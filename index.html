@@ -29,7 +29,7 @@
             <div class="team-card">
                 <h2>🎮 Actions Rapides</h2>
                 <div class="quick-actions">
-                    <button class="btn btn-primary" onclick="footballApp.startNewMatch()">
+                    <button class="btn btn-primary" onclick="startNewMatch()">
                         🆕 Nouveau Match
                     </button>
                     <button class="btn btn-secondary" onclick="showConfirmReset()">
@@ -50,29 +50,29 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="teamName">Nom de votre équipe :</label>
-                        <input type="text" id="teamName" placeholder="Mon Équipe" maxlength="30">
+                        <input type="text" id="teamName" placeholder="Mon Équipe" value="Mon Équipe">
                     </div>
                     <div class="form-group">
                         <label for="opponentName">Équipe adverse :</label>
-                        <input type="text" id="opponentName" placeholder="Équipe Adverse" maxlength="30">
+                        <input type="text" id="opponentName" placeholder="Équipe Adverse" value="Équipe Adverse">
                     </div>
                     <div class="form-group">
                         <label for="venue">Lieu du match :</label>
-                        <input type="text" id="venue" placeholder="Stade Municipal" maxlength="50">
+                        <input type="text" id="venue" placeholder="Stade Municipal" value="Stade Municipal">
                     </div>
                     <div class="form-group">
                         <label for="matchDate">Date et heure :</label>
                         <input type="datetime-local" id="matchDate">
                     </div>
                 </div>
-                <div class="form-actions">
-                    <button class="btn btn-primary" onclick="saveMatchConfig()">💾 Sauvegarder Configuration</button>
-                </div>
+                <button class="btn btn-primary" onclick="saveMatchConfig()">
+                    💾 Sauvegarder Configuration
+                </button>
             </div>
 
             <div class="team-card">
                 <h2>📊 Aperçu Rapide</h2>
-                <div id="recentStats" class="stats-preview">
+                <div id="recentStats" class="stats-summary">
                     <p>Commencez par créer votre équipe !</p>
                 </div>
             </div>
@@ -131,194 +131,227 @@
     <script src="js/storage.js"></script>
     <script src="js/app.js"></script>
     <script>
-        // ===== FONCTIONS SPÉCIFIQUES À LA PAGE INDEX =====
-        
-        /**
-         * Initialisation de la page d'accueil
-         */
+        // Attendre que footballApp soit disponible
+        function waitForFootballApp(callback) {
+            if (typeof footballApp !== 'undefined') {
+                callback();
+            } else {
+                setTimeout(() => waitForFootballApp(callback), 100);
+            }
+        }
+
+        // Initialisation de la page d'accueil
         document.addEventListener('DOMContentLoaded', function() {
-            loadMatchConfig();
-            
-            // Attendre que footballApp soit chargé
-            setTimeout(() => {
+            waitForFootballApp(function() {
+                loadMatchConfig();
                 updateRecentStats();
-            }, 100);
-            
-            // Configuration de la date par défaut
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('matchDate').value = now.toISOString().slice(0, 16);
+                
+                // Configuration de la date par défaut
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('matchDate').value = now.toISOString().slice(0, 16);
+            });
         });
 
+        // ===== FONCTIONS PRINCIPALES =====
+
         /**
-         * Afficher la modal de confirmation de reset
+         * Nouveau match via footballApp
+         */
+        function startNewMatch() {
+            waitForFootballApp(function() {
+                if (typeof footballApp.startNewMatch === 'function') {
+                    footballApp.startNewMatch();
+                } else {
+                    // Fallback si la fonction n'est pas disponible
+                    if (confirm('🆕 Commencer un nouveau match ?\n\n⚠️ Les données du match en cours seront perdues !')) {
+                        // Sauvegarder la config avant reset
+                        saveMatchConfig();
+                        
+                        // Reset des données de match
+                        removeData('currentMatch');
+                        
+                        footballApp.showNotification('🆕 Nouveau match créé !', 'success');
+                        
+                        setTimeout(() => {
+                            window.location.href = 'pages/match.html';
+                        }, 1500);
+                    }
+                }
+            });
+        }
+
+        /**
+         * Reset complet via footballApp
+         */
+        function confirmReset() {
+            waitForFootballApp(function() {
+                if (typeof footballApp.resetCompleteApp === 'function') {
+                    footballApp.resetCompleteApp();
+                } else {
+                    // Fallback si la fonction n'est pas disponible
+                    if (typeof clearAllData === 'function') {
+                        clearAllData();
+                    }
+                    footballApp.showNotification('🔄 Toutes les données ont été effacées !', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                }
+                closeConfirmReset();
+            });
+        }
+
+        /**
+         * Affichage de la modal de confirmation
          */
         function showConfirmReset() {
             document.getElementById('confirmResetModal').style.display = 'block';
         }
 
         /**
-         * Fermer la modal de confirmation
+         * Fermeture de la modal de confirmation
          */
         function closeConfirmReset() {
             document.getElementById('confirmResetModal').style.display = 'none';
         }
 
-        /**
-         * Confirmer le reset complet
-         */
-        function confirmReset() {
-            closeConfirmReset();
-            footballApp.resetCompleteApp();
-        }
+        // ===== GESTION DE LA CONFIGURATION =====
 
         /**
-         * Sauvegarder la configuration du match
+         * Sauvegarde de la configuration du match
          */
         function saveMatchConfig() {
             const config = getMatchConfig();
-            if (typeof setMatchConfig === 'function') {
-                setMatchConfig(config);
-            }
+            saveData('matchConfig', config);
             
-            if (typeof footballApp !== 'undefined' && footballApp.showNotification) {
+            waitForFootballApp(function() {
                 footballApp.showNotification('💾 Configuration sauvegardée !', 'success');
-            } else {
-                alert('💾 Configuration sauvegardée !');
-            }
+            });
         }
 
         /**
-         * Obtenir la configuration du match depuis les champs
+         * Récupération de la configuration du formulaire
          */
         function getMatchConfig() {
             return {
                 teamName: document.getElementById('teamName').value.trim() || 'Mon Équipe',
                 opponentName: document.getElementById('opponentName').value.trim() || 'Équipe Adverse',
                 venue: document.getElementById('venue').value.trim() || 'Stade Municipal',
-                matchDate: document.getElementById('matchDate').value
+                matchDate: document.getElementById('matchDate').value || new Date().toISOString()
             };
         }
 
         /**
-         * Charger la configuration du match dans les champs
+         * Chargement de la configuration sauvegardée
          */
         function loadMatchConfig() {
-            const config = getMatchConfig();
-            let saved = null;
-            
-            // Essayer de charger depuis storage.js
-            if (typeof loadData === 'function') {
-                saved = loadData('matchConfig');
-            }
+            const saved = loadData('matchConfig');
             
             if (saved) {
-                document.getElementById('teamName').value = saved.teamName || config.teamName;
-                document.getElementById('opponentName').value = saved.opponentName || config.opponentName;
-                document.getElementById('venue').value = saved.venue || config.venue;
+                document.getElementById('teamName').value = saved.teamName || 'Mon Équipe';
+                document.getElementById('opponentName').value = saved.opponentName || 'Équipe Adverse';
+                document.getElementById('venue').value = saved.venue || 'Stade Municipal';
                 if (saved.matchDate) {
-                    document.getElementById('matchDate').value = saved.matchDate;
+                    // Convertir la date pour l'input datetime-local
+                    const date = new Date(saved.matchDate);
+                    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+                    document.getElementById('matchDate').value = date.toISOString().slice(0, 16);
                 }
             }
         }
 
-        /**
-         * Mettre à jour les statistiques affichées
-         */
-        function updateRecentStats() {
-            const container = document.getElementById('recentStats');
-            
-            // Vérifier que footballApp est disponible
-            if (typeof footballApp === 'undefined' || !footballApp.getHomePageStats) {
-                container.innerHTML = '<p>Chargement des statistiques...</p>';
-                return;
-            }
-            
-            const stats = footballApp.getHomePageStats();
-            
-            if (!stats.hasData) {
-                container.innerHTML = '<p>Aucune donnée disponible. Commencez par créer votre équipe !</p>';
-                return;
-            }
-            
-            let html = '<div class="stats-summary">';
-            
-            // Statistiques des joueurs
-            if (stats.players.total > 0) {
-                html += `
-                    <div class="stat-item">
-                        <span class="stat-icon">👥</span>
-                        <span class="stat-text">${stats.players.total} joueuses</span>
-                        <span class="stat-detail">(${stats.players.field} titulaires, ${stats.players.bench} remplaçantes)</span>
-                    </div>
-                `;
-            }
-            
-            // Statistiques du match actuel
-            if (stats.match) {
-                html += `
-                    <div class="stat-item">
-                        <span class="stat-icon">⚽</span>
-                        <span class="stat-text">Match en cours</span>
-                        <span class="stat-detail">Score: ${stats.match.score.team}-${stats.match.score.opponent}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-icon">📝</span>
-                        <span class="stat-text">${stats.match.events} événements</span>
-                        <span class="stat-detail">${stats.match.half}ème mi-temps</span>
-                    </div>
-                `;
-            }
-            
-            html += '</div>';
-            container.innerHTML = html;
-        }
+        // ===== STATISTIQUES ET AFFICHAGE =====
 
         /**
-         * Télécharger les données du match actuel
+         * Mise à jour des statistiques récentes
          */
-        function downloadCurrentMatch() {
-            try {
-                if (typeof footballApp === 'undefined' || !footballApp.exportCurrentMatch) {
-                    alert('❌ Application non chargée, veuillez réessayer');
+        function updateRecentStats() {
+            waitForFootballApp(function() {
+                const container = document.getElementById('recentStats');
+                const players = loadData('players') || [];
+                const currentMatch = loadData('currentMatch');
+                
+                if (players.length === 0 && !currentMatch) {
+                    container.innerHTML = '<p>Aucune donnée disponible. Commencez par créer votre équipe !</p>';
                     return;
                 }
                 
-                const exportData = footballApp.exportCurrentMatch();
+                let html = '';
                 
-                const dataStr = JSON.stringify(exportData, null, 2);
-                const dataBlob = new Blob([dataStr], {type: 'application/json'});
-                
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(dataBlob);
-                link.download = `football-stats-${new Date().toISOString().slice(0, 10)}.json`;
-                link.click();
-                
-                if (footballApp.showNotification) {
-                    footballApp.showNotification('💾 Sauvegarde téléchargée !', 'success');
-                } else {
-                    alert('💾 Sauvegarde téléchargée !');
+                if (players.length > 0) {
+                    html += `<div class="stat-item">
+                        <span class="stat-icon">👥</span>
+                        <span class="stat-text">${players.length} joueuses dans l'équipe</span>
+                    </div>`;
+                    
+                    const fieldPlayers = players.filter(p => p.status === 'field').length;
+                    if (fieldPlayers > 0) {
+                        html += `<div class="stat-item">
+                            <span class="stat-icon">🟢</span>
+                            <span class="stat-text">${fieldPlayers} joueuses sur le terrain</span>
+                        </div>`;
+                    }
                 }
-            } catch (error) {
-                console.error('Erreur export:', error);
-                if (typeof footballApp !== 'undefined' && footballApp.showNotification) {
-                    footballApp.showNotification('❌ Erreur lors de l\'export', 'error');
-                } else {
-                    alert('❌ Erreur lors de l\'export');
+                
+                if (currentMatch) {
+                    html += `<div class="stat-item">
+                        <span class="stat-icon">⚽</span>
+                        <span class="stat-text">Match en cours: ${currentMatch.config?.teamName || 'Mon Équipe'} vs ${currentMatch.config?.opponentName || 'Équipe Adverse'}</span>
+                    </div>`;
+                    
+                    html += `<div class="stat-item">
+                        <span class="stat-icon">🕐</span>
+                        <span class="stat-text">Score: ${currentMatch.score?.team || 0} - ${currentMatch.score?.opponent || 0}</span>
+                    </div>`;
                 }
-            }
+                
+                container.innerHTML = html || '<p>Aucune donnée disponible.</p>';
+            });
         }
 
+        // ===== IMPORT/EXPORT =====
+
         /**
-         * Charger un fichier de match
+         * Ouverture du sélecteur de fichier
          */
         function loadMatchFile() {
             document.getElementById('fileInput').click();
         }
 
         /**
-         * Gestionnaire de fichier
+         * Téléchargement des données actuelles
          */
+        function downloadCurrentMatch() {
+            waitForFootballApp(function() {
+                const allData = {
+                    players: loadData('players') || [],
+                    currentMatch: loadData('currentMatch'),
+                    matchConfig: loadData('matchConfig'),
+                    timestamp: new Date().toISOString()
+                };
+                
+                if (!allData.players.length && !allData.currentMatch) {
+                    footballApp.showNotification('❌ Aucune donnée à sauvegarder !', 'error');
+                    return;
+                }
+                
+                const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `football_stats_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                footballApp.showNotification('💾 Données sauvegardées !', 'success');
+            });
+        }
+
+        // ===== GESTION DU CHARGEMENT DE FICHIER =====
+
         document.getElementById('fileInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -328,43 +361,29 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     
-                    if (confirm('📂 Charger cette sauvegarde ?\n\n⚠️ Les données actuelles seront remplacées !')) {
-                        if (typeof footballApp === 'undefined' || !footballApp.importMatchData) {
-                            alert('❌ Application non chargée, veuillez recharger la page');
-                            return;
+                    waitForFootballApp(function() {
+                        // Importer les données
+                        if (data.players) {
+                            saveData('players', data.players);
                         }
-                        
-                        const success = footballApp.importMatchData(data);
-                        
-                        if (success) {
-                            if (footballApp.showNotification) {
-                                footballApp.showNotification('📂 Sauvegarde chargée avec succès !', 'success');
-                            } else {
-                                alert('📂 Sauvegarde chargée avec succès !');
-                            }
-                            updateRecentStats();
+                        if (data.currentMatch) {
+                            saveData('currentMatch', data.currentMatch);
+                        }
+                        if (data.matchConfig) {
+                            saveData('matchConfig', data.matchConfig);
                             loadMatchConfig();
-                        } else {
-                            if (footballApp.showNotification) {
-                                footballApp.showNotification('❌ Erreur lors du chargement', 'error');
-                            } else {
-                                alert('❌ Erreur lors du chargement');
-                            }
                         }
-                    }
+                        
+                        updateRecentStats();
+                        footballApp.showNotification('✅ Données chargées avec succès !', 'success');
+                    });
                 } catch (error) {
-                    console.error('Erreur lors du chargement:', error);
-                    if (typeof footballApp !== 'undefined' && footballApp.showNotification) {
-                        footballApp.showNotification('❌ Erreur: fichier invalide', 'error');
-                    } else {
-                        alert('❌ Erreur: fichier invalide');
-                    }
+                    waitForFootballApp(function() {
+                        footballApp.showNotification('❌ Erreur lors du chargement du fichier !', 'error');
+                    });
                 }
             };
             reader.readAsText(file);
-            
-            // Reset input
-            event.target.value = '';
         });
     </script>
 </body>
