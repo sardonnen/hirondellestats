@@ -1,11 +1,11 @@
 // ===== CONFIGURATION API JSONBIN.IO =====
 const JSONBIN_CONFIG = {
     // Remplacez par votre clé API JSONBin.io
-    API_KEY: '$2a$10$YOUR_JSONBIN_API_KEY_HERE',
+    API_KEY: '$2a$10$r5MbOaRyivoihBZSwAHKkO',
     BASE_URL: 'https://api.jsonbin.io/v3/b',
     HEADERS: {
         'Content-Type': 'application/json',
-        'X-Master-Key': '$2a$10$YOUR_JSONBIN_API_KEY_HERE'
+        'X-Master-Key': '$2a$10$r5MbOaRyivoihBZSwAHKkO'
     }
 };
 
