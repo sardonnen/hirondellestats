@@ -431,9 +431,153 @@ function resetMatchTimer() {
  * Mise à jour de l'affichage du temps
  */
 function updateTimeDisplay() {
-    const timeElement = document.getElementById('matchTime');
-    if (timeElement) {
-        timeElement.textContent = formatTime(appState.time);
+    const timeElements = ['matchTime', 'liveTime', 'timerDisplay'];
+    timeElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = formatTime(appState.time);
+        }
+    });
+}
+
+/**
+ * Mise à jour de l'affichage du score
+ */
+function updateScoreDisplay() {
+    const scoreElements = [
+        { team: 'teamScore', opponent: 'opponentScore' },
+        { team: 'liveTeamScore', opponent: 'liveOpponentScore' },
+        { team: 'headerTeamScore', opponent: 'headerOpponentScore' }
+    ];
+    
+    scoreElements.forEach(pair => {
+        const teamElement = document.getElementById(pair.team);
+        const opponentElement = document.getElementById(pair.opponent);
+        
+        if (teamElement) teamElement.textContent = appState.score.team;
+        if (opponentElement) opponentElement.textContent = appState.score.opponent;
+    });
+}
+
+/**
+ * Mise à jour de l'affichage des mi-temps
+ */
+function updateHalfDisplay() {
+    const halfElements = ['matchHalf', 'halfDisplay', 'currentHalf'];
+    const halfText = appState.half === 1 ? '1ère Mi-temps' : '2ème Mi-temps';
+    
+    halfElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = halfText;
+        }
+    });
+}
+
+/**
+ * Mise à jour de l'affichage des événements
+ */
+function updateEventsDisplay() {
+    const containers = ['eventsList', 'eventsTimeline', 'matchEvents'];
+    
+    containers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        if (appState.events.length === 0) {
+            container.innerHTML = '<p class="no-events">Aucun événement enregistré</p>';
+            return;
+        }
+        
+        // Afficher les événements les plus récents en premier
+        appState.events.forEach((event, index) => {
+            const eventElement = createEventElement(event, index);
+            container.appendChild(eventElement);
+        });
+    });
+}
+
+/**
+ * Création d'un élément d'événement pour l'affichage
+ */
+function createEventElement(event, index) {
+    const element = document.createElement('div');
+    element.className = `event-item ${event.isTeam ? 'team-event' : 'opponent-event'}`;
+    
+    const player = appState.players.find(p => p.id === event.playerId);
+    const playerName = player ? player.name : (event.playerId === 'opponent' ? 'Équipe Adverse' : 'Joueur');
+    
+    element.innerHTML = `
+        <div class="event-time">${event.time}</div>
+        <div class="event-description">${getEventDescription(event)}</div>
+        <div class="event-meta">
+            ${event.half === 1 ? '1ère' : '2ème'} mi-temps
+            ${event.isTeam ? '• Notre équipe' : '• Équipe adverse'}
+        </div>
+    `;
+    
+    return element;
+}
+
+/**
+ * Mise à jour des statistiques rapides
+ */
+function updateQuickStats() {
+    const stats = {
+        totalEvents: appState.events.length,
+        goals: appState.events.filter(e => e.type === 'goal').length,
+        cards: appState.events.filter(e => e.type === 'card').length,
+        substitutions: appState.events.filter(e => e.type === 'substitution').length
+    };
+    
+    // Mettre à jour les éléments d'affichage des stats
+    const statsElements = [
+        { id: 'totalEvents', value: stats.totalEvents },
+        { id: 'totalGoals', value: stats.goals },
+        { id: 'totalCards', value: stats.cards },
+        { id: 'totalSubstitutions', value: stats.substitutions }
+    ];
+    
+    statsElements.forEach(stat => {
+        const element = document.getElementById(stat.id);
+        if (element) {
+            element.textContent = stat.value;
+        }
+    });
+}
+
+/**
+ * Mise à jour de l'affichage du bouton play/pause
+ */
+function updatePlayButton() {
+    const playBtn = document.getElementById('playBtn');
+    if (playBtn) {
+        if (appState.isPlaying) {
+            playBtn.innerHTML = '⏸️ Pause';
+            playBtn.className = 'btn btn-warning';
+        } else {
+            playBtn.innerHTML = '▶️ Démarrer';
+            playBtn.className = 'btn btn-success';
+        }
+    }
+}
+
+/**
+ * Mise à jour complète de l'affichage du match
+ */
+function updateMatchDisplay() {
+    updateScoreDisplay();
+    updateTimeDisplay();
+    updateHalfDisplay();
+    updateEventsDisplay();
+    updateQuickStats();
+    updatePlayButton();
+    
+    // Appeler les fonctions spécifiques de la page si elles existent
+    if (typeof updateSpecificMatchDisplay === 'function') {
+        updateSpecificMatchDisplay();
     }
 }
 
@@ -441,6 +585,8 @@ function updateTimeDisplay() {
  * Mise à jour de tous les affichages
  */
 function updateAllDisplays() {
+    updateMatchDisplay();
+    
     // Mise à jour de l'affichage des joueurs
     if (typeof updatePlayersDisplay === 'function') {
         updatePlayersDisplay();
@@ -450,9 +596,6 @@ function updateAllDisplays() {
     if (typeof updateStatsDisplay === 'function') {
         updateStatsDisplay();
     }
-    
-    // Mise à jour du temps
-    updateTimeDisplay();
 }
 
 // ===== GESTION DU LIVE =====
@@ -482,6 +625,10 @@ function startNewMatch() {
         // Créer un nouveau match
         createNewMatch();
         
+        // Mettre à jour tous les affichages immédiatement
+        updateMatchDisplay();
+        updateAllDisplays();
+        
         console.log('✅ Nouveau match créé');
         showNotification('🆕 Nouveau match créé ! Prêt à commencer.', 'success');
         
@@ -505,8 +652,14 @@ function clearMatchData() {
     appState.half = 1;
     appState.isPlaying = false;
     
+    // Arrêter le chronomètre s'il tourne
+    stopMatchTimer();
+    
     // Supprimer les données du localStorage
     removeData('currentMatch');
+    
+    // Mettre à jour l'affichage immédiatement
+    updateMatchDisplay();
     
     console.log('📝 Données de match effacées');
 }
@@ -529,6 +682,12 @@ function resetCompositionData() {
     });
     
     saveAppState();
+    
+    // Mettre à jour l'affichage des joueurs
+    if (typeof updatePlayersDisplay === 'function') {
+        updatePlayersDisplay();
+    }
+    
     console.log('🔄 Composition réinitialisée');
 }
 
@@ -554,7 +713,18 @@ function createNewMatch() {
         half: 1
     };
     
+    // S'assurer que l'état local correspond
+    appState.events = [];
+    appState.score = { team: 0, opponent: 0 };
+    appState.time = 0;
+    appState.half = 1;
+    appState.isPlaying = false;
+    
     saveAppState();
+    
+    // Mettre à jour tous les affichages
+    updateMatchDisplay();
+    
     console.log('⚽ Nouveau match configuré');
 }
 
@@ -588,6 +758,10 @@ function resetCompleteApp() {
         
         // Sauvegarder l'état vide
         saveAppState();
+        
+        // 6. Mettre à jour TOUS les affichages immédiatement
+        updateMatchDisplay();
+        updateAllDisplays();
         
         console.log('✅ Reset complet terminé');
         showNotification('🔄 Toutes les données ont été effacées ! Application remise à zéro.', 'success');
@@ -737,8 +911,15 @@ window.footballApp = {
     addEvent: addMatchEvent,
     formatTime,
     
-    // Affichage
+    // Affichage principal
     updateAllDisplays,
+    updateMatchDisplay,
+    updateScoreDisplay,
+    updateTimeDisplay,
+    updateHalfDisplay,
+    updateEventsDisplay,
+    updateQuickStats,
+    updatePlayButton,
     showNotification,
     
     // Modales
