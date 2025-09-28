@@ -1,875 +1,650 @@
-// js/app.js - Logique principale de l'application
-
-// Variables globales
-let players = [];
-let startingEleven = []; // IDs des joueurs titulaires
-let currentMatch = {};
-let gameSettings = { duration: 45, halfTime: 1 };
-let stats = {
-    team1: { goals: 0, shots: 0, shotsOn: 0, shotsOff: 0, saves: 0, fouls: 0, freeKicks: 0, yellowCards: 0, redCards: 0, whiteCards: 0 },
-    team2: { goals: 0, shots: 0, shotsOn: 0, shotsOff: 0, saves: 0, fouls: 0, freeKicks: 0, yellowCards: 0, redCards: 0, whiteCards: 0 }
+// ===== VARIABLES GLOBALES =====
+let appState = {
+    currentMatch: null,
+    players: [],
+    events: [],
+    score: { team: 0, opponent: 0 },
+    time: 0,
+    half: 1,
+    isPlaying: false,
+    selectedPlayer: null,
+    selectedCardType: null
 };
-let events = [];
-let playerStats = {};
-let timer = { minutes: 0, seconds: 0, isRunning: false, interval: null };
 
-// Variables pour les actions
-let currentActionType = null;
-let currentActionTeam = null;
-let selectedPlayerId = null;
-let selectedCardType = null;
+// ===== INITIALISATION =====
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+});
 
-// Initialisation de l'application
+/**
+ * Initialisation de l'application
+ */
 function initializeApp() {
-    console.log('Initialisation de l\'application...');
-    
-    // Vérifier si on est en mode live
-    const urlParams = new URLSearchParams(window.location.search);
-    const liveId = urlParams.get('live');
-    
-    if (liveId) {
-        showPage('live');
-        initializeLiveView(liveId);
-        return;
-    }
+    console.log('🚀 Initialisation de Football Stats App');
     
     // Charger les données sauvegardées
-    loadData();
+    loadAppState();
     
-    // Mettre à jour l'affichage
-    updateDisplay();
-    updatePlayersDisplay();
-    updateStatsDisplay();
+    // Vérifier si on est en mode live
+    checkLiveMode();
     
-    console.log('Application initialisée');
+    // Initialiser les event listeners
+    setupEventListeners();
+    
+    // Mise à jour de l'affichage
+    updateAllDisplays();
+    
+    console.log('✅ Application initialisée');
 }
 
-// Gestion des pages
-function showPage(pageId) {
-    // Cacher toutes les pages
-    const pages = document.querySelectorAll('.page');
-    pages.forEach(page => page.classList.remove('active'));
-    
-    // Afficher la page demandée
-    const targetPage = document.getElementById(pageId);
-    if (targetPage) {
-        targetPage.classList.add('active');
+/**
+ * Chargement de l'état de l'application
+ */
+function loadAppState() {
+    try {
+        appState.players = loadData('players') || [];
+        appState.currentMatch = loadData('currentMatch') || null;
         
-        // Actions spécifiques par page
-        switch(pageId) {
-            case 'lineup':
-                updateLineupDisplay();
-                updateFieldDisplay();
-                break;
-            case 'match':
-                updateMatchDisplay();
-                break;
-            case 'stats':
-                updateStatsDisplay();
-                updatePlayerStatsDisplay();
-                break;
-            case 'live':
-                updateLiveDisplay();
-                break;
-            case 'setup':
-                loadCompositionsList();
-                break;
+        if (appState.currentMatch) {
+            appState.events = appState.currentMatch.events || [];
+            appState.score = appState.currentMatch.score || { team: 0, opponent: 0 };
+            appState.time = appState.currentMatch.time || 0;
+            appState.half = appState.currentMatch.half || 1;
         }
+        
+        console.log('État de l\'application chargé:', appState);
+    } catch (error) {
+        console.error('Erreur lors du chargement de l\'état:', error);
     }
 }
 
-// Gestion des joueuses
-function addPlayer() {
-    const name = document.getElementById('playerName').value.trim();
-    const position = document.getElementById('playerPosition').value;
-    
-    if (!name) {
-        showNotification('Veuillez entrer un nom', 'error');
-        return;
-    }
-    
-    // Vérifier doublons
-    if (players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
-        showNotification('Cette joueuse existe déjà !', 'error');
-        return;
-    }
-    
-    const player = {
-        id: Date.now(),
-        name: name,
-        position: position,
-        status: 'bench', // bench, field, out, sanctioned
-        isStarting: false // IMPORTANT : Initialiser à false
-    };
-    
-    players.push(player);
-    playerStats[player.id] = { 
-        goals: 0, 
-        assists: 0, 
-        shots: 0, 
-        fouls: 0,
-        cards: [],
-        saves: 0,
-        freeKicks: 0
-    };
-    
-    document.getElementById('playerName').value = '';
-    updatePlayersDisplay();
-    updateLineupDisplay(); // Mettre à jour l'affichage de composition
-    saveData();
-    showNotification(`${name} ajouté(e) !`, 'success');
-    
-    // Feedback tactile Android
-    if (navigator.vibrate) {
-        navigator.vibrate(50);
+/**
+ * Sauvegarde de l'état de l'application
+ */
+function saveAppState() {
+    try {
+        if (appState.players.length > 0) {
+            saveData('players', appState.players);
+        }
+        
+        if (appState.currentMatch) {
+            appState.currentMatch.events = appState.events;
+            appState.currentMatch.score = appState.score;
+            appState.currentMatch.time = appState.time;
+            appState.currentMatch.half = appState.half;
+            appState.currentMatch.lastUpdated = new Date().toISOString();
+            
+            saveData('currentMatch', appState.currentMatch);
+        }
+        
+        console.log('État de l\'application sauvegardé');
+    } catch (error) {
+        console.error('Erreur lors de la sauvegarde:', error);
     }
 }
 
-function removePlayer(playerId) {
-    if (confirm('Supprimer cette joueuse ?')) {
-        players = players.filter(p => p.id !== playerId);
-        startingEleven = startingEleven.filter(id => id !== playerId);
-        delete playerStats[playerId];
-        updatePlayersDisplay();
-        updateLineupDisplay();
-        saveData();
-        showNotification('Joueuse supprimée', 'info');
-    }
-}
+// ===== GESTION DES ÉVÉNEMENTS =====
 
-function updatePlayersDisplay() {
-    const container = document.getElementById('playersList');
-    if (!container) return;
+/**
+ * Configuration des event listeners
+ */
+function setupEventListeners() {
+    // Fermeture des modales en cliquant à l'extérieur
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal')) {
+            closeAllModals();
+        }
+    });
     
-    container.innerHTML = '';
+    // Gestion des touches du clavier
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeAllModals();
+        }
+    });
     
-    if (players.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #bdc3c7;">Aucune joueuse ajoutée</p>';
-        return;
-    }
-    
-    players.forEach(player => {
-        const div = document.createElement('div');
-        div.className = 'player-item';
-        div.innerHTML = `
-            <div class="player-info">
-                <span class="position-badge position-${player.position}">
-                    ${getPositionIcon(player.position)}
-                </span>
-                <strong>${player.name}</strong>
-                <span style="color: #bdc3c7;">(${player.position})</span>
-            </div>
-            <button class="btn btn-small" onclick="removePlayer(${player.id})" style="background: #e74c3c;">
-                🗑️
-            </button>
-        `;
-        container.appendChild(div);
+    // Sauvegarde automatique avant fermeture de la page
+    window.addEventListener('beforeunload', function() {
+        saveAppState();
     });
 }
 
+// ===== GESTION DES MODALES =====
+
+/**
+ * Fermeture de toutes les modales
+ */
+function closeAllModals() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.style.display = 'none';
+    });
+    
+    // Reset des sélections
+    appState.selectedPlayer = null;
+    appState.selectedCardType = null;
+    
+    // Reset des feedbacks visuels
+    resetVisualFeedbacks();
+}
+
+/**
+ * Reset des feedbacks visuels
+ */
+function resetVisualFeedbacks() {
+    // Reset sélection des joueurs
+    const playerButtons = document.querySelectorAll('.player-btn');
+    playerButtons.forEach(btn => btn.classList.remove('selected'));
+    
+    // Reset sélection des cartons
+    const cardButtons = document.querySelectorAll('.card-btn');
+    cardButtons.forEach(btn => btn.style.opacity = '1');
+}
+
+// ===== GESTION DES JOUEURS =====
+
+/**
+ * Ajout d'un joueur
+ */
+function addPlayerToTeam(playerData) {
+    const player = {
+        id: Date.now() + Math.random(),
+        name: playerData.name,
+        position: playerData.position,
+        status: 'bench', // bench, field, sanctioned
+        stats: {
+            goals: 0,
+            shots: 0,
+            cards: 0,
+            fouls: 0,
+            saves: 0,
+            freeKicks: 0
+        },
+        createdAt: new Date().toISOString()
+    };
+    
+    // Vérifier qu'il n'y ait qu'une seule gardienne
+    if (player.position === 'gardienne') {
+        const existingGoalkeeper = appState.players.find(p => p.position === 'gardienne');
+        if (existingGoalkeeper) {
+            showNotification('Il ne peut y avoir qu\'une seule gardienne dans l\'équipe !', 'error');
+            return null;
+        }
+    }
+    
+    appState.players.push(player);
+    saveAppState();
+    
+    console.log('Joueur ajouté:', player);
+    return player;
+}
+
+/**
+ * Suppression d'un joueur
+ */
+function removePlayerFromTeam(playerId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette joueuse ?')) {
+        return false;
+    }
+    
+    const playerIndex = appState.players.findIndex(p => p.id === playerId);
+    if (playerIndex !== -1) {
+        const removedPlayer = appState.players.splice(playerIndex, 1)[0];
+        saveAppState();
+        
+        console.log('Joueur supprimé:', removedPlayer);
+        showNotification(`${removedPlayer.name} a été supprimée de l'équipe.`);
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Mise à jour du statut d'un joueur
+ */
+function updatePlayerStatus(playerId, newStatus) {
+    const player = appState.players.find(p => p.id === playerId);
+    if (player) {
+        player.status = newStatus;
+        player.lastUpdated = new Date().toISOString();
+        saveAppState();
+        return player;
+    }
+    return null;
+}
+
+/**
+ * Obtenir les joueurs par statut
+ */
+function getPlayersByStatus(status) {
+    return appState.players.filter(p => p.status === status);
+}
+
+/**
+ * Obtenir l'icône de position
+ */
 function getPositionIcon(position) {
     const icons = {
         'gardienne': '🥅',
-        'defenseure': '🛡️',
-        'milieu': '⚡',
+        'défenseuse': '🛡️',
+        'milieu': '⚙️',
         'attaquante': '⚽'
     };
-    return icons[position] || '⚽';
+    return icons[position] || '👤';
 }
 
-// Démarrer un nouveau match avec validation
-function startNewMatch() {
-    if (players.length === 0) {
-        showNotification('Ajoutez des joueuses avant de commencer', 'error');
-        return;
-    }
-    
-    if (startingEleven.length === 0) {
-        if (confirm('Aucun joueur titulaire sélectionné. Voulez-vous continuer ?')) {
-            // Mettre automatiquement tous les joueurs sur le banc
-            players.forEach(player => {
-                player.status = 'bench';
-                player.isStarting = false;
-            });
-        } else {
-            showNotification('Sélectionnez vos titulaires dans l\'onglet Composition', 'info');
-            return;
-        }
-    }
-    
-    const duration = parseInt(document.getElementById('duration').value) || 45;
-    gameSettings.duration = duration;
-    gameSettings.halfTime = 1;
-    
-    currentMatch = {
-        id: Date.now().toString(),
-        timestamp: new Date().toISOString(),
-        team1: document.getElementById('team1Name').value || 'Mon Équipe',
-        team2: document.getElementById('team2Name').value || 'Équipe Adverse',
-        venue: document.getElementById('venue').value || 'Terrain'
-    };
-    
-    // Reset timer et stats
-    resetTimer();
-    resetStats();
-    
-    // Mettre les joueurs titulaires sur le terrain, les autres sur le banc
-    players.forEach(player => {
-        if (player.isStarting) {
-            player.status = 'field';
-        } else {
-            player.status = 'bench';
-        }
-    });
-    
-    addEvent('🏁', 'Début du match', 'Arbitre');
-    showNotification('Nouveau match commencé !', 'success');
-    showPage('match');
-    updateFieldDisplay();
-    saveData();
-}
+// ===== GESTION DES ÉVÉNEMENTS DE MATCH =====
 
-// Fonctions utilitaires manquantes
-function togglePlayerStatus(playerId) {
-    const player = players.find(p => p.id === playerId);
-    if (!player) return;
-    
-    const currentPlayersOnField = players.filter(p => p.status === 'field').length;
-    
-    // Cycle: bench -> field -> bench
-    if (player.status === 'bench') {
-        if (currentPlayersOnField >= 11) {
-            showNotification('Il ne peut y avoir que 11 joueurs maximum sur le terrain', 'error');
-            return;
-        }
-        player.status = 'field';
-        addEvent('🔄', 'Entrée en jeu', player.name, 'team1');
-        showNotification(`${player.name} entre en jeu`, 'info');
-    } else if (player.status === 'field') {
-        player.status = 'bench';
-        addEvent('🔄', 'Sortie du terrain', player.name, 'team1');
-        showNotification(`${player.name} sort du terrain`, 'info');
-    }
-    
-    updateFieldDisplay();
-    saveData();
-}
-
-// Fonction pour obtenir le statut d'un joueur avec emoji
-function getPlayerStatusIcon(status) {
-    switch(status) {
-        case 'field': return '🟢';
-        case 'bench': return '🔵';
-        case 'out': return '🔴';
-        case 'sanctioned': return '🟡';
-        default: return '⚪';
-    }
-}
-
-// Fonction pour formater le temps de jeu
-function formatGameTime(minutes, seconds) {
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
-// Fonction pour obtenir les stats d'une équipe
-function getTeamStats(teamKey) {
-    return stats[teamKey] || {
-        goals: 0, shots: 0, shotsOn: 0, shotsOff: 0, 
-        saves: 0, fouls: 0, freeKicks: 0, 
-        yellowCards: 0, redCards: 0, whiteCards: 0
-    };
-}
-
-// Validation des données avant sauvegarde
-function validateData() {
-    // Vérifier que les IDs des joueurs titulaires existent encore
-    startingEleven = startingEleven.filter(id => 
-        players.find(p => p.id === id)
-    );
-    
-    // Nettoyer les stats des joueurs supprimés
-    Object.keys(playerStats).forEach(playerId => {
-        if (!players.find(p => p.id.toString() === playerId.toString())) {
-            delete playerStats[playerId];
-        }
-    });
-    
-    // S'assurer que tous les joueurs ont des stats
-    players.forEach(player => {
-        if (!playerStats[player.id]) {
-            playerStats[player.id] = {
-                goals: 0, assists: 0, shots: 0, fouls: 0,
-                cards: [], saves: 0, freeKicks: 0
-            };
-        }
-    });
-}
-
-function resetStats() {
-    stats = {
-        team1: { goals: 0, shots: 0, shotsOn: 0, shotsOff: 0, saves: 0, fouls: 0, freeKicks: 0, yellowCards: 0, redCards: 0, whiteCards: 0 },
-        team2: { goals: 0, shots: 0, shotsOn: 0, shotsOff: 0, saves: 0, fouls: 0, freeKicks: 0, yellowCards: 0, redCards: 0, whiteCards: 0 }
-    };
-    events = [];
-    
-    // Reset des stats joueurs
-    Object.keys(playerStats).forEach(playerId => {
-        playerStats[playerId] = { 
-            goals: 0, 
-            assists: 0, 
-            shots: 0, 
-            fouls: 0,
-            cards: [],
-            saves: 0,
-            freeKicks: 0
-        };
-    });
-}
-
-function showConfirmReset() {
-    document.getElementById('confirmResetModal').style.display = 'block';
-}
-
-function confirmReset() {
-    // Reset complet
-    players = [];
-    startingEleven = [];
-    stats = {
-        team1: { goals: 0, shots: 0, shotsOn: 0, shotsOff: 0, saves: 0, fouls: 0, freeKicks: 0, yellowCards: 0, redCards: 0, whiteCards: 0 },
-        team2: { goals: 0, shots: 0, shotsOn: 0, shotsOff: 0, saves: 0, fouls: 0, freeKicks: 0, yellowCards: 0, redCards: 0, whiteCards: 0 }
-    };
-    events = [];
-    timer = { minutes: 0, seconds: 0, isRunning: false, interval: null };
-    gameSettings = { duration: 45, halfTime: 1 };
-    playerStats = {};
-    currentMatch = {};
-    
-    // Clear localStorage
-    localStorage.removeItem('footballStats_data');
-    
-    updatePlayersDisplay();
-    updateLineupDisplay();
-    updateFieldDisplay();
-    updateDisplay();
-    updateStatsDisplay();
-    updateTimerDisplay();
-    
-    closeModal('confirmResetModal');
-    showNotification('Données réinitialisées !', 'success');
-}
-
-// Gestion du timer
-function toggleTimer() {
-    if (timer.isRunning) {
-        pauseTimer();
-    } else {
-        startTimer();
-    }
-}
-
-function startTimer() {
-    if (!timer.interval) {
-        timer.interval = setInterval(() => {
-            timer.seconds++;
-            if (timer.seconds >= 60) {
-                timer.minutes++;
-                timer.seconds = 0;
-            }
-            updateTimerDisplay();
-            saveData();
-        }, 1000);
-    }
-    timer.isRunning = true;
-    updateTimerDisplay();
-}
-
-function pauseTimer() {
-    timer.isRunning = false;
-    updateTimerDisplay();
-}
-
-function resetTimer() {
-    if (timer.interval) {
-        clearInterval(timer.interval);
-        timer.interval = null;
-    }
-    timer.minutes = 0;
-    timer.seconds = 0;
-    timer.isRunning = false;
-    updateTimerDisplay();
-    saveData();
-}
-
-function updateTimerDisplay() {
-    const timerEl = document.getElementById('timer');
-    if (timerEl) {
-        const minutes = String(timer.minutes).padStart(2, '0');
-        const seconds = String(timer.seconds).padStart(2, '0');
-        timerEl.textContent = `${minutes}:${seconds}`;
-        
-        // Mettre à jour le bouton play/pause
-        const toggleBtn = timerEl.parentElement?.querySelector('button');
-        if (toggleBtn) {
-            toggleBtn.textContent = timer.isRunning ? '⏸️' : '▶️';
-        }
-    }
-}
-
-// Gestion des événements
-function addEvent(icon, description, player, team = null) {
+/**
+ * Ajout d'un événement de match
+ */
+function addMatchEvent(type, data) {
     const event = {
-        id: Date.now(),
-        time: `${String(timer.minutes).padStart(2, '0')}:${String(timer.seconds).padStart(2, '0')}`,
-        icon: icon,
-        description: description,
-        player: player,
-        team: team,
-        timestamp: new Date().toISOString()
+        id: Date.now() + Math.random(),
+        type: type,
+        time: formatTime(appState.time),
+        timestamp: new Date().toISOString(),
+        half: appState.half,
+        ...data
     };
     
-    events.unshift(event); // Ajouter au début
-    updateTimelineDisplay();
-    saveData();
+    appState.events.unshift(event); // Ajouter en début de liste
     
-    // Mettre à jour le live si activé
-    if (currentMatch.liveId) {
-        updateLiveData();
+    // Mettre à jour les statistiques
+    updateStatsFromEvent(event);
+    
+    // Sauvegarder
+    saveAppState();
+    
+    // Mettre à jour le live si actif
+    updateLiveIfActive();
+    
+    console.log('Événement ajouté:', event);
+    return event;
+}
+
+/**
+ * Mise à jour des statistiques à partir d'un événement
+ */
+function updateStatsFromEvent(event) {
+    if (event.playerId && event.playerId !== 'opponent') {
+        const player = appState.players.find(p => p.id === event.playerId);
+        if (player) {
+            switch (event.type) {
+                case 'goal':
+                    player.stats.goals++;
+                    if (event.isTeam) appState.score.team++;
+                    break;
+                case 'shot':
+                    player.stats.shots++;
+                    break;
+                case 'card':
+                    player.stats.cards++;
+                    if (event.cardType === 'red') {
+                        player.status = 'sanctioned';
+                    }
+                    break;
+                case 'foul':
+                    player.stats.fouls++;
+                    break;
+                case 'save':
+                    player.stats.saves++;
+                    break;
+                case 'freeKick':
+                    player.stats.freeKicks++;
+                    break;
+            }
+        }
+    } else if (event.type === 'goal' && !event.isTeam) {
+        appState.score.opponent++;
     }
 }
 
-function updateTimelineDisplay() {
-    const timeline = document.getElementById('timeline');
-    if (!timeline) return;
-    
-    timeline.innerHTML = '<h3>⏱️ Chronologie du match</h3>';
-    
-    if (events.length === 0) {
-        timeline.innerHTML += '<p style="text-align: center; color: #bdc3c7;">Aucun événement</p>';
-        return;
-    }
-    
-    events.forEach(event => {
-        const div = document.createElement('div');
-        div.className = `timeline-event ${event.team ? event.team + '-event' : ''}`;
-        div.innerHTML = `
-            <strong>${event.time}</strong> ${event.icon} 
-            <strong>${event.player}</strong> - ${event.description}
-        `;
-        timeline.appendChild(div);
-    });
+/**
+ * Formatage du temps de match
+ */
+function formatTime(minutes) {
+    const displayMinutes = Math.floor(minutes);
+    const seconds = Math.floor((minutes - displayMinutes) * 60);
+    return `${displayMinutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
-// Mise à jour de l'affichage
-function updateDisplay() {
-    updateMatchDisplay();
-    updateTimelineDisplay();
-    updateTimerDisplay();
+// ===== GESTION DU LIVE =====
+
+/**
+ * Vérification du mode live
+ */
+function checkLiveMode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const liveId = urlParams.get('live');
+    const binId = urlParams.get('bin');
+    
+    if (liveId) {
+        console.log('Mode live détecté:', liveId);
+        initializeLiveMode(liveId, binId);
+        return true;
+    }
+    return false;
 }
 
-function updateMatchDisplay() {
-    // Mettre à jour les noms d'équipes
-    const team1Display = document.getElementById('team1Display');
-    const team2Display = document.getElementById('team2Display');
-    
-    if (team1Display && currentMatch.team1) {
-        team1Display.textContent = currentMatch.team1;
-    }
-    if (team2Display && currentMatch.team2) {
-        team2Display.textContent = currentMatch.team2;
-    }
-    
-    // Mettre à jour les scores
-    const team1Score = document.getElementById('team1Score');
-    const team2Score = document.getElementById('team2Score');
-    
-    if (team1Score) team1Score.textContent = stats.team1.goals;
-    if (team2Score) team2Score.textContent = stats.team2.goals;
-}
-
-function updateStatsDisplay() {
-    const container = document.getElementById('statsGrid');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <div class="stat-card">
-            <h3>${currentMatch.team1 || 'Mon Équipe'}</h3>
-            <div class="stat-item">
-                <span>Buts</span>
-                <span class="stat-value">${stats.team1.goals}</span>
-            </div>
-            <div class="stat-item">
-                <span>Tirs</span>
-                <span class="stat-value">${stats.team1.shots}</span>
-            </div>
-            <div class="stat-item">
-                <span>Tirs cadrés</span>
-                <span class="stat-value">${stats.team1.shotsOn}</span>
-            </div>
-            <div class="stat-item">
-                <span>Tirs non cadrés</span>
-                <span class="stat-value">${stats.team1.shotsOff}</span>
-            </div>
-            <div class="stat-item">
-                <span>Arrêts gardienne</span>
-                <span class="stat-value">${stats.team1.saves}</span>
-            </div>
-            <div class="stat-item">
-                <span>Fautes</span>
-                <span class="stat-value">${stats.team1.fouls}</span>
-            </div>
-            <div class="stat-item">
-                <span>Coups francs</span>
-                <span class="stat-value">${stats.team1.freeKicks}</span>
-            </div>
-            <div class="stat-item">
-                <span>Cartons jaunes</span>
-                <span class="stat-value">${stats.team1.yellowCards}</span>
-            </div>
-            <div class="stat-item">
-                <span>Cartons rouges</span>
-                <span class="stat-value">${stats.team1.redCards}</span>
-            </div>
-            <div class="stat-item">
-                <span>Cartons blancs</span>
-                <span class="stat-value">${stats.team1.whiteCards}</span>
-            </div>
-        </div>
+/**
+ * Initialisation du mode live
+ */
+async function initializeLiveMode(liveId, binId = null) {
+    try {
+        const liveData = await getLiveData(liveId, binId);
         
-        <div class="stat-card">
-            <h3>${currentMatch.team2 || 'Équipe Adverse'}</h3>
-            <div class="stat-item">
-                <span>Buts</span>
-                <span class="stat-value">${stats.team2.goals}</span>
-            </div>
-            <div class="stat-item">
-                <span>Tirs</span>
-                <span class="stat-value">${stats.team2.shots}</span>
-            </div>
-            <div class="stat-item">
-                <span>Tirs cadrés</span>
-                <span class="stat-value">${stats.team2.shotsOn}</span>
-            </div>
-            <div class="stat-item">
-                <span>Tirs non cadrés</span>
-                <span class="stat-value">${stats.team2.shotsOff}</span>
-            </div>
-            <div class="stat-item">
-                <span>Arrêts gardienne</span>
-                <span class="stat-value">${stats.team2.saves}</span>
-            </div>
-            <div class="stat-item">
-                <span>Fautes</span>
-                <span class="stat-value">${stats.team2.fouls}</span>
-            </div>
-            <div class="stat-item">
-                <span>Coups francs</span>
-                <span class="stat-value">${stats.team2.freeKicks}</span>
-            </div>
-            <div class="stat-item">
-                <span>Cartons jaunes</span>
-                <span class="stat-value">${stats.team2.yellowCards}</span>
-            </div>
-            <div class="stat-item">
-                <span>Cartons rouges</span>
-                <span class="stat-value">${stats.team2.redCards}</span>
-            </div>
-            <div class="stat-item">
-                <span>Cartons blancs</span>
-                <span class="stat-value">${stats.team2.whiteCards}</span>
-            </div>
-        </div>
-    `;
-}
-
-// Affichage des stats individuelles
-function updatePlayerStatsDisplay() {
-    const container = document.getElementById('playerStatsGrid');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    players.forEach(player => {
-        const stats = playerStats[player.id];
-        if (!stats) return;
-        
-        const div = document.createElement('div');
-        div.className = 'player-stat-card';
-        div.innerHTML = `
-            <h4>${getPositionIcon(player.position)} ${player.name}</h4>
-            <div class="player-stat-item">
-                <span>Buts</span>
-                <span>${stats.goals}</span>
-            </div>
-            <div class="player-stat-item">
-                <span>Passes décisives</span>
-                <span>${stats.assists}</span>
-            </div>
-            <div class="player-stat-item">
-                <span>Tirs</span>
-                <span>${stats.shots}</span>
-            </div>
-            <div class="player-stat-item">
-                <span>Arrêts</span>
-                <span>${stats.saves}</span>
-            </div>
-            <div class="player-stat-item">
-                <span>Coups francs</span>
-                <span>${stats.freeKicks}</span>
-            </div>
-            <div class="player-stat-item">
-                <span>Fautes</span>
-                <span>${stats.fouls}</span>
-            </div>
-            <div class="player-stat-item">
-                <span>Cartons</span>
-                <span>${stats.cards.length}</span>
-            </div>
-        `;
-        container.appendChild(div);
-    });
-}
-
-// Gestion des compositions
-function saveComposition() {
-    const name = document.getElementById('compositionName').value.trim();
-    if (!name) {
-        showNotification('Veuillez entrer un nom pour la composition', 'error');
-        return;
+        if (liveData) {
+            // Charger les données live
+            appState.events = liveData.events || [];
+            appState.score = liveData.score || { team: 0, opponent: 0 };
+            appState.time = liveData.time || 0;
+            appState.half = liveData.half || 1;
+            appState.players = liveData.players || [];
+            
+            // Masquer les contrôles d'édition
+            hideEditControls();
+            
+            // Démarrer la mise à jour automatique
+            startLiveUpdates(liveId, binId);
+            
+            showNotification('Mode spectateur activé - Suivi live du match', 'info');
+        } else {
+            showNotification('Impossible de charger les données du match', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur initialisation mode live:', error);
+        showNotification('Erreur lors du chargement du match live', 'error');
     }
-    
-    const composition = {
-        name: name,
-        players: players,
-        startingEleven: startingEleven,
-        timestamp: new Date().toISOString()
-    };
-    
-    localStorage.setItem('composition_' + name, JSON.stringify(composition));
-    loadCompositionsList();
-    showNotification('Composition sauvegardée !', 'success');
 }
 
-function loadComposition() {
-    const select = document.getElementById('compositionsList');
-    const selectedName = select.value;
+/**
+ * Masquer les contrôles d'édition en mode live
+ */
+function hideEditControls() {
+    const editElements = document.querySelectorAll('.edit-only');
+    editElements.forEach(el => el.style.display = 'none');
     
-    if (!selectedName) {
-        showNotification('Veuillez sélectionner une composition', 'error');
-        return;
-    }
-    
-    const saved = localStorage.getItem('composition_' + selectedName);
-    if (saved) {
+    // Ajouter une classe pour le mode spectateur
+    document.body.classList.add('spectator-mode');
+}
+
+/**
+ * Démarrage des mises à jour live
+ */
+function startLiveUpdates(liveId, binId) {
+    setInterval(async () => {
         try {
-            const composition = JSON.parse(saved);
-            players = composition.players || [];
-            startingEleven = composition.startingEleven || [];
-            
-            // Réinitialiser les stats des joueurs
-            playerStats = {};
-            players.forEach(player => {
-                playerStats[player.id] = { 
-                    goals: 0, assists: 0, shots: 0, cards: [], saves: 0, freeKicks: 0, fouls: 0 
-                };
-            });
-            
-            updatePlayersDisplay();
-            updateLineupDisplay();
-            saveData();
-            showNotification('Composition chargée !', 'success');
+            const liveData = await getLiveData(liveId, binId);
+            if (liveData && liveData.lastUpdated !== appState.lastUpdate) {
+                // Mettre à jour les données
+                appState.events = liveData.events || appState.events;
+                appState.score = liveData.score || appState.score;
+                appState.time = liveData.time || appState.time;
+                appState.half = liveData.half || appState.half;
+                appState.lastUpdate = liveData.lastUpdated;
+                
+                // Mettre à jour l'affichage
+                updateAllDisplays();
+                
+                console.log('Données live mises à jour');
+            }
         } catch (error) {
-            showNotification('Erreur lors du chargement de la composition', 'error');
+            console.error('Erreur mise à jour live:', error);
+        }
+    }, 5000); // Mise à jour toutes les 5 secondes
+}
+
+/**
+ * Mise à jour du live si actif
+ */
+async function updateLiveIfActive() {
+    if (appState.currentMatch && appState.currentMatch.liveId) {
+        try {
+            await updateLiveData(appState.currentMatch.liveId, {
+                events: appState.events,
+                score: appState.score,
+                time: appState.time,
+                half: appState.half,
+                players: appState.players
+            });
+        } catch (error) {
+            console.error('Erreur mise à jour live:', error);
         }
     }
 }
 
-function loadCompositionsList() {
-    const select = document.getElementById('compositionsList');
-    if (!select) return;
-    
-    select.innerHTML = '<option value="">Sélectionner une composition...</option>';
-    
-    Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('composition_')) {
-            const name = key.replace('composition_', '');
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            select.appendChild(option);
-        }
-    });
-}
+// ===== NOTIFICATIONS =====
 
-// Mi-temps
-function showHalfTimeConfirm() {
-    document.getElementById('confirmHalfTimeModal').style.display = 'block';
-}
-
-function confirmHalfTime() {
-    gameSettings.halfTime = gameSettings.halfTime === 1 ? 2 : 1;
-    resetTimer();
+/**
+ * Affichage d'une notification
+ */
+function showNotification(message, type = 'info', duration = 3000) {
+    // Supprimer les notifications existantes
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notif => notif.remove());
     
-    const halfTimeText = gameSettings.halfTime === 1 ? '1ère' : '2ème';
-    addEvent('🔄', `${halfTimeText} mi-temps`, 'Arbitre');
-    
-    closeModal('confirmHalfTimeModal');
-    showNotification(`${halfTimeText} mi-temps commencée !`, 'info');
-    saveData();
-}
-
-// Gestion des modales
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    
-    // Reset des sélections selon le modal
-    if (modalId === 'actionModal' || modalId === 'actionChoiceModal') {
-        selectedPlayerId = null;
-        selectedCardType = null;
-        currentActionType = null;
-        currentActionTeam = null;
-    } else if (modalId === 'saveModal') {
-        selectedSavePlayerId = null;
-    } else if (modalId === 'freeKickModal') {
-        selectedFreeKickPlayerId = null;
-    } else if (modalId === 'substitutionModal') {
-        selectedOutPlayer = null;
-        selectedInPlayer = null;
-    }
-}
-
-// S'assurer que les variables globales des actions sont définies
-if (typeof selectedPlayerId === 'undefined') {
-    var selectedPlayerId = null;
-}
-if (typeof selectedCardType === 'undefined') {
-    var selectedCardType = null;
-}
-if (typeof currentActionType === 'undefined') {
-    var currentActionType = null;
-}
-if (typeof currentActionTeam === 'undefined') {
-    var currentActionTeam = null;
-}
-if (typeof selectedSavePlayerId === 'undefined') {
-    var selectedSavePlayerId = null;
-}
-if (typeof selectedFreeKickPlayerId === 'undefined') {
-    var selectedFreeKickPlayerId = null;
-}
-
-// Notifications
-function showNotification(message, type = 'info') {
-    // Créer la notification
     const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 1rem 2rem;
-        border-radius: 8px;
-        color: white;
-        font-weight: bold;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    // Couleur selon le type
-    switch(type) {
-        case 'success':
-            notification.style.background = '#2ecc71';
-            break;
-        case 'error':
-            notification.style.background = '#e74c3c';
-            break;
-        case 'warning':
-            notification.style.background = '#f39c12';
-            break;
-        default:
-            notification.style.background = '#3498db';
-    }
-    
+    notification.className = `notification ${type}`;
     notification.textContent = message;
+    
     document.body.appendChild(notification);
     
-    // Supprimer après 3 secondes
     setTimeout(() => {
         notification.remove();
-    }, 3000);
+    }, duration);
 }
 
-// Sauvegarde et chargement
-function saveData() {
-    const data = {
-        players,
-        startingEleven,
-        currentMatch,
-        gameSettings,
-        stats,
-        events,
-        playerStats,
-        timer: {
-            minutes: timer.minutes,
-            seconds: timer.seconds,
-            isRunning: timer.isRunning
-        },
-        timestamp: new Date().toISOString()
-    };
+// ===== UTILITAIRES D'AFFICHAGE =====
+
+/**
+ * Mise à jour de tous les affichages
+ */
+function updateAllDisplays() {
+    updateScoreDisplay();
+    updateTimeDisplay();
+    updateEventsDisplay();
+    updatePlayersDisplay();
+    updateStatsDisplay();
+}
+
+/**
+ * Mise à jour de l'affichage du score
+ */
+function updateScoreDisplay() {
+    const teamScoreEl = document.getElementById('teamScore');
+    const opponentScoreEl = document.getElementById('opponentScore');
     
-    localStorage.setItem('footballStats_data', JSON.stringify(data));
+    if (teamScoreEl) teamScoreEl.textContent = appState.score.team;
+    if (opponentScoreEl) opponentScoreEl.textContent = appState.score.opponent;
 }
 
-function loadData() {
-    const saved = localStorage.getItem('footballStats_data');
-    if (saved) {
-        try {
-            const data = JSON.parse(saved);
+/**
+ * Mise à jour de l'affichage du temps
+ */
+function updateTimeDisplay() {
+    const timeEl = document.getElementById('matchTime');
+    const halfEl = document.getElementById('halfDisplay');
+    
+    if (timeEl) timeEl.textContent = formatTime(appState.time);
+    if (halfEl) halfEl.textContent = appState.half === 1 ? '1ère Mi-temps' : '2ème Mi-temps';
+}
+
+/**
+ * Mise à jour de l'affichage des événements
+ */
+function updateEventsDisplay() {
+    const eventsContainers = ['eventsList', 'liveEventsList'];
+    
+    eventsContainers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        appState.events.forEach(event => {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event-item';
             
-            players = data.players || [];
-            startingEleven = data.startingEleven || [];
-            currentMatch = data.currentMatch || {};
-            gameSettings = data.gameSettings || { duration: 45, halfTime: 1 };
-            stats = data.stats || {
-                team1: { goals: 0, shots: 0, shotsOn: 0, shotsOff: 0, saves: 0, fouls: 0, freeKicks: 0, yellowCards: 0, redCards: 0, whiteCards: 0 },
-                team2: { goals: 0, shots: 0, shotsOn: 0, shotsOff: 0, saves: 0, fouls: 0, freeKicks: 0, yellowCards: 0, redCards: 0, whiteCards: 0 }
-            };
-            events = data.events || [];
-            playerStats = data.playerStats || {};
+            const icon = getEventIcon(event);
+            const text = getEventText(event);
             
-            if (data.timer) {
-                timer.minutes = data.timer.minutes || 0;
-                timer.seconds = data.timer.seconds || 0;
-                timer.isRunning = false; // Ne pas reprendre automatiquement
-            }
+            eventDiv.innerHTML = `
+                <span class="event-time">${event.time}</span>
+                <span class="event-icon">${icon}</span>
+                <span class="event-text">${text}</span>
+            `;
             
-            console.log('Données chargées depuis localStorage');
-        } catch (error) {
-            console.error('Erreur lors du chargement des données:', error);
-        }
+            container.appendChild(eventDiv);
+        });
+    });
+}
+
+/**
+ * Obtenir l'icône d'un événement
+ */
+function getEventIcon(event) {
+    const icons = {
+        'goal': '⚽',
+        'shot': '🎯',
+        'card': event.cardType === 'yellow' ? '🟨' : event.cardType === 'red' ? '🟥' : '⚪',
+        'foul': '⚠️',
+        'save': '🧤',
+        'freeKick': '⚽',
+        'substitution': '🔄',
+        'halfTime': '⏱️'
+    };
+    return icons[event.type] || '📝';
+}
+
+/**
+ * Obtenir le texte d'un événement
+ */
+function getEventText(event) {
+    const player = appState.players.find(p => p.id === event.playerId);
+    const playerName = player ? player.name : (event.playerId === 'opponent' ? 'Équipe Adverse' : 'Joueur');
+    
+    switch (event.type) {
+        case 'goal':
+            return `But de ${playerName}`;
+        case 'shot':
+            return `Tir de ${playerName}`;
+        case 'card':
+            const cardName = event.cardType === 'yellow' ? 'jaune' : event.cardType === 'red' ? 'rouge' : 'blanc';
+            return `Carton ${cardName} pour ${playerName}`;
+        case 'foul':
+            return `Faute de ${playerName}`;
+        case 'save':
+            return `Arrêt de ${playerName} (${event.saveType === 'line' ? 'sur sa ligne' : 'en sortie'})`;
+        case 'freeKick':
+            return `Coup de pied arrêté - ${playerName}`;
+        case 'substitution':
+            return event.description || 'Substitution';
+        case 'halfTime':
+            return event.description || 'Mi-temps';
+        default:
+            return event.description || 'Événement';
     }
 }
 
-// Événements au clic sur les modales (fermer en cliquant à l'extérieur)
-window.addEventListener('click', function(event) {
-    if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
+/**
+ * Mise à jour de l'affichage des joueurs
+ */
+function updatePlayersDisplay() {
+    // Cette fonction sera implémentée dans chaque page spécifique
+    if (typeof updateSpecificPlayersDisplay === 'function') {
+        updateSpecificPlayersDisplay();
     }
-});
+}
 
-// CSS pour l'animation des notifications
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+/**
+ * Mise à jour de l'affichage des statistiques
+ */
+function updateStatsDisplay() {
+    // Cette fonction sera implémentée dans la page des statistiques
+    if (typeof updateSpecificStatsDisplay === 'function') {
+        updateSpecificStatsDisplay();
     }
-`;
-document.head.appendChild(style);
+}
+
+// ===== CHRONOMÈTRE =====
+
+/**
+ * Démarrage du chronomètre de match
+ */
+function startMatchTimer() {
+    if (appState.isPlaying) return;
+    
+    appState.isPlaying = true;
+    appState.timerInterval = setInterval(() => {
+        appState.time += 1/60; // Ajouter 1 seconde (en minutes)
+        updateTimeDisplay();
+        saveAppState();
+    }, 1000);
+    
+    console.log('Chronomètre démarré');
+}
+
+/**
+ * Arrêt du chronomètre de match
+ */
+function stopMatchTimer() {
+    if (!appState.isPlaying) return;
+    
+    appState.isPlaying = false;
+    if (appState.timerInterval) {
+        clearInterval(appState.timerInterval);
+        appState.timerInterval = null;
+    }
+    
+    console.log('Chronomètre arrêté');
+}
+
+/**
+ * Reset du chronomètre
+ */
+function resetMatchTimer() {
+    stopMatchTimer();
+    appState.time = 0;
+    updateTimeDisplay();
+    saveAppState();
+    
+    console.log('Chronomètre remis à zéro');
+}
+
+// ===== EXPORT DES FONCTIONS GLOBALES =====
+
+// Fonctions disponibles globalement
+window.footballApp = {
+    // État
+    getState: () => appState,
+    saveState: saveAppState,
+    
+    // Joueurs
+    addPlayer: addPlayerToTeam,
+    removePlayer: removePlayerFromTeam,
+    updatePlayerStatus,
+    getPlayersByStatus,
+    getPositionIcon,
+    
+    // Événements
+    addEvent: addMatchEvent,
+    formatTime,
+    
+    // Affichage
+    updateAllDisplays,
+    showNotification,
+    
+    // Modales
+    closeAllModals,
+    
+    // Chrono
+    startTimer: startMatchTimer,
+    stopTimer: stopMatchTimer,
+    resetTimer: resetMatchTimer,
+    
+    // Live
+    updateLive: updateLiveIfActive
+};
+
+console.log('🎯 Football Stats App - Fonctions principales chargées');

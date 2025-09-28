@@ -3,414 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Football Stats - App Complète</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <title>Football Stats - Manager</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <h1>⚽ Football Stats</h1>
-            <div class="nav-menu">
-                <button class="nav-btn" onclick="showPage('setup')">⚙️ Configuration</button>
-                <button class="nav-btn" onclick="showPage('lineup')">👥 Composition</button>
-                <button class="nav-btn" onclick="showPage('match')">🏟️ Match</button>
-                <button class="nav-btn" onclick="showPage('stats')">📊 Statistiques</button>
-                <button class="nav-btn" onclick="showPage('live')">📡 Live</button>
-            </div>
-        </div>
-    </nav>
+    <div class="container">
+        <header class="header">
+            <h1>⚽ Football Stats Manager</h1>
+            <p>Gestion complète des statistiques de match</p>
+        </header>
 
-    <!-- Page Configuration -->
-    <div id="setup" class="page active">
-        <div class="page-container">
-            <h2>⚙️ Configuration des Équipes</h2>
-            
-            <div class="team-card">
-                <h3>👥 Composition de votre équipe</h3>
-                <div class="form-group">
-                    <label for="playerName">Nom de la joueuse:</label>
-                    <input type="text" id="playerName" placeholder="Entrez le nom">
-                </div>
-                <div class="form-group">
-                    <label for="playerPosition">Position:</label>
-                    <select id="playerPosition">
-                        <option value="gardienne">🥅 Gardienne</option>
-                        <option value="defenseure">🛡️ Défenseure</option>
-                        <option value="milieu">⚡ Milieu</option>
-                        <option value="attaquante">⚽ Attaquante</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" onclick="addPlayer()">➕ Ajouter Joueuse</button>
-                
-                <div class="players-list" id="playersList">
-                    <!-- Les joueuses seront affichées ici -->
-                </div>
-            </div>
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <a href="index.html" class="nav-link active">🏠 Accueil</a>
+            <a href="pages/team.html" class="nav-link">👥 Équipe</a>
+            <a href="pages/composition.html" class="nav-link">📋 Compo</a>
+            <a href="pages/match.html" class="nav-link">⚽ Match</a>
+            <a href="pages/live.html" class="nav-link">📺 Live</a>
+            <a href="pages/stats.html" class="nav-link">📊 Stats</a>
+        </nav>
 
-            <div class="team-card">
-                <h3>💾 Gestion des Compositions</h3>
-                <div class="form-group">
-                    <label for="compositionName">Nom de la composition:</label>
-                    <input type="text" id="compositionName" placeholder="Ex: Équipe Titulaire">
-                </div>
-                <button class="btn btn-primary" onclick="saveComposition()">💾 Sauvegarder Composition</button>
-                <button class="btn btn-secondary" onclick="loadComposition()">📂 Charger Composition</button>
-                <select id="compositionsList" style="width: 100%; margin: 10px 0;"></select>
-            </div>
-
-            <div class="team-card">
-                <h3>⚙️ Paramètres du Match</h3>
-                <div class="form-group">
-                    <label for="team1Name">Nom de votre équipe:</label>
-                    <input type="text" id="team1Name" value="Mon Équipe">
-                </div>
-                <div class="form-group">
-                    <label for="team2Name">Équipe adverse:</label>
-                    <input type="text" id="team2Name" value="Équipe Adverse">
-                </div>
-                <div class="form-group">
-                    <label for="venue">Lieu:</label>
-                    <input type="text" id="venue" value="Terrain">
-                </div>
-                <div class="form-group">
-                    <label for="duration">Durée mi-temps (minutes):</label>
-                    <input type="number" id="duration" value="45" min="1" max="90">
-                </div>
-            </div>
-            
+        <!-- Page d'accueil -->
+        <main class="main-content">
             <div class="team-card">
                 <h2>🎮 Actions Rapides</h2>
-                <button class="btn btn-primary" onclick="startNewMatch()" style="width: 100%; margin: 10px 0;">
-                    🆕 Nouveau Match
-                </button>
-                <button class="btn btn-secondary" onclick="showConfirmReset()" style="width: 100%; margin: 10px 0;">
-                    🔄 Reset Complet
-                </button>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" onclick="startNewMatch()">
+                        🆕 Nouveau Match
+                    </button>
+                    <button class="btn btn-secondary" onclick="showConfirmReset()">
+                        🔄 Reset Complet
+                    </button>
+                    <button class="btn btn-warning" onclick="loadMatchFile()">
+                        📂 Charger Sauvegarde
+                    </button>
+                    <button class="btn btn-success" onclick="downloadCurrentMatch()">
+                        💾 Sauvegarder Match
+                    </button>
+                </div>
+                <input type="file" id="fileInput" accept=".json" style="display: none;">
             </div>
-        </div>
-    </div>
 
-    <!-- Page Composition d'équipe -->
-    <div id="lineup" class="page">
-        <div class="page-container">
-            <h2>👥 Composition de l'Équipe</h2>
-            
             <div class="team-card">
-                <h3>🏟️ Sélectionner votre 11 de départ</h3>
-                <p style="margin-bottom: 20px;">Cliquez sur les joueuses pour les sélectionner comme titulaires (maximum 11)</p>
-                
-                <div class="players-grid" id="lineupPlayersList">
-                    <!-- Les joueuses seront affichées ici -->
+                <h2>📋 Configuration du Match</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="teamName">Nom de votre équipe :</label>
+                        <input type="text" id="teamName" placeholder="Mon Équipe">
+                    </div>
+                    <div class="form-group">
+                        <label for="opponentName">Équipe adverse :</label>
+                        <input type="text" id="opponentName" placeholder="Équipe Adverse">
+                    </div>
+                    <div class="form-group">
+                        <label for="venue">Lieu du match :</label>
+                        <input type="text" id="venue" placeholder="Stade Municipal">
+                    </div>
+                    <div class="form-group">
+                        <label for="matchDate">Date du match :</label>
+                        <input type="datetime-local" id="matchDate">
+                    </div>
                 </div>
-                
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-primary" onclick="saveLineup()">💾 Confirmer la Composition</button>
-                    <button class="btn btn-secondary" onclick="clearLineup()">🔄 Effacer la Sélection</button>
-                </div>
-                
-                <div id="lineupSummary" style="margin-top: 20px; display: none;">
-                    <h4>📋 Composition Confirmée:</h4>
-                    <div id="lineupDisplay"></div>
-                </div>
+                <button class="btn btn-primary" onclick="saveMatchConfig()">💾 Sauvegarder Configuration</button>
             </div>
 
-            <!-- Terrain de football visuel -->
             <div class="team-card">
-                <h3>🏟️ Terrain</h3>
-                <div class="field-container">
-                    <div class="field-section">
-                        <h4>Sur le terrain</h4>
-                        <div id="fieldPlayers" class="field-players">
-                            <!-- Joueurs sur le terrain -->
-                        </div>
-                    </div>
-                    <div class="field-section">
-                        <h4>Banc de touche</h4>
-                        <div id="benchPlayers" class="bench-players">
-                            <!-- Joueurs sur le banc -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Page Match -->
-    <div id="match" class="page">
-        <div class="page-container">
-            <div class="match-header">
-                <div class="teams-display">
-                    <div class="team team1">
-                        <h3 id="team1Display">Mon Équipe</h3>
-                        <div class="score" id="team1Score">0</div>
-                    </div>
-                    <div class="timer-section">
-                        <div class="timer" id="timer">00:00</div>
-                        <div class="timer-controls">
-                            <button class="btn btn-small" onclick="toggleTimer()">▶️</button>
-                            <button class="btn btn-small" onclick="showHalfTimeConfirm()">🔄 Mi-temps</button>
-                            <button class="btn btn-small" onclick="resetTimer()">⏹️</button>
-                        </div>
-                    </div>
-                    <div class="team team2">
-                        <h3 id="team2Display">Équipe Adverse</h3>
-                        <div class="score" id="team2Score">0</div>
-                    </div>
+                <h2>📊 Statistiques Récentes</h2>
+                <div id="recentStats" class="stats-preview">
+                    <p>Aucune donnée disponible. Commencez par créer votre équipe !</p>
                 </div>
             </div>
 
-            <!-- Actions du Match - 2 boutons par ligne -->
-            <div class="actions-grid">
-                <div class="action-card" onclick="showActionChoiceModal('goal')">
-                    <div class="action-icon">⚽</div>
-                    <div>But</div>
-                </div>
-                <div class="action-card" onclick="showActionChoiceModal('shot_on')">
-                    <div class="action-icon">🎯</div>
-                    <div>Tir Cadré</div>
-                </div>
-                
-                <div class="action-card" onclick="showActionChoiceModal('shot_off')">
-                    <div class="action-icon">📐</div>
-                    <div>Tir Non Cadré</div>
-                </div>
-                <div class="action-card" onclick="showActionChoiceModal('card')">
-                    <div class="action-icon">🟨</div>
-                    <div>Carton</div>
-                </div>
-                
-                <div class="action-card" onclick="showSaveModal()">
-                    <div class="action-icon">🧤</div>
-                    <div>Arrêt Gardienne</div>
-                </div>
-                <div class="action-card" onclick="showActionChoiceModal('foul')">
-                    <div class="action-icon">⚠️</div>
-                    <div>Faute</div>
-                </div>
-                
-                <div class="action-card" onclick="showFreeKickModal()">
-                    <div class="action-icon">⚽</div>
-                    <div>Coup Franc</div>
-                </div>
-                <div class="action-card" onclick="showSubstitutionModal()">
-                    <div class="action-icon">🔄</div>
-                    <div>Changement</div>
-                </div>
-            </div>
-
-            <!-- Timeline des événements -->
-            <div class="timeline" id="timeline">
-                <!-- Les événements seront affichés ici -->
-            </div>
-
-            <!-- Lien Live -->
-            <div class="live-section">
-                <button class="btn btn-primary" onclick="generateLiveLink()">📡 Générer Lien Live</button>
-                <input type="text" id="liveLink" placeholder="Le lien live apparaîtra ici..." readonly style="display: none;">
-                <button id="copyLinkBtn" class="btn btn-small" onclick="copyLiveLink()" style="display: none;">📋 Copier</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Page Statistiques -->
-    <div id="stats" class="page">
-        <div class="page-container">
-            <h2>📊 Statistiques du Match</h2>
-            <div class="stats-grid" id="statsGrid">
-                <!-- Les statistiques seront affichées ici -->
-            </div>
-            
             <div class="team-card">
-                <h3>👥 Statistiques Individuelles</h3>
-                <div id="playerStatsGrid">
-                    <!-- Stats des joueuses -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Page Live -->
-    <div id="live" class="page">
-        <div class="page-container">
-            <h2>📡 Suivi Live</h2>
-            <div id="liveContent">
-                <div id="waitingMessage" class="waiting-message">
-                    <h3>En attente de données...</h3>
-                    <p>Le match n'a pas encore commencé ou aucun événement n'a été enregistré.</p>
-                </div>
-                <div id="liveMatch" style="display: none;">
-                    <div class="live-teams">
-                        <div class="team">
-                            <h3 id="liveTeam1">Équipe 1</h3>
-                            <div class="score" id="liveScore1">0</div>
-                        </div>
-                        <div class="timer">
-                            <div id="liveTimer">00:00</div>
-                        </div>
-                        <div class="team">
-                            <h3 id="liveTeam2">Équipe 2</h3>
-                            <div class="score" id="liveScore2">0</div>
+                <h2>📖 Guide Rapide</h2>
+                <div class="guide-steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Créer l'équipe</h3>
+                            <p>Ajoutez vos joueuses dans la section "Équipe"</p>
                         </div>
                     </div>
-                    <div class="live-events" id="liveEvents">
-                        <!-- Événements live -->
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Sélectionner la composition</h3>
+                            <p>Choisissez vos 11 titulaires dans "Compo"</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Lancer le match</h3>
+                            <p>Utilisez l'interface "Match" pour suivre le jeu</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>Partager en live</h3>
+                            <p>Générez un lien pour que d'autres suivent le match</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal Choix Action -->
-    <div id="actionChoiceModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('actionChoiceModal')">&times;</span>
-            <h3 id="actionChoiceTitle">Choisir l'équipe</h3>
-            <div class="choice-buttons">
-                <button class="choice-btn team-choice" onclick="selectTeamForAction('team')">
-                    <span id="teamChoiceText">Mon Équipe</span>
-                </button>
-                <button class="choice-btn opponent-choice" onclick="selectTeamForAction('opponent')">
-                    <span>Équipe Adverse</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Action -->
-    <div id="actionModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('actionModal')">&times;</span>
-            <h3 id="actionModalTitle">Action</h3>
-            
-            <!-- Choix carton pour les cartons -->
-            <div id="cardButtons" class="card-buttons" style="display: none;">
-                <button class="card-btn yellow-card" onclick="selectCardType('yellow')">🟨 Jaune</button>
-                <button class="card-btn red-card" onclick="selectCardType('red')">🟥 Rouge</button>
-                <button class="card-btn white-card" onclick="selectCardType('white')">⬜ Blanc</button>
-            </div>
-            
-            <!-- Sélection joueur -->
-            <div class="players-grid" id="actionPlayerButtons">
-                <!-- Boutons joueurs -->
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <button id="saveActionBtn" class="btn btn-primary" onclick="saveAction()" disabled>
-                    ✅ Valider
-                </button>
-                <button class="btn btn-secondary" onclick="closeModal('actionModal')">
-                    ❌ Annuler
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Arrêt Gardienne -->
-    <div id="saveModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('saveModal')">&times;</span>
-            <h3>🧤 Arrêt de la Gardienne</h3>
-            
-            <div class="players-grid" id="savePlayerButtons">
-                <!-- Boutons des gardiennes -->
-            </div>
-            
-            <div class="form-group">
-                <label>Type d'arrêt:</label>
-                <select id="saveType">
-                    <option value="line">Sur sa ligne</option>
-                    <option value="out">En sortie</option>
-                </select>
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <button id="saveSaveBtn" class="btn btn-primary" onclick="saveGoalkeeperSave()" disabled>💾 Enregistrer</button>
-                <button class="btn btn-secondary" onclick="closeModal('saveModal')">❌ Annuler</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Coup Franc -->
-    <div id="freeKickModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('freeKickModal')">&times;</span>
-            <h3>⚽ Coup de Pied Arrêté</h3>
-            
-            <div class="players-grid" id="freeKickPlayerButtons">
-                <!-- Boutons des joueuses -->
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <button id="saveFreeKickBtn" class="btn btn-primary" onclick="saveFreeKick()" disabled>💾 Enregistrer</button>
-                <button class="btn btn-secondary" onclick="closeModal('freeKickModal')">❌ Annuler</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Changement -->
-    <div id="substitutionModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('substitutionModal')">&times;</span>
-            <h3>🔄 Changement de Joueuse</h3>
-            
-            <div class="substitution-container">
-                <div class="substitution-section">
-                    <h4>Sortante (sur le terrain)</h4>
-                    <div class="players-grid" id="outPlayerButtons">
-                        <!-- Joueurs sur le terrain -->
-                    </div>
-                </div>
-                
-                <div class="substitution-section">
-                    <h4>Entrante (sur le banc)</h4>
-                    <div class="players-grid" id="inPlayerButtons">
-                        <!-- Joueurs sur le banc -->
-                    </div>
-                </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <button id="saveSubstitutionBtn" class="btn btn-primary" onclick="saveSubstitution()" disabled>💾 Effectuer le Changement</button>
-                <button class="btn btn-secondary" onclick="closeModal('substitutionModal')">❌ Annuler</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Confirmation Mi-temps -->
-    <div id="confirmHalfTimeModal" class="modal">
-        <div class="modal-content">
-            <h3>🔄 Confirmer la Mi-temps</h3>
-            <p>Passer à la seconde mi-temps ? Le timer sera remis à zéro.</p>
-            <div style="text-align: center;">
-                <button class="btn btn-primary" onclick="confirmHalfTime()">✅ Oui, Mi-temps</button>
-                <button class="btn btn-secondary" onclick="closeModal('confirmHalfTimeModal')">❌ Annuler</button>
-            </div>
-        </div>
+        </main>
     </div>
 
     <!-- Modal Confirmation Reset -->
     <div id="confirmResetModal" class="modal">
         <div class="modal-content">
-            <h3>🔄 Confirmer la réinitialisation</h3>
-            <p>Êtes-vous sûr de vouloir tout réinitialiser ? Cette action est irréversible.</p>
-            <div style="text-align: center;">
-                <button class="btn btn-primary" onclick="confirmReset()">✅ Oui, réinitialiser</button>
-                <button class="btn btn-secondary" onclick="closeModal('confirmResetModal')">❌ Annuler</button>
+            <span class="close" onclick="closeConfirmReset()">&times;</span>
+            <h3>⚠️ Confirmation Reset</h3>
+            <p>Êtes-vous sûr de vouloir effacer toutes les données ?</p>
+            <p style="color: #e74c3c;">Cette action est irréversible !</p>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="confirmReset()">✅ Oui, effacer tout</button>
+                <button class="btn btn-secondary" onclick="closeConfirmReset()">❌ Annuler</button>
             </div>
         </div>
     </div>
 
     <!-- Scripts -->
+    <script src="js/storage.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/match-actions.js"></script>
-    <script src="js/lineup.js"></script>
-    
     <script>
-        // Initialisation
+        // Initialisation de la page d'accueil
         document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
+            loadMatchConfig();
+            updateRecentStats();
+            
+            // Configuration de la date par défaut
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('matchDate').value = now.toISOString().slice(0, 16);
+        });
+
+        function startNewMatch() {
+            if (confirm('Commencer un nouveau match ? (Les données actuelles seront perdues)')) {
+                const config = getMatchConfig();
+                setMatchConfig(config);
+                
+                // Créer un nouveau match
+                const matchData = {
+                    id: Date.now().toString(),
+                    config: config,
+                    timestamp: new Date().toISOString(),
+                    events: [],
+                    score: { team: 0, opponent: 0 },
+                    time: 0,
+                    half: 1
+                };
+                
+                saveData('currentMatch', matchData);
+                showNotification('Nouveau match créé ! Allez dans "Match" pour commencer.');
+                
+                setTimeout(() => {
+                    window.location.href = 'pages/match.html';
+                }, 2000);
+            }
+        }
+
+        function showConfirmReset() {
+            document.getElementById('confirmResetModal').style.display = 'block';
+        }
+
+        function closeConfirmReset() {
+            document.getElementById('confirmResetModal').style.display = 'none';
+        }
+
+        function confirmReset() {
+            // Reset complet
+            clearAllData();
+            closeConfirmReset();
+            showNotification('Toutes les données ont été effacées !');
+            updateRecentStats();
+        }
+
+        function saveMatchConfig() {
+            const config = getMatchConfig();
+            setMatchConfig(config);
+            showNotification('Configuration sauvegardée !');
+        }
+
+        function getMatchConfig() {
+            return {
+                teamName: document.getElementById('teamName').value.trim() || 'Mon Équipe',
+                opponentName: document.getElementById('opponentName').value.trim() || 'Équipe Adverse',
+                venue: document.getElementById('venue').value.trim() || 'Stade Municipal',
+                matchDate: document.getElementById('matchDate').value
+            };
+        }
+
+        function loadMatchConfig() {
+            const config = getMatchConfig();
+            const saved = loadData('matchConfig');
+            
+            if (saved) {
+                document.getElementById('teamName').value = saved.teamName || config.teamName;
+                document.getElementById('opponentName').value = saved.opponentName || config.opponentName;
+                document.getElementById('venue').value = saved.venue || config.venue;
+                if (saved.matchDate) {
+                    document.getElementById('matchDate').value = saved.matchDate;
+                }
+            }
+        }
+
+        function updateRecentStats() {
+            const container = document.getElementById('recentStats');
+            const players = loadData('players') || [];
+            const currentMatch = loadData('currentMatch');
+            
+            if (players.length === 0 && !currentMatch) {
+                container.innerHTML = '<p>Aucune donnée disponible. Commencez par créer votre équipe !</p>';
+                return;
+            }
+            
+            let html = '';
+            
+            if (players.length > 0) {
+                html += `<div class="stat-item">
+                    <span class="stat-icon">👥</span>
+                    <span class="stat-text">${players.length} joueuses dans l'équipe</span>
+                </div>`;
+                
+                const fieldPlayers = players.filter(p => p.status === 'field').length;
+                if (fieldPlayers > 0) {
+                    html += `<div class="stat-item">
+                        <span class="stat-icon">🏟️</span>
+                        <span class="stat-text">${fieldPlayers} joueuses sur le terrain</span>
+                    </div>`;
+                }
+            }
+            
+            if (currentMatch) {
+                html += `<div class="stat-item">
+                    <span class="stat-icon">⚽</span>
+                    <span class="stat-text">Match en cours: ${currentMatch.config?.teamName || 'Mon Équipe'} vs ${currentMatch.config?.opponentName || 'Équipe Adverse'}</span>
+                </div>`;
+                
+                html += `<div class="stat-item">
+                    <span class="stat-icon">🕐</span>
+                    <span class="stat-text">Score: ${currentMatch.score?.team || 0} - ${currentMatch.score?.opponent || 0}</span>
+                </div>`;
+            }
+            
+            container.innerHTML = html || '<p>Aucune donnée disponible.</p>';
+        }
+
+        function loadMatchFile() {
+            document.getElementById('fileInput').click();
+        }
+
+        function downloadCurrentMatch() {
+            const allData = {
+                players: loadData('players') || [],
+                currentMatch: loadData('currentMatch'),
+                matchConfig: loadData('matchConfig'),
+                timestamp: new Date().toISOString()
+            };
+            
+            if (!allData.players.length && !allData.currentMatch) {
+                showNotification('Aucune donnée à sauvegarder !', 'error');
+                return;
+            }
+            
+            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `football_stats_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Données sauvegardées !');
+        }
+
+        // Gestion du chargement de fichier
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.players) {
+                        saveData('players', data.players);
+                    }
+                    if (data.currentMatch) {
+                        saveData('currentMatch', data.currentMatch);
+                    }
+                    if (data.matchConfig) {
+                        saveData('matchConfig', data.matchConfig);
+                        loadMatchConfig();
+                    }
+                    
+                    updateRecentStats();
+                    showNotification('Données chargées avec succès !');
+                } catch (error) {
+                    showNotification('Erreur lors du chargement du fichier !', 'error');
+                }
+            };
+            reader.readAsText(file);
         });
     </script>
 </body>

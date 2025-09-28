@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Équipe - Football Stats</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>👥 Gestion de l'Équipe</h1>
+            <p>Créez et gérez votre équipe de football</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <a href="../index.html" class="nav-link">🏠 Accueil</a>
+            <a href="team.html" class="nav-link active">👥 Équipe</a>
+            <a href="composition.html" class="nav-link">📋 Compo</a>
+            <a href="match.html" class="nav-link">⚽ Match</a>
+            <a href="live.html" class="nav-link">📺 Live</a>
+            <a href="stats.html" class="nav-link">📊 Stats</a>
+        </nav>
+
+        <!-- Contenu principal -->
+        <main class="main-content">
+            
+            <!-- Ajout de joueuse -->
+            <div class="team-card">
+                <h2>➕ Ajouter une Joueuse</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="playerName">Nom de la joueuse :</label>
+                        <input type="text" id="playerName" placeholder="Sarah Dubois" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="playerPosition">Position :</label>
+                        <select id="playerPosition" required>
+                            <option value="">Sélectionner une position</option>
+                            <option value="gardienne">🥅 Gardienne</option>
+                            <option value="défenseuse">🛡️ Défenseuse</option>
+                            <option value="milieu">⚙️ Milieu de terrain</option>
+                            <option value="attaquante">⚽ Attaquante</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="playerNumber">Numéro de maillot (optionnel) :</label>
+                        <input type="number" id="playerNumber" min="1" max="99" placeholder="10">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="addNewPlayer()">➕ Ajouter à l'équipe</button>
+            </div>
+
+            <!-- Statistiques de l'équipe -->
+            <div class="team-card">
+                <h2>📊 Statistiques de l'Équipe</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalPlayers">0</div>
+                        <div class="stat-label">Joueuses Total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="fieldPlayers">0</div>
+                        <div class="stat-label">Sur le Terrain</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="benchPlayers">0</div>
+                        <div class="stat-label">Sur le Banc</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="goalkeepers">0</div>
+                        <div class="stat-label">Gardiennes</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liste des joueuses -->
+            <div class="team-card">
+                <h2>👥 Liste des Joueuses</h2>
+                <div class="team-actions" style="margin-bottom: 20px;">
+                    <button class="btn btn-warning" onclick="exportTeam()">📤 Exporter Équipe</button>
+                    <button class="btn btn-secondary" onclick="importTeam()">📥 Importer Équipe</button>
+                    <button class="btn btn-danger" onclick="clearTeam()">🗑️ Vider l'Équipe</button>
+                    <input type="file" id="teamFileInput" accept=".json" style="display: none;">
+                </div>
+                
+                <div id="playersContainer">
+                    <p class="text-center">Aucune joueuse dans l'équipe. Commencez par en ajouter une !</p>
+                </div>
+            </div>
+
+            <!-- Gestion des compositions sauvegardées -->
+            <div class="team-card">
+                <h2>💾 Compositions Sauvegardées</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="compositionName">Nom de la composition :</label>
+                        <input type="text" id="compositionName" placeholder="Formation 4-4-2">
+                    </div>
+                    <div class="form-group">
+                        <label for="savedCompositions">Compositions existantes :</label>
+                        <select id="savedCompositions">
+                            <option value="">Aucune composition sauvegardée</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button class="btn btn-success" onclick="saveCurrentComposition()">💾 Sauvegarder Composition</button>
+                    <button class="btn btn-primary" onclick="loadSelectedComposition()">📂 Charger Composition</button>
+                    <button class="btn btn-danger" onclick="deleteSelectedComposition()">🗑️ Supprimer Composition</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Édition Joueuse -->
+    <div id="editPlayerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h3>✏️ Modifier la Joueuse</h3>
+            
+            <div class="form-group">
+                <label for="editPlayerName">Nom :</label>
+                <input type="text" id="editPlayerName" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="editPlayerPosition">Position :</label>
+                <select id="editPlayerPosition" required>
+                    <option value="gardienne">🥅 Gardienne</option>
+                    <option value="défenseuse">🛡️ Défenseuse</option>
+                    <option value="milieu">⚙️ Milieu de terrain</option>
+                    <option value="attaquante">⚽ Attaquante</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="editPlayerNumber">Numéro :</label>
+                <input type="number" id="editPlayerNumber" min="1" max="99">
+            </div>
+            
+            <div class="form-group">
+                <label for="editPlayerStatus">Statut :</label>
+                <select id="editPlayerStatus">
+                    <option value="bench">🪑 Sur le banc</option>
+                    <option value="field">🏟️ Sur le terrain</option>
+                    <option value="sanctioned">⚠️ Sanctionnée</option>
+                </select>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="savePlayerEdits()">💾 Sauvegarder</button>
+                <button class="btn btn-secondary" onclick="closeEditModal()">❌ Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/storage.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        // Variables locales
+        let editingPlayerId = null;
+
+        // Initialisation de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePlayersDisplay();
+            updateTeamStats();
+            loadSavedCompositions();
+        });
+
+        /**
+         * Ajout d'une nouvelle joueuse
+         */
+        function addNewPlayer() {
+            const name = document.getElementById('playerName').value.trim();
+            const position = document.getElementById('playerPosition').value;
+            const number = document.getElementById('playerNumber').value;
+
+            if (!name) {
+                showNotification('Veuillez entrer un nom de joueuse', 'error');
+                return;
+            }
+
+            if (!position) {
+                showNotification('Veuillez sélectionner une position', 'error');
+                return;
+            }
+
+            // Vérifier le numéro de maillot
+            if (number && isNumberTaken(number)) {
+                showNotification(`Le numéro ${number} est déjà pris`, 'error');
+                return;
+            }
+
+            const playerData = {
+                name: name,
+                position: position,
+                number: number ? parseInt(number) : null
+            };
+
+            const newPlayer = footballApp.addPlayer(playerData);
+            
+            if (newPlayer) {
+                // Reset du formulaire
+                document.getElementById('playerName').value = '';
+                document.getElementById('playerPosition').value = '';
+                document.getElementById('playerNumber').value = '';
+
+                updatePlayersDisplay();
+                updateTeamStats();
+                showNotification(`${name} a été ajoutée à l'équipe !`);
+            }
+        }
+
+        /**
+         * Vérification si un numéro est déjà pris
+         */
+        function isNumberTaken(number) {
+            const players = footballApp.getState().players;
+            return players.some(p => p.number === parseInt(number));
+        }
+
+        /**
+         * Mise à jour de l'affichage des joueuses
+         */
+        function updatePlayersDisplay() {
+            const container = document.getElementById('playersContainer');
+            const players = footballApp.getState().players;
+
+            if (players.length === 0) {
+                container.innerHTML = '<p class="text-center">Aucune joueuse dans l\'équipe. Commencez par en ajouter une !</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            // Regrouper par position
+            const positions = ['gardienne', 'défenseuse', 'milieu', 'attaquante'];
+            
+            positions.forEach(position => {
+                const positionPlayers = players.filter(p => p.position === position);
+                
+                if (positionPlayers.length > 0) {
+                    const positionSection = document.createElement('div');
+                    positionSection.className = 'position-section';
+                    
+                    const positionTitle = document.createElement('h3');
+                    positionTitle.innerHTML = `${footballApp.getPositionIcon(position)} ${position.charAt(0).toUpperCase() + position.slice(1)}s (${positionPlayers.length})`;
+                    positionTitle.style.marginBottom = '15px';
+                    positionTitle.style.color = 'var(--warning-color)';
+                    
+                    positionSection.appendChild(positionTitle);
+                    
+                    const playersGrid = document.createElement('div');
+                    playersGrid.className = 'player-grid';
+                    
+                    positionPlayers.forEach(player => {
+                        const playerCard = createPlayerCard(player);
+                        playersGrid.appendChild(playerCard);
+                    });
+                    
+                    positionSection.appendChild(playersGrid);
+                    container.appendChild(positionSection);
+                }
+            });
+        }
+
+        /**
+         * Création d'une carte joueuse
+         */
+        function createPlayerCard(player) {
+            const card = document.createElement('div');
+            card.className = `player-btn ${player.position === 'gardienne' ? 'goalkeeper' : ''} ${player.status}`;
+            
+            const statusIcons = {
+                'field': '🏟️',
+                'bench': '🪑',
+                'sanctioned': '⚠️'
+            };
+
+            const statusText = {
+                'field': 'Sur le terrain',
+                'bench': 'Sur le banc',
+                'sanctioned': 'Sanctionnée'
+            };
+
+            card.innerHTML = `
+                <div style="font-size: 1.5em;">${footballApp.getPositionIcon(player.position)}</div>
+                <div style="font-weight: bold; margin: 5px 0;">${player.name}</div>
+                ${player.number ? `<div style="font-size: 12px; color: var(--warning-color);">N° ${player.number}</div>` : ''}
+                <div style="font-size: 11px; margin: 5px 0;">
+                    ${statusIcons[player.status]} ${statusText[player.status]}
+                </div>
+                <div style="font-size: 10px; opacity: 0.8;">
+                    ⚽ ${player.stats.goals} | 🎯 ${player.stats.shots} | 🟨 ${player.stats.cards}
+                </div>
+                <div style="margin-top: 10px; display: flex; gap: 5px; justify-content: center;">
+                    <button class="btn btn-warning" style="padding: 5px 10px; font-size: 12px;" onclick="editPlayer(${player.id})">✏️</button>
+                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="removePlayer(${player.id})">🗑️</button>
+                </div>
+            `;
+
+            return card;
+        }
+
+        /**
+         * Édition d'une joueuse
+         */
+        function editPlayer(playerId) {
+            const players = footballApp.getState().players;
+            const player = players.find(p => p.id === playerId);
+            
+            if (!player) return;
+
+            editingPlayerId = playerId;
+
+            // Remplir le formulaire d'édition
+            document.getElementById('editPlayerName').value = player.name;
+            document.getElementById('editPlayerPosition').value = player.position;
+            document.getElementById('editPlayerNumber').value = player.number || '';
+            document.getElementById('editPlayerStatus').value = player.status;
+
+            // Afficher la modale
+            document.getElementById('editPlayerModal').style.display = 'block';
+        }
+
+        /**
+         * Sauvegarde des modifications
+         */
+        function savePlayerEdits() {
+            if (!editingPlayerId) return;
+
+            const name = document.getElementById('editPlayerName').value.trim();
+            const position = document.getElementById('editPlayerPosition').value;
+            const number = document.getElementById('editPlayerNumber').value;
+            const status = document.getElementById('editPlayerStatus').value;
+
+            if (!name || !position) {
+                showNotification('Nom et position sont obligatoires', 'error');
+                return;
+            }
+
+            // Vérifier le numéro de maillot
+            if (number) {
+                const players = footballApp.getState().players;
+                const numberTaken = players.some(p => p.id !== editingPlayerId && p.number === parseInt(number));
+                if (numberTaken) {
+                    showNotification(`Le numéro ${number} est déjà pris`, 'error');
+                    return;
+                }
+            }
+
+            // Vérifier qu'il n'y ait qu'une seule gardienne
+            if (position === 'gardienne') {
+                const players = footballApp.getState().players;
+                const existingGoalkeeper = players.find(p => p.id !== editingPlayerId && p.position === 'gardienne');
+                if (existingGoalkeeper) {
+                    showNotification('Il ne peut y avoir qu\'une seule gardienne dans l\'équipe', 'error');
+                    return;
+                }
+            }
+
+            // Mettre à jour le joueur
+            const players = footballApp.getState().players;
+            const player = players.find(p => p.id === editingPlayerId);
+            
+            if (player) {
+                player.name = name;
+                player.position = position;
+                player.number = number ? parseInt(number) : null;
+                player.status = status;
+                player.lastUpdated = new Date().toISOString();
+
+                footballApp.saveState();
+                updatePlayersDisplay();
+                updateTeamStats();
+                closeEditModal();
+                
+                showNotification(`${name} a été mise à jour !`);
+            }
+        }
+
+        /**
+         * Fermeture de la modale d'édition
+         */
+        function closeEditModal() {
+            document.getElementById('editPlayerModal').style.display = 'none';
+            editingPlayerId = null;
+        }
+
+        /**
+         * Suppression d'une joueuse
+         */
+        function removePlayer(playerId) {
+            const success = footballApp.removePlayer(playerId);
+            if (success) {
+                updatePlayersDisplay();
+                updateTeamStats();
+            }
+        }
+
+        /**
+         * Mise à jour des statistiques de l'équipe
+         */
+        function updateTeamStats() {
+            const players = footballApp.getState().players;
+            
+            document.getElementById('totalPlayers').textContent = players.length;
+            document.getElementById('fieldPlayers').textContent = players.filter(p => p.status === 'field').length;
+            document.getElementById('benchPlayers').textContent = players.filter(p => p.status === 'bench').length;
+            document.getElementById('goalkeepers').textContent = players.filter(p => p.position === 'gardienne').length;
+        }
+
+        /**
+         * Export de l'équipe
+         */
+        function exportTeam() {
+            const players = footballApp.getState().players;
+            
+            if (players.length === 0) {
+                showNotification('Aucune joueuse à exporter', 'error');
+                return;
+            }
+
+            const teamData = {
+                players: players,
+                exportDate: new Date().toISOString(),
+                teamName: loadData('matchConfig')?.teamName || 'Mon Équipe'
+            };
+
+            const blob = new Blob([JSON.stringify(teamData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `equipe_${teamData.teamName.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showNotification('Équipe exportée avec succès !');
+        }
+
+        /**
+         * Import de l'équipe
+         */
+        function importTeam() {
+            document.getElementById('teamFileInput').click();
+        }
+
+        /**
+         * Gestion du fichier d'import
+         */
+        document.getElementById('teamFileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.players && Array.isArray(data.players)) {
+                        if (confirm(`Importer ${data.players.length} joueuses ? (Les joueuses actuelles seront remplacées)`)) {
+                            footballApp.getState().players = data.players;
+                            footballApp.saveState();
+                            updatePlayersDisplay();
+                            updateTeamStats();
+                            showNotification('Équipe importée avec succès !');
+                        }
+                    } else {
+                        showNotification('Fichier invalide', 'error');
+                    }
+                } catch (error) {
+                    showNotification('Erreur lors de l\'import', 'error');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        /**
+         * Vider l'équipe
+         */
+        function clearTeam() {
+            if (confirm('Êtes-vous sûr de vouloir supprimer toutes les joueuses ?')) {
+                footballApp.getState().players = [];
+                footballApp.saveState();
+                updatePlayersDisplay();
+                updateTeamStats();
+                showNotification('Équipe vidée');
+            }
+        }
+
+        /**
+         * Sauvegarde de la composition actuelle
+         */
+        function saveCurrentComposition() {
+            const name = document.getElementById('compositionName').value.trim();
+            const players = footballApp.getState().players;
+
+            if (!name) {
+                showNotification('Veuillez entrer un nom pour la composition', 'error');
+                return;
+            }
+
+            if (players.length === 0) {
+                showNotification('Aucune joueuse à sauvegarder', 'error');
+                return;
+            }
+
+            const success = saveComposition(name, players, []);
+            if (success) {
+                loadSavedCompositions();
+                document.getElementById('compositionName').value = '';
+                showNotification(`Composition "${name}" sauvegardée !`);
+            }
+        }
+
+        /**
+         * Chargement des compositions sauvegardées
+         */
+        function loadSavedCompositions() {
+            const select = document.getElementById('savedCompositions');
+            const compositions = listCompositions();
+
+            select.innerHTML = '<option value="">Sélectionner une composition...</option>';
+
+            compositions.forEach(comp => {
+                const option = document.createElement('option');
+                option.value = comp.name;
+                option.textContent = `${comp.name} (${new Date(comp.timestamp).toLocaleDateString()})`;
+                select.appendChild(option);
+            });
+        }
+
+        /**
+         * Chargement d'une composition sélectionnée
+         */
+        function loadSelectedComposition() {
+            const select = document.getElementById('savedCompositions');
+            const selectedName = select.value;
+
+            if (!selectedName) {
+                showNotification('Veuillez sélectionner une composition', 'error');
+                return;
+            }
+
+            const composition = loadComposition(selectedName);
+            if (composition && composition.players) {
+                if (confirm(`Charger la composition "${selectedName}" ? (L'équipe actuelle sera remplacée)`)) {
+                    footballApp.getState().players = composition.players;
+                    footballApp.saveState();
+                    updatePlayersDisplay();
+                    updateTeamStats();
+                    showNotification(`Composition "${selectedName}" chargée !`);
+                }
+            } else {
+                showNotification('Erreur lors du chargement', 'error');
+            }
+        }
+
+        /**
+         * Suppression d'une composition
+         */
+        function deleteSelectedComposition() {
+            const select = document.getElementById('savedCompositions');
+            const selectedName = select.value;
+
+            if (!selectedName) {
+                showNotification('Veuillez sélectionner une composition', 'error');
+                return;
+            }
+
+            if (confirm(`Supprimer définitivement la composition "${selectedName}" ?`)) {
+                const success = deleteComposition(selectedName);
+                if (success) {
+                    loadSavedCompositions();
+                    showNotification(`Composition "${selectedName}" supprimée`);
+                }
+            }
+        }
+
+        // Fonction spécialisée pour cette page
+        function updateSpecificPlayersDisplay() {
+            updatePlayersDisplay();
+            updateTeamStats();
+        }
+    </script>
+</body>
+</html>
