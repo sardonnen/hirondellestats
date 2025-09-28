@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match - Football Stats</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <!-- Bouton Live fixe -->
+        <div class="live-link">
+            <button class="btn btn-primary" onclick="generateLiveLink()">📡 Lien Live</button>
+        </div>
+
+        <header class="header">
+            <h1>⚽ Interface de Match</h1>
+            <p>Suivez et enregistrez tous les événements du match</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <a href="../index.html" class="nav-link">🏠 Accueil</a>
+            <a href="team.html" class="nav-link">👥 Équipe</a>
+            <a href="composition.html" class="nav-link">📋 Compo</a>
+            <a href="match.html" class="nav-link active">⚽ Match</a>
+            <a href="live.html" class="nav-link">📺 Live</a>
+            <a href="stats.html" class="nav-link">📊 Stats</a>
+        </nav>
+
+        <!-- Contenu principal -->
+        <main class="main-content">
+            
+            <!-- Tableau de bord du match -->
+            <div class="team-card">
+                <div class="match-header">
+                    <div class="team-info">
+                        <div class="team-name" id="teamName">Mon Équipe</div>
+                        <div class="team-score" id="teamScore">0</div>
+                    </div>
+                    
+                    <div class="match-info">
+                        <div class="match-time" id="matchTime">00:00</div>
+                        <div class="match-half" id="matchHalf">1ère Mi-temps</div>
+                        <div class="timer-controls">
+                            <button class="btn btn-success" id="playBtn" onclick="toggleTimer()">▶️ Démarrer</button>
+                            <button class="btn btn-warning" onclick="resetTimer()">🔄 Reset</button>
+                            <button class="btn btn-primary" onclick="showHalfTimeConfirm()">⭐ Mi-temps</button>
+                        </div>
+                    </div>
+                    
+                    <div class="team-info">
+                        <div class="team-name" id="opponentName">Équipe Adverse</div>
+                        <div class="team-score" id="opponentScore">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions principales -->
+            <div class="team-card">
+                <h3>🎯 Actions Principales</h3>
+                <div class="actions-grid">
+                    <button class="action-btn goal" onclick="showActionChoiceModal('goal')">
+                        <div class="action-icon">⚽</div>
+                        <div class="action-text">But</div>
+                    </button>
+                    <button class="action-btn shot" onclick="showActionChoiceModal('shot')">
+                        <div class="action-icon">🎯</div>
+                        <div class="action-text">Tir Cadré</div>
+                    </button>
+                    <button class="action-btn missedShot" onclick="showActionChoiceModal('missedShot')">
+                        <div class="action-icon">📋</div>
+                        <div class="action-text">Tir Non Cadré</div>
+                    </button>
+                    <button class="action-btn card" onclick="showActionChoiceModal('card')">
+                        <div class="action-icon">🟨</div>
+                        <div class="action-text">Carton</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Actions secondaires -->
+            <div class="team-card">
+                <h3>⚽ Actions Secondaires</h3>
+                <div class="actions-grid">
+                    <button class="action-btn save" onclick="showActionChoiceModal('save')">
+                        <div class="action-icon">🧤</div>
+                        <div class="action-text">Arrêt Gardienne</div>
+                    </button>
+                    <button class="action-btn foul" onclick="showActionChoiceModal('foul')">
+                        <div class="action-icon">⚠️</div>
+                        <div class="action-text">Faute</div>
+                    </button>
+                    <button class="action-btn freeKick" onclick="showActionChoiceModal('freeKick')">
+                        <div class="action-icon">⚽</div>
+                        <div class="action-text">Coup Franc</div>
+                    </button>
+                    <button class="action-btn substitution" onclick="showSubstitutionModal()">
+                        <div class="action-icon">🔄</div>
+                        <div class="action-text">Changement</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Gestion d'équipe -->
+            <div class="team-card">
+                <h3>🔄 Gestion d'Équipe</h3>
+                <div class="action-buttons">
+                    <button class="action-btn substitution" onclick="showSubstitutionModal()">
+                        🔄 Substitution
+                    </button>
+                    <button class="action-btn timeout" onclick="addTimeoutEvent()">
+                        ⏱️ Temps Mort
+                    </button>
+                    <button class="action-btn injury" onclick="showInjuryModal()">
+                        🏥 Blessure
+                    </button>
+                    <button class="action-btn offside" onclick="addOffsideEvent()">
+                        🚩 Hors-jeu
+                    </button>
+                </div>
+            </div>
+
+            <!-- Timeline des événements -->
+            <div class="team-card">
+                <h3>📝 Timeline du Match</h3>
+                <div class="events-controls">
+                    <button class="btn btn-secondary" onclick="clearEvents()">🗑️ Effacer Événements</button>
+                    <button class="btn btn-warning" onclick="exportEvents()">📤 Exporter Timeline</button>
+                    <button class="btn btn-primary" onclick="newMatchFromMatchPage()">🆕 Nouveau Match</button>
+                    <button class="btn btn-danger" onclick="resetAllFromMatchPage()">🔄 Reset Complet</button>
+                </div>
+                <div id="eventsTimeline" class="events-list">
+                    <p class="text-center">Aucun événement enregistré</p>
+                </div>
+            </div>
+
+            <!-- Résumé rapide -->
+            <div class="team-card">
+                <h3>📊 Résumé Rapide</h3>
+                <div id="quickStats" class="quick-stats">
+                    <!-- Les stats s'afficheront ici -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Action -->
+    <div id="actionModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeActionModal()">&times;</span>
+            <h3 id="actionModalTitle">Action</h3>
+            
+            <!-- Sélection du type de carton -->
+            <div id="cardButtons" class="card-buttons" style="display: none;">
+                <button class="card-btn yellow-card" onclick="selectCardType('yellow')">🟨 Jaune</button>
+                <button class="card-btn red-card" onclick="selectCardType('red')">🟥 Rouge</button>
+                <button class="card-btn white-card" onclick="selectCardType('white')">⬜ Blanc</button>
+            </div>
+            
+            <!-- Sélection du type d'arrêt -->
+            <div id="saveButtons" class="save-buttons" style="display: none;">
+                <button class="save-btn line-save" onclick="selectSaveType('line')">🥅 Sur sa ligne</button>
+                <button class="save-btn exit-save" onclick="selectSaveType('exit')">🏃 En sortie</button>
+            </div>
+            
+            <!-- Choix équipe/adversaire -->
+            <div id="teamChoice" class="team-choice">
+                <p>Pour quelle équipe ?</p>
+                <div class="team-buttons">
+                    <button id="myTeamBtn" class="team-btn my-team" onclick="selectTeamChoice(true)">
+                        🏠 Notre Équipe
+                    </button>
+                    <button id="opponentBtn" class="team-btn opponent" onclick="selectTeamChoice(false)">
+                        🚫 Équipe Adverse
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Sélection du joueur -->
+            <div id="playerButtons" class="player-grid" style="display: none;">
+                <!-- Boutons des joueuses -->
+            </div>
+            
+            <div class="modal-actions">
+                <button id="confirmActionBtn" class="btn btn-primary" disabled onclick="confirmAction()">✅ Confirmer</button>
+                <button class="btn btn-secondary" onclick="closeActionModal()">❌ Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Substitution -->
+    <div id="substitutionModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSubstitutionModal()">&times;</span>
+            <h3>🔄 Substitution</h3>
+            
+            <div class="substitution-grid">
+                <div class="sub-section">
+                    <h4>👤 Joueuse qui sort (Terrain)</h4>
+                    <div id="outPlayerButtons" class="player-grid">
+                        <!-- Boutons des joueuses sur le terrain -->
+                    </div>
+                </div>
+                
+                <div class="sub-section">
+                    <h4>🔄 Joueuse qui entre (Banc)</h4>
+                    <div id="inPlayerButtons" class="player-grid">
+                        <!-- Boutons des joueuses sur le banc -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button id="confirmSubBtn" class="btn btn-primary" disabled onclick="confirmSubstitution()">✅ Confirmer Substitution</button>
+                <button class="btn btn-secondary" onclick="closeSubstitutionModal()">❌ Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Blessure -->
+    <div id="injuryModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeInjuryModal()">&times;</span>
+            <h3>🏥 Blessure</h3>
+            
+            <div id="injuryPlayerButtons" class="player-grid">
+                <!-- Boutons des joueuses -->
+            </div>
+            
+            <div class="form-group">
+                <label for="injuryType">Type de blessure :</label>
+                <select id="injuryType">
+                    <option value="minor">Blessure légère</option>
+                    <option value="serious">Blessure sérieuse</option>
+                    <option value="unknown">À évaluer</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="injuryDescription">Description (optionnel) :</label>
+                <input type="text" id="injuryDescription" placeholder="Description de la blessure">
+            </div>
+            
+            <div class="modal-actions">
+                <button id="saveInjuryBtn" class="btn btn-primary" disabled onclick="saveInjury()">💾 Enregistrer</button>
+                <button class="btn btn-secondary" onclick="closeInjuryModal()">❌ Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmation Mi-temps -->
+    <div id="halfTimeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeHalfTimeModal()">&times;</span>
+            <h3>⭐ Confirmation Mi-temps</h3>
+            <p>Êtes-vous sûr de vouloir passer à la seconde mi-temps ?</p>
+            <p style="color: var(--warning-color);">Le chronomètre sera remis à 45:00</p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="confirmHalfTime()">✅ Oui, 2ème mi-temps</button>
+                <button class="btn btn-secondary" onclick="closeHalfTimeModal()">❌ Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Lien Live -->
+    <div id="liveModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeLiveModal()">&times;</span>
+            <h3>📡 Lien Live Généré</h3>
+            <p>Partagez ce lien pour que d'autres puissent suivre le match en temps réel :</p>
+            
+            <div class="live-link-container">
+                <input type="text" id="liveLink" readonly class="live-link-input">
+                <button class="btn btn-primary" onclick="copyLiveLink()">📋 Copier</button>
+            </div>
+            
+            <div class="live-instructions">
+                <h4>📱 Instructions :</h4>
+                <ul>
+                    <li>Copiez et partagez ce lien</li>
+                    <li>Les spectateurs verront le match en temps réel</li>
+                    <li>Les données se mettent à jour automatiquement</li>
+                    <li>Aucune modification n'est possible pour les spectateurs</li>
+                </ul>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeLiveModal()">✅ Compris</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/storage.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        // Variables locales de la page match
+        let selectedPlayerId = null;
+        let selectedCardType = null;
+        let selectedOutPlayer = null;
+        let selectedInPlayer = null;
+        let selectedSavePlayer = null;
+        let selectedFreeKickPlayer = null;
+        let selectedInjuryPlayer = null;
+        let currentLiveId = null;
+
+        // Attendre que footballApp soit disponible
+        function waitForFootballApp(callback) {
+            if (typeof footballApp !== 'undefined') {
+                callback();
+            } else {
+                setTimeout(() => waitForFootballApp(callback), 100);
+            }
+        }
+
+        // Initialisation de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            waitForFootballApp(function() {
+                initializeMatchPage();
+            });
+        });
+
+        /**
+         * Initialisation de la page de match
+         */
+        function initializeMatchPage() {
+            loadMatchConfig();
+            updateMatchDisplay();
+            checkComposition();
+            startPeriodicSave();
+            console.log('Page de match initialisée');
+        }
+
+        /**
+         * Chargement de la configuration du match
+         */
+        function loadMatchConfig() {
+            const config = loadData('matchConfig') || {};
+            document.getElementById('teamName').textContent = config.teamName || 'Mon Équipe';
+            document.getElementById('opponentName').textContent = config.opponentName || 'Équipe Adverse';
+        }
+
+        /**
+         * Vérification de la composition
+         */
+        function checkComposition() {
+            const players = footballApp.getState().players;
+            const fieldPlayers = players.filter(p => p.status === 'field');
+            
+            if (fieldPlayers.length !== 11) {
+                footballApp.showNotification(`Composition incomplète (${fieldPlayers.length}/11). Configurez votre équipe d'abord.`, 'warning');
+            }
+            
+            const goalkeepers = fieldPlayers.filter(p => p.position === 'gardienne');
+            if (goalkeepers.length === 0) {
+                footballApp.showNotification('Aucune gardienne sur le terrain !', 'error');
+            }
+        }
+
+        // ===== NOUVELLES FONCTIONS DE RESET (SEULES MODIFICATIONS) =====
+
+        /**
+         * Reset visuel complet de la page match
+         */
+        function resetMatchPageDisplay() {
+            // Remettre les scores à 0
+            const scoreElements = ['teamScore', 'opponentScore'];
+            scoreElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = '0';
+            });
+            
+            // Remettre le temps à 00:00
+            const timeElement = document.getElementById('matchTime');
+            if (timeElement) timeElement.textContent = '00:00';
+            
+            // Remettre à la 1ère mi-temps
+            const halfElement = document.getElementById('matchHalf');
+            if (halfElement) halfElement.textContent = '1ère Mi-temps';
+            
+            // Vider la liste des événements
+            const eventsContainer = document.getElementById('eventsTimeline');
+            if (eventsContainer) {
+                eventsContainer.innerHTML = '<p class="text-center">Aucun événement enregistré</p>';
+            }
+            
+            // Remettre le bouton en mode "Démarrer"
+            const playBtn = document.getElementById('playBtn');
+            if (playBtn) {
+                playBtn.innerHTML = '▶️ Démarrer';
+                playBtn.className = 'btn btn-success';
+            }
+        }
+
+        /**
+         * Fonction à appeler quand on veut un nouveau match depuis la page match
+         */
+        function newMatchFromMatchPage() {
+            if (confirm('🆕 Créer un nouveau match ?\n\n⚠️ Le match actuel sera perdu !')) {
+                // Utiliser la fonction de footballApp
+                footballApp.startNewMatch();
+                
+                // Reset visuel immédiat
+                resetMatchPageDisplay();
+                
+                // Mettre à jour l'affichage avec footballApp
+                setTimeout(() => {
+                    footballApp.updateMatchDisplay();
+                }, 100);
+                
+                footballApp.showNotification('🆕 Nouveau match créé !', 'success');
+            }
+        }
+
+        /**
+         * Fonction à appeler pour reset complet depuis la page match
+         */
+        function resetAllFromMatchPage() {
+            if (confirm('🔄 Reset complet ?\n\n⚠️ TOUTES les données seront perdues !')) {
+                // Utiliser la fonction de footballApp
+                footballApp.resetCompleteApp();
+                
+                // Reset visuel immédiat
+                resetMatchPageDisplay();
+            }
+        }
+
+        // ===== FONCTIONS ORIGINALES (NON MODIFIÉES) =====
+
+        /**
+         * Mise à jour de l'affichage du match
+         */
+        function updateMatchDisplay() {
+            const state = footballApp.getState();
+            
+            // Mise à jour du score
+            document.getElementById('teamScore').textContent = state.score.team;
+            document.getElementById('opponentScore').textContent = state.score.opponent;
+            
+            // Mise à jour du temps
+            document.getElementById('matchTime').textContent = footballApp.formatTime(state.time);
+            document.getElementById('matchHalf').textContent = state.half === 1 ? '1ère Mi-temps' : '2ème Mi-temps';
+            
+            // Mise à jour du bouton play/pause
+            const playBtn = document.getElementById('playBtn');
+            if (state.isPlaying) {
+                playBtn.innerHTML = '⏸️ Pause';
+                playBtn.className = 'btn btn-warning';
+            } else {
+                playBtn.innerHTML = '▶️ Démarrer';
+                playBtn.className = 'btn btn-success';
+            }
+            
+            // Mise à jour des événements
+            updateEventsDisplay();
+            updateQuickStats();
+        }
+
+        /**
+         * Toggle du chronomètre
+         */
+        function toggleTimer() {
+            const state = footballApp.getState();
+            
+            if (state.isPlaying) {
+                footballApp.stopTimer();
+                footballApp.showNotification('Chronomètre arrêté', 'info');
+            } else {
+                footballApp.startTimer();
+                footballApp.showNotification('Chronomètre démarré', 'success');
+            }
+            
+            updateMatchDisplay();
+        }
+
+        /**
+         * Reset du chronomètre
+         */
+        function resetTimer() {
+            if (confirm('Remettre le chronomètre à zéro ?')) {
+                footballApp.resetTimer();
+                updateMatchDisplay();
+                footballApp.showNotification('Chronomètre remis à zéro', 'info');
+            }
+        }
+
+        /**
+         * Effacement de tous les événements
+         */
+        function clearEvents() {
+            if (confirm('Supprimer tous les événements du match ?')) {
+                const state = footballApp.getState();
+                state.events = [];
+                state.score = { team: 0, opponent: 0 };
+                footballApp.saveState();
+                updateMatchDisplay();
+                footballApp.updateLive();
+                footballApp.showNotification('Tous les événements ont été supprimés');
+            }
+        }
+
+        /**
+         * Export des événements
+         */
+        function exportEvents() {
+            const state = footballApp.getState();
+            const config = loadData('matchConfig') || {};
+            
+            const exportData = {
+                match: {
+                    teams: {
+                        home: config.teamName || 'Mon Équipe',
+                        away: config.opponentName || 'Équipe Adverse'
+                    },
+                    score: state.score,
+                    time: state.time,
+                    half: state.half
+                },
+                events: state.events,
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `match_timeline_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            footballApp.showNotification('Timeline exportée !', 'success');
+        }
+
+        // [Toutes les autres fonctions originales restent inchangées...]
+        // showActionChoiceModal, selectTeamChoice, selectCardType, etc.
+
+        /**
+         * Copie du lien live
+         */
+        function copyLiveLink() {
+            const linkInput = document.getElementById('liveLink');
+            linkInput.select();
+            
+            try {
+                document.execCommand('copy');
+                footballApp.showNotification('Lien copié !', 'success');
+            } catch (error) {
+                console.error('Erreur copie:', error);
+                linkInput.select();
+                footballApp.showNotification('Veuillez copier manuellement le lien sélectionné', 'info');
+            }
+        }
+
+        /**
+         * Fermeture de la modale live
+         */
+        function closeLiveModal() {
+            document.getElementById('liveModal').style.display = 'none';
+        }
+
+        /**
+         * Sauvegarde périodique
+         */
+        function startPeriodicSave() {
+            setInterval(() => {
+                footballApp.saveState();
+                if (currentLiveId) {
+                    footballApp.updateLive();
+                }
+            }, 10000); // Toutes les 10 secondes
+        }
+
+        // Fonction spécialisée pour cette page
+        function updateSpecificPlayersDisplay() {
+            // Pas d'affichage spécifique des joueurs sur cette page
+        }
+
+        // Mise à jour périodique de l'affichage
+        setInterval(updateMatchDisplay, 1000);
+    </script>
+
+    <style>
+        /* Styles spécifiques à la page match */
+        .match-header {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .team-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .team-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--light-color);
+        }
+
+        .team-score {
+            font-size: 3em;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .match-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .match-time {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--warning-color);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .match-half {
+            font-size: 1.1em;
+            color: var(--light-color);
+            margin-bottom: 15px;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .timer-controls .btn {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .action-btn {
+            padding: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: var(--border-radius-lg);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,0.2);
+            box-shadow: var(--shadow);
+        }
+
+        .action-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .events-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .events-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: var(--border-radius);
+        }
+
+        .live-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .match-header {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .team-score {
+                font-size: 2.5em;
+            }
+
+            .match-time {
+                font-size: 2em;
+            }
+
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .timer-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .events-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</body>
+</html>
