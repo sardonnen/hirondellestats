@@ -88,12 +88,18 @@ function addPlayer() {
         return;
     }
     
+    // Vérifier doublons
+    if (players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+        showNotification('Cette joueuse existe déjà !', 'error');
+        return;
+    }
+    
     const player = {
         id: Date.now(),
         name: name,
         position: position,
         status: 'bench', // bench, field, out, sanctioned
-        isStarting: false
+        isStarting: false // IMPORTANT : Initialiser à false
     };
     
     players.push(player);
@@ -109,9 +115,14 @@ function addPlayer() {
     
     document.getElementById('playerName').value = '';
     updatePlayersDisplay();
-    updateLineupDisplay();
+    updateLineupDisplay(); // Mettre à jour l'affichage de composition
     saveData();
-    showNotification('Joueuse ajoutée !', 'success');
+    showNotification(`${name} ajouté(e) !`, 'success');
+    
+    // Feedback tactile Android
+    if (navigator.vibrate) {
+        navigator.vibrate(50);
+    }
 }
 
 function removePlayer(playerId) {

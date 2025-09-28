@@ -8,52 +8,77 @@ function updateLineupDisplay() {
     container.innerHTML = '';
     
     if (players.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #bdc3c7;">Aucune joueuse ajoutée</p>';
+        container.innerHTML = '<p style="text-align: center; color: #bdc3c7; padding: 2rem;">Aucune joueuse ajoutée.<br>Allez dans Configuration pour ajouter des joueuses.</p>';
         return;
     }
     
     players.forEach(player => {
         const button = document.createElement('button');
         button.className = `player-btn ${player.position === 'gardienne' ? 'goalkeeper' : ''} ${player.isStarting ? 'starting-eleven' : ''}`;
+        
+        // Interface mobile Android optimisée
+        button.style.minHeight = '60px';
+        button.style.fontSize = '14px';
+        button.style.padding = '8px';
+        
         button.innerHTML = `
-            <div>${getPositionIcon(player.position)}</div>
-            <div style="font-size: 12px; margin-top: 5px;">${player.name}</div>
-            ${player.isStarting ? '<div style="font-size: 10px; color: #2ecc71;">✓ Titulaire</div>' : ''}
+            <div style="font-size: 1.2rem; margin-bottom: 4px;">${getPositionIcon(player.position)}</div>
+            <div style="font-weight: bold;">${player.name}</div>
+            <div style="font-size: 11px; opacity: 0.8;">${player.position}</div>
+            ${player.isStarting ? '<div style="font-size: 10px; color: #2ecc71; margin-top: 4px;">✓ TITULAIRE</div>' : '<div style="font-size: 10px; color: #bdc3c7; margin-top: 4px;">Remplaçant</div>'}
         `;
-        button.onclick = () => toggleStartingPlayer(player.id, button);
+        
+        button.onclick = () => toggleStartingPlayer(player.id);
         container.appendChild(button);
     });
     
     updateLineupSummary();
 }
 
-// Basculer le statut titulaire d'un joueur
-function toggleStartingPlayer(playerId, buttonElement) {
+// Basculer le statut titulaire d'un joueur - Version corrigée
+function toggleStartingPlayer(playerId) {
     const player = players.find(p => p.id === playerId);
-    if (!player) return;
+    if (!player) {
+        console.error('Joueur non trouvé:', playerId);
+        return;
+    }
     
     if (player.isStarting) {
         // Retirer du 11 de départ
         player.isStarting = false;
         startingEleven = startingEleven.filter(id => id !== playerId);
         player.status = 'bench';
+        showNotification(`${player.name} retiré des titulaires`, 'info');
     } else {
         // Ajouter au 11 de départ (maximum 11)
         if (startingEleven.length >= 11) {
-            showNotification('Vous ne pouvez sélectionner que 11 joueurs titulaires maximum', 'error');
+            showNotification('Maximum 11 joueurs titulaires !', 'error');
+            // Vibration sur Android si supportée
+            if (navigator.vibrate) {
+                navigator.vibrate(200);
+            }
             return;
         }
+        
         player.isStarting = true;
         startingEleven.push(playerId);
         player.status = 'field';
+        showNotification(`${player.name} ajouté aux titulaires`, 'success');
+        
+        // Feedback tactile positif sur Android
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
     }
+    
+    console.log('Titulaires actuels:', startingEleven.length, startingEleven);
     
     updateLineupDisplay();
     updateFieldDisplay();
     saveData();
 }
 
-// Mettre à jour le résumé de la composition
+// Mettre à jour le résumé de la composition - Version améliorée
 function updateLineupSummary() {
     const summary = document.getElementById('lineupSummary');
     const display = document.getElementById('lineupDisplay');
@@ -64,6 +89,7 @@ function updateLineupSummary() {
         summary.style.display = 'block';
         display.innerHTML = '';
         
+        // Compter par position
         const positions = {
             gardienne: [],
             defenseure: [],
@@ -78,21 +104,52 @@ function updateLineupSummary() {
             }
         });
         
+        // Affichage optimisé mobile
+        const positionsDiv = document.createElement('div');
+        positionsDiv.style.display = 'grid';
+        positionsDiv.style.gridTemplateColumns = '1fr 1fr';
+        positionsDiv.style.gap = '10px';
+        positionsDiv.style.fontSize = '14px';
+        
         Object.entries(positions).forEach(([position, playerList]) => {
             if (playerList.length > 0) {
                 const posDiv = document.createElement('div');
-                posDiv.style.margin = '10px 0';
+                posDiv.style.background = 'rgba(255,255,255,0.1)';
+                posDiv.style.padding = '8px';
+                posDiv.style.borderRadius = '6px';
                 posDiv.innerHTML = `
-                    <strong>${getPositionIcon(position)} ${position.charAt(0).toUpperCase() + position.slice(1)}s (${playerList.length}):</strong><br>
-                    ${playerList.map(p => p.name).join(', ')}
+                    <div style="font-weight: bold; margin-bottom: 4px;">
+                        ${getPositionIcon(position)} ${position.charAt(0).toUpperCase() + position.slice(1)}s (${playerList.length})
+                    </div>
+                    <div style="font-size: 12px;">
+                        ${playerList.map(p => p.name).join(', ')}
+                    </div>
                 `;
-                display.appendChild(posDiv);
+                positionsDiv.appendChild(posDiv);
             }
         });
         
+        display.appendChild(positionsDiv);
+        
+        // Total avec couleur selon le nombre
         const total = document.createElement('div');
-        total.style.marginTop = '10px';
-        total.innerHTML = `<strong>Total: ${startingEleven.length}/11 joueurs</strong>`;
+        total.style.marginTop = '15px';
+        total.style.padding = '10px';
+        total.style.textAlign = 'center';
+        total.style.borderRadius = '8px';
+        total.style.fontWeight = 'bold';
+        total.style.fontSize = '16px';
+        
+        if (startingEleven.length === 11) {
+            total.style.background = 'rgba(46, 204, 113, 0.3)';
+            total.style.color = '#2ecc71';
+            total.innerHTML = `✅ Équipe complète : ${startingEleven.length}/11 joueurs`;
+        } else {
+            total.style.background = 'rgba(243, 156, 18, 0.3)';
+            total.style.color = '#f39c12';
+            total.innerHTML = `⚠️ Équipe incomplète : ${startingEleven.length}/11 joueurs`;
+        }
+        
         display.appendChild(total);
     } else {
         summary.style.display = 'none';
@@ -103,16 +160,33 @@ function updateLineupSummary() {
 function saveLineup() {
     if (startingEleven.length === 0) {
         showNotification('Veuillez sélectionner au moins un joueur', 'error');
+        if (navigator.vibrate) {
+            navigator.vibrate([100, 50, 100]);
+        }
         return;
     }
     
-    showNotification(`Composition sauvegardée avec ${startingEleven.length} joueurs !`, 'success');
+    // Feedback tactile de succès
+    if (navigator.vibrate) {
+        navigator.vibrate(100);
+    }
+    
+    const message = startingEleven.length === 11 
+        ? `✅ Composition complète sauvegardée !` 
+        : `⚠️ Composition sauvegardée avec ${startingEleven.length} joueurs`;
+    
+    showNotification(message, startingEleven.length === 11 ? 'success' : 'warning');
     saveData();
 }
 
 // Effacer la sélection
 function clearLineup() {
-    if (confirm('Effacer la sélection des titulaires ?')) {
+    if (startingEleven.length === 0) {
+        showNotification('Aucune sélection à effacer', 'info');
+        return;
+    }
+    
+    if (confirm(`Effacer la sélection des ${startingEleven.length} titulaires ?`)) {
         players.forEach(player => {
             player.isStarting = false;
             player.status = 'bench';
@@ -122,6 +196,11 @@ function clearLineup() {
         updateFieldDisplay();
         saveData();
         showNotification('Sélection effacée', 'info');
+        
+        // Feedback tactile
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
     }
 }
 
