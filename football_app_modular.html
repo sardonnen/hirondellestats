@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Stats - App</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1>⚽ Football Stats</h1>
+            <div class="nav-menu">
+                <button class="nav-btn" onclick="showPage('setup')">⚙️ Configuration</button>
+                <button class="nav-btn" onclick="showPage('match')">🏟️ Match</button>
+                <button class="nav-btn" onclick="showPage('stats')">📊 Statistiques</button>
+                <button class="nav-btn" onclick="showPage('live')">📡 Live</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Configuration -->
+    <div id="setup" class="page active">
+        <div class="page-container">
+            <h2>⚙️ Configuration des Équipes</h2>
+            
+            <div class="team-card">
+                <h3>👥 Composition de votre équipe</h3>
+                <div class="form-group">
+                    <label for="playerName">Nom de la joueuse:</label>
+                    <input type="text" id="playerName" placeholder="Entrez le nom">
+                </div>
+                <div class="form-group">
+                    <label for="playerPosition">Position:</label>
+                    <select id="playerPosition">
+                        <option value="gardienne">🥅 Gardienne</option>
+                        <option value="defenseure">🛡️ Défenseure</option>
+                        <option value="milieu">⚡ Milieu</option>
+                        <option value="attaquante">⚽ Attaquante</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="addPlayer()">➕ Ajouter Joueuse</button>
+                
+                <div class="players-list" id="playersList">
+                    <!-- Les joueuses seront affichées ici -->
+                </div>
+            </div>
+
+            <div class="team-card">
+                <h3>⚙️ Paramètres du Match</h3>
+                <div class="form-group">
+                    <label for="team1Name">Nom de votre équipe:</label>
+                    <input type="text" id="team1Name" value="Mon Équipe">
+                </div>
+                <div class="form-group">
+                    <label for="team2Name">Équipe adverse:</label>
+                    <input type="text" id="team2Name" value="Équipe Adverse">
+                </div>
+                <div class="form-group">
+                    <label for="venue">Lieu:</label>
+                    <input type="text" id="venue" value="Terrain">
+                </div>
+                <div class="form-group">
+                    <label for="duration">Durée mi-temps (minutes):</label>
+                    <input type="number" id="duration" value="45" min="1" max="90">
+                </div>
+            </div>
+            
+            <div class="team-card">
+                <h2>🎮 Actions Rapides</h2>
+                <button class="btn btn-primary" onclick="startNewMatch()" style="width: 100%; margin: 10px 0;">
+                    🆕 Nouveau Match
+                </button>
+                <button class="btn btn-secondary" onclick="showConfirmReset()" style="width: 100%; margin: 10px 0;">
+                    🔄 Reset Complet
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Match -->
+    <div id="match" class="page">
+        <div class="page-container">
+            <div class="match-header">
+                <div class="teams-display">
+                    <div class="team team1">
+                        <h3 id="team1Display">Mon Équipe</h3>
+                        <div class="score" id="team1Score">0</div>
+                    </div>
+                    <div class="timer-section">
+                        <div class="timer" id="timer">00:00</div>
+                        <div class="timer-controls">
+                            <button class="btn btn-small" onclick="toggleTimer()">▶️</button>
+                            <button class="btn btn-small" onclick="resetTimer()">🔄</button>
+                        </div>
+                    </div>
+                    <div class="team team2">
+                        <h3 id="team2Display">Équipe Adverse</h3>
+                        <div class="score" id="team2Score">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Rapides avec Popup -->
+            <div class="actions-grid">
+                <div class="action-card" onclick="showActionChoiceModal('goal')">
+                    <div class="action-icon">⚽</div>
+                    <div>But</div>
+                </div>
+                <div class="action-card" onclick="showActionChoiceModal('shot')">
+                    <div class="action-icon">🎯</div>
+                    <div>Tir</div>
+                </div>
+                <div class="action-card" onclick="showActionChoiceModal('card')">
+                    <div class="action-icon">🟨</div>
+                    <div>Carton</div>
+                </div>
+                <div class="action-card" onclick="showActionChoiceModal('foul')">
+                    <div class="action-icon">⚠️</div>
+                    <div>Faute</div>
+                </div>
+            </div>
+
+            <!-- Timeline des événements -->
+            <div class="timeline" id="timeline">
+                <!-- Les événements seront affichés ici -->
+            </div>
+
+            <!-- Lien Live -->
+            <div class="live-section">
+                <button class="btn btn-primary" onclick="generateLiveLink()">📡 Générer Lien Live</button>
+                <input type="text" id="liveLink" placeholder="Le lien live apparaîtra ici..." readonly style="display: none;">
+                <button id="copyLinkBtn" class="btn btn-small" onclick="copyLiveLink()" style="display: none;">📋 Copier</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Statistiques -->
+    <div id="stats" class="page">
+        <div class="page-container">
+            <h2>📊 Statistiques du Match</h2>
+            <div class="stats-grid" id="statsGrid">
+                <!-- Les statistiques seront affichées ici -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Live -->
+    <div id="live" class="page">
+        <div class="page-container">
+            <h2>📡 Suivi Live</h2>
+            <div id="liveContent">
+                <div id="waitingMessage" class="waiting-message">
+                    <h3>En attente de données...</h3>
+                    <p>Le match n'a pas encore commencé ou aucun événement n'a été enregistré.</p>
+                </div>
+                <div id="liveMatch" style="display: none;">
+                    <div class="live-teams">
+                        <div class="team">
+                            <h3 id="liveTeam1">Équipe 1</h3>
+                            <div class="score" id="liveScore1">0</div>
+                        </div>
+                        <div class="timer">
+                            <div id="liveTimer">00:00</div>
+                        </div>
+                        <div class="team">
+                            <h3 id="liveTeam2">Équipe 2</h3>
+                            <div class="score" id="liveScore2">0</div>
+                        </div>
+                    </div>
+                    <div class="live-events" id="liveEvents">
+                        <!-- Événements live -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Choix Action -->
+    <div id="actionChoiceModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('actionChoiceModal')">&times;</span>
+            <h3 id="actionChoiceTitle">Choisir l'équipe</h3>
+            <div class="choice-buttons">
+                <button class="choice-btn team-choice" onclick="selectTeamForAction('team')">
+                    <span id="teamChoiceText">Mon Équipe</span>
+                </button>
+                <button class="choice-btn opponent-choice" onclick="selectTeamForAction('opponent')">
+                    <span>Équipe Adverse</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Action -->
+    <div id="actionModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('actionModal')">&times;</span>
+            <h3 id="actionModalTitle">Action</h3>
+            
+            <!-- Choix carton pour les cartons -->
+            <div id="cardButtons" class="card-buttons" style="display: none;">
+                <button class="card-btn yellow-card" onclick="selectCardType('yellow')">🟨 Jaune</button>
+                <button class="card-btn red-card" onclick="selectCardType('red')">🟥 Rouge</button>
+                <button class="card-btn white-card" onclick="selectCardType('white')">⬜ Blanc</button>
+            </div>
+            
+            <!-- Sélection joueur -->
+            <div class="players-grid" id="actionPlayerButtons">
+                <!-- Boutons joueurs -->
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="saveActionBtn" class="btn btn-primary" onclick="saveAction()" disabled>
+                    ✅ Valider
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('actionModal')">
+                    ❌ Annuler
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmation Reset -->
+    <div id="confirmResetModal" class="modal">
+        <div class="modal-content">
+            <h3>🔄 Confirmer la réinitialisation</h3>
+            <p>Êtes-vous sûr de vouloir tout réinitialiser ? Cette action est irréversible.</p>
+            <div style="text-align: center;">
+                <button class="btn btn-primary" onclick="confirmReset()">✅ Oui, réinitialiser</button>
+                <button class="btn btn-secondary" onclick="closeModal('confirmResetModal')">❌ Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/match-actions.js"></script>
+    
+    <script>
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
