@@ -1,0 +1,161 @@
+# Guide de Test - Corrections Appliquées 🔧
+
+## ✅ **Corrections Effectuées**
+
+### 1. **Actions du Match - CORRIGÉ**
+- ✅ Toutes les variables globales définies
+- ✅ Fonction `closeModal()` corrigée
+- ✅ Gestion des erreurs améliorée
+- ✅ Vibrations Android ajoutées
+
+### 2. **Mode Live - CORRIGÉ**
+- ✅ Logs de debug ajoutés
+- ✅ Gestion d'erreurs détaillée
+- ✅ Messages d'erreur informatifs
+- ✅ Fonction de test API incluse
+
+## 🧪 **Tests à Effectuer**
+
+### **Test 1 : Actions du Match**
+```
+1. Ajoutez 2-3 joueuses dans Configuration
+2. Allez dans Composition → Sélectionnez 2-3 titulaires
+3. Configuration → "Nouveau Match"
+4. Allez dans Match
+5. Testez CHAQUE bouton d'action :
+   
+   ✅ But → Popup choix équipe → Fond blanc → Choix joueur → Validation
+   ✅ Tir Cadré → Même processus
+   ✅ Tir Non Cadré → Même processus  
+   ✅ Carton → Choix équipe → Choix couleur + joueur
+   ✅ Arrêt Gardienne → Seulement si gardienne sur terrain
+   ✅ Faute → Choix équipe → Choix joueur
+   ✅ Coup Franc → Seulement votre équipe
+   ✅ Changement → Doit marcher (c'était le seul qui marchait)
+```
+
+**❓ Si un bouton ne marche pas :**
+- Ouvrez la console (F12)
+- Regardez les erreurs en rouge
+- Notez quelle action pose problème
+
+### **Test 2 : Mode Live**
+```
+1. Avec un match en cours (quelques événements)
+2. Dans Match → "Générer Lien Live"
+3. Observez la console (F12) pour les logs :
+   
+   ✅ "Génération lien live pour match: ..."
+   ✅ "Données à envoyer: ..."
+   ✅ "Création d'un nouveau bin..."
+   ✅ "Bin créé avec ID: ..."
+   ✅ "Lien généré: ..."
+   
+4. Si succès → Lien apparaît + notification verte
+5. Testez le lien dans un autre onglet
+```
+
+**❓ Si le live ne marche pas :**
+- Vérifiez la console pour voir l'erreur exacte
+- Notez le message d'erreur complet
+
+## 🔍 **Debug Console**
+
+### Commandes de Test
+Ouvrez la console (F12) et tapez :
+
+```javascript
+// Tester l'état des variables
+console.log('Players:', players.length);
+console.log('Actions variables:', {
+    currentActionType,
+    selectedPlayerId,
+    selectedCardType
+});
+
+// Tester l'API Live
+testAPIConnection();
+
+// Voir les stats actuelles
+console.log('Stats:', stats);
+console.log('Events:', events.length);
+```
+
+### Vérifier les Boutons Actions
+```javascript
+// Tester chaque fonction d'action
+console.log('Functions disponibles:');
+console.log('showActionChoiceModal:', typeof showActionChoiceModal);
+console.log('showSaveModal:', typeof showSaveModal);
+console.log('showFreeKickModal:', typeof showFreeKickModal);
+console.log('showSubstitutionModal:', typeof showSubstitutionModal);
+```
+
+## 📱 **Test Android Spécifique**
+
+### Actions sur Mobile
+1. **Vibrations** : Doivent se déclencher à chaque sélection
+2. **Fond blanc** : Visible sur les choix sélectionnés
+3. **2 colonnes** : Actions TOUJOURS en grille 2x2
+4. **Tactile** : Boutons réactifs au touch
+
+### Live sur Mobile
+1. Générez le lien sur PC/Android
+2. Partagez via WhatsApp à un autre téléphone
+3. Ouvrez le lien → Doit afficher le match live
+4. Ajoutez un événement → Doit apparaître sur l'autre téléphone
+
+## ⚠️ **Messages d'Erreur Possibles**
+
+### Actions
+- `"showActionChoiceModal is not defined"` → Problème de chargement JS
+- `"Cannot read property of undefined"` → Variables non initialisées
+- `"selectedPlayerId is null"` → Sélection joueur échouée
+
+### Live  
+- `"Erreur API: 401"` → Problème clé API
+- `"Erreur API: 403"` → Limite atteinte
+- `"Network error"` → Problème connexion
+- `"CORS error"` → Problème navigateur
+
+## 🆘 **Si Ça Ne Marche Toujours Pas**
+
+### Actions qui ne marchent pas
+1. **Vérifiez que tous les fichiers JS sont chargés**
+2. **Console → Network** : Vérifiez que `match-actions.js` se charge
+3. **Testez sur un autre navigateur** (Chrome recommandé)
+
+### Live qui ne marche pas
+1. **Testez la fonction de debug** : `testAPIConnection()`
+2. **Vérifiez votre connexion internet**
+3. **Essayez de régénérer le lien**
+
+### En Dernier Recours
+- **Reset complet** : Configuration → Reset Complet
+- **Vider le cache** : Ctrl+Shift+R (ou Ctrl+F5)
+- **Mode incognito** : Test dans une fenêtre privée
+
+---
+
+## ✅ **Checklist de Test Rapide**
+
+Cochez au fur et à mesure :
+
+**Actions :**
+- [ ] But (équipe + adversaire)
+- [ ] Tir Cadré (équipe + adversaire)  
+- [ ] Tir Non Cadré (équipe + adversaire)
+- [ ] Carton (jaune/rouge/blanc + équipe/adversaire)
+- [ ] Arrêt Gardienne (si gardienne sur terrain)
+- [ ] Faute (équipe + adversaire)
+- [ ] Coup Franc (votre équipe uniquement)
+- [ ] Changement (sortant → entrant)
+
+**Live :**
+- [ ] Génération lien réussie
+- [ ] Lien copiable/partageable
+- [ ] Ouverture lien dans autre onglet/téléphone
+- [ ] Synchronisation événements temps réel
+
+**Si tout fonctionne → L'app est opérationnelle ! 🎉**  
+**Si problème → Notez l'erreur exacte pour correction ciblée**

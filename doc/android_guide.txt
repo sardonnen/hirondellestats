@@ -1,0 +1,185 @@
+# Guide Démarrage Rapide - Android 📱
+
+## 🚀 Setup en 3 minutes sur Android
+
+### 1. Premier Lancement
+- ✅ **2 colonnes d'actions** affichées correctement
+- ✅ **Optimisation tactile** pour Android
+- ✅ **Pas de zoom automatique** sur les champs
+- ✅ **Vibrations** pour le feedback
+
+### 2. Créer votre équipe (2 min)
+
+**📍 Onglet "Configuration" :**
+```
+1. Tapez le nom d'une joueuse
+2. Choisissez la position 
+3. Appuyez "Ajouter Joueuse"
+4. Répétez pour 11+ joueuses minimum
+```
+
+**💡 Conseil Android :** Utilisez la reconnaissance vocale du clavier pour aller plus vite !
+
+### 3. Sélectionner vos 11 titulaires (1 min)
+
+**📍 Onglet "Composition" :**
+```
+1. Tapez sur les joueuses pour les sélectionner
+2. Fond BLANC = sélectionné ✅
+3. Maximum 11 joueuses 
+4. "Confirmer la Composition"
+```
+
+**🔧 Si ça ne fonctionne pas :**
+- Vérifiez que vous avez bien ajouté des joueuses d'abord
+- Tapez bien au centre du bouton joueur
+- Le nombre s'affiche en bas (X/11 joueurs)
+
+### 4. Démarrer le match
+
+**📍 Retour "Configuration" :**
+```
+1. Remplissez les noms d'équipes
+2. "Nouveau Match"
+3. Allez dans "Match" ✅
+```
+
+## 🎮 Utilisation Pendant le Match
+
+### Actions - Grille 2x2 TOUJOURS
+```
+⚽ But           🎯 Tir Cadré
+📐 Tir Non Cadré  🟨 Carton  
+🧤 Arrêt         ⚠️ Faute
+⚽ Coup Franc     🔄 Changement
+```
+
+### Popup en 2 étapes :
+1. **Choix équipe** : Vert=Vous, Rouge=Adversaire → **FOND BLANC** sur sélection
+2. **Choix joueur** : Tapez le joueur → **FOND BLANC** sur sélection
+
+### Chronomètre Android
+- **TAP** ▶️ = Démarrer/Pause
+- **TAP** 🔄 = Mi-temps (remet à 0)
+- **TAP** ⏹️ = Reset complet
+
+## 🔧 Problèmes Fréquents Android
+
+### ❌ "Je ne peux pas sélectionner mes titulaires"
+**Solutions :**
+1. Allez dans "Configuration" et ajoutez au moins 11 joueuses
+2. Puis allez dans "Composition" 
+3. Tapez au CENTRE du bouton joueur
+4. Vérifiez le compteur en bas : "X/11 joueurs"
+
+### ❌ "Les actions ne sont qu'en 1 colonne"
+**Solutions :**
+1. Tournez votre téléphone en mode portrait
+2. Rafraîchissez la page (F5 ou glisser vers le bas)
+3. Si problème persiste : videz le cache du navigateur
+
+### ❌ "Les popups ne s'affichent pas bien"
+**Solutions :**
+1. Utilisez Chrome ou Firefox (évitez navigateurs intégrés)
+2. Autorisez les popups pour ce site
+3. Désactivez le mode économie de données
+
+### ❌ "L'app est lente"
+**Solutions :**
+1. Fermez les autres apps en arrière-plan
+2. Redémarrez votre navigateur
+3. Utilisez Chrome pour de meilleures performances
+
+## ⚡ Conseils Pro Android
+
+### Installation App
+1. **Chrome :** Menu ⋮ → "Ajouter à l'écran d'accueil"
+2. **Firefox :** Menu → "Installer"
+3. **Avantage :** Ouvre comme une vraie app !
+
+### Performance Optimale
+- **Orientation :** Portrait recommandé pour les actions
+- **Navigateur :** Chrome > Firefox > Samsung Internet
+- **RAM :** Fermez les autres apps pendant le match
+- **Réseau :** WiFi recommandé pour le mode live
+
+### Mode Live Spécial Android
+```
+1. Générez le lien dans "Match"
+2. Partagez via WhatsApp/SMS directement
+3. Les spectateurs tapent le lien = suivent en direct
+4. Fonctionne même sur vieux Android !
+```
+
+### Raccourcis Android
+- **Volume +** pendant match = Actions plus rapides
+- **Retour** = Ferme les popups automatiquement
+- **Menu récents** = Basculer vers autre app sans perdre données
+
+## 🆘 Dépannage Urgent
+
+### Reset d'Urgence
+Si tout bug :
+```
+1. "Configuration" → "Reset Complet" 
+2. Confirmer → Tout repart à zéro
+3. Recommencer l'ajout des joueuses
+```
+
+### Sauvegarde Urgente  
+Si match en cours et bug :
+```
+1. Notez le score sur papier
+2. Screenshot de la timeline
+3. Reset et continuez à la main
+```
+
+### Bug Mode Live
+Si le live ne marche pas :
+```
+1. Vérifiez votre connexion internet
+2. Regenerez le lien
+3. Testez d'abord sur votre propre téléphone
+```
+
+## 📞 Support Rapide
+
+### Auto-Diagnostic Android
+```javascript
+// Collez dans console Chrome (F12)
+console.log('Players:', players.length);
+console.log('Titulaires:', startingEleven.length);
+console.log('Android:', /Android/i.test(navigator.userAgent));
+```
+
+### Informations Utiles
+- **Version Android :** Settings → About phone
+- **Version Chrome :** Chrome → Menu → Help & feedback
+- **RAM disponible :** Settings → Device maintenance
+- **Connexion :** Test sur fast.com
+
+---
+
+## ✅ Checklist Match Android
+
+**Avant le match :**
+- [ ] 11+ joueuses ajoutées
+- [ ] 11 titulaires sélectionnés  
+- [ ] Noms équipes renseignés
+- [ ] App installée sur écran d'accueil
+- [ ] Batterie > 50%
+- [ ] WiFi connecté
+
+**Pendant le match :**
+- [ ] Chrono démarré au coup d'envoi
+- [ ] Actions 2x2 visibles
+- [ ] Popups fonctionnent (fond blanc)
+- [ ] Timeline se met à jour
+- [ ] Lien live partagé
+
+**Après le match :**
+- [ ] Stats consultées
+- [ ] Screenshot final
+- [ ] Données sauvegardées
+
+**🎉 Profitez de votre match avec l'app optimisée Android ! ⚽**

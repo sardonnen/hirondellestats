@@ -12,6 +12,7 @@ async function generateLiveLink() {
     
     try {
         showNotification('Génération du lien live...', 'info');
+        console.log('Génération lien live pour match:', currentMatch.id);
         
         // Données à synchroniser
         const liveData = {
@@ -29,18 +30,24 @@ async function generateLiveLink() {
             lastUpdate: new Date().toISOString()
         };
         
+        console.log('Données à envoyer:', liveData);
+        
         // Créer ou mettre à jour le bin
         let binId = currentMatch.liveId;
         
         if (!binId) {
+            console.log('Création d\'un nouveau bin...');
             binId = await createLiveBin(liveData);
             currentMatch.liveId = binId;
+            console.log('Bin créé avec ID:', binId);
         } else {
+            console.log('Mise à jour du bin existant:', binId);
             await updateLiveBin(binId, liveData);
         }
         
         // Générer le lien
         const liveLink = `${window.location.origin}${window.location.pathname}?live=${binId}`;
+        console.log('Lien généré:', liveLink);
         
         // Afficher le lien
         const linkInput = document.getElementById('liveLink');
@@ -58,33 +65,55 @@ async function generateLiveLink() {
         saveData();
         showNotification('Lien live généré !', 'success');
         
+        // Auto-copie sur mobile Android
+        if (/Android/i.test(navigator.userAgent)) {
+            setTimeout(() => {
+                copyLiveLink();
+            }, 1000);
+        }
+        
     } catch (error) {
         console.error('Erreur génération lien:', error);
-        showNotification('Erreur lors de la génération du lien', 'error');
+        showNotification(`Erreur: ${error.message}`, 'error');
     }
 }
 
 // Créer un nouveau bin
 async function createLiveBin(data) {
+    console.log('Création bin avec API_KEY:', API_KEY.substring(0, 10) + '...');
+    
     const response = await fetch(API_BASE_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-Master-Key': API_KEY
+            'X-Master-Key': API_KEY,
+            'X-Bin-Name': `football-match-${Date.now()}`
         },
         body: JSON.stringify(data)
     });
     
+    console.log('Réponse création:', response.status, response.statusText);
+    
     if (!response.ok) {
-        throw new Error(`Erreur API: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Erreur API création:', errorText);
+        throw new Error(`Erreur API: ${response.status} - ${errorText}`);
     }
     
     const result = await response.json();
+    console.log('Résultat création:', result);
+    
+    if (!result.metadata || !result.metadata.id) {
+        throw new Error('ID du bin non reçu');
+    }
+    
     return result.metadata.id;
 }
 
 // Mettre à jour un bin existant
 async function updateLiveBin(binId, data) {
+    console.log('Mise à jour bin:', binId);
+    
     const response = await fetch(`${API_BASE_URL}/${binId}`, {
         method: 'PUT',
         headers: {
@@ -94,32 +123,53 @@ async function updateLiveBin(binId, data) {
         body: JSON.stringify(data)
     });
     
+    console.log('Réponse mise à jour:', response.status, response.statusText);
+    
     if (!response.ok) {
-        throw new Error(`Erreur API: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Erreur API mise à jour:', errorText);
+        throw new Error(`Erreur API: ${response.status} - ${errorText}`);
     }
     
-    return await response.json();
+    const result = await response.json();
+    console.log('Mise à jour réussie');
+    return result;
 }
 
 // Récupérer les données d'un bin
 async function getLiveData(binId) {
+    console.log('Récupération données bin:', binId);
+    
     const response = await fetch(`${API_BASE_URL}/${binId}/latest`, {
         headers: {
             'X-Master-Key': API_KEY
         }
     });
     
+    console.log('Réponse récupération:', response.status, response.statusText);
+    
     if (!response.ok) {
-        throw new Error(`Erreur API: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Erreur API récupération:', errorText);
+        throw new Error(`Erreur API: ${response.status} - ${errorText}`);
     }
     
     const result = await response.json();
+    console.log('Données récupérées:', result);
+    
+    if (!result.record) {
+        throw new Error('Aucune donnée trouvée');
+    }
+    
     return result.record;
 }
 
 // Mettre à jour les données live (appelé automatiquement lors des événements)
 async function updateLiveData() {
-    if (!currentMatch.liveId) return;
+    if (!currentMatch.liveId) {
+        console.log('Pas de liveId, pas de mise à jour live');
+        return;
+    }
     
     try {
         const liveData = {
@@ -137,11 +187,13 @@ async function updateLiveData() {
             lastUpdate: new Date().toISOString()
         };
         
+        console.log('Mise à jour automatique live...');
         await updateLiveBin(currentMatch.liveId, liveData);
-        console.log('Données live mises à jour');
+        console.log('Live mis à jour automatiquement');
         
     } catch (error) {
-        console.error('Erreur mise à jour live:', error);
+        console.error('Erreur mise à jour live automatique:', error);
+        // Ne pas notifier l'utilisateur pour les erreurs automatiques
     }
 }
 
@@ -156,8 +208,8 @@ async function copyLiveLink() {
     }
     
     try {
-        // Méthode moderne pour partager sur mobile
-        if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        // Méthode moderne pour partager sur mobile Android
+        if (navigator.share && /Android/i.test(navigator.userAgent)) {
             await navigator.share({
                 title: 'Match Live - Football Stats',
                 text: 'Suivez le match en direct !',
@@ -182,13 +234,16 @@ async function copyLiveLink() {
         if (successful) {
             showNotification('Lien copié !', 'success');
         } else {
-            throw new Error('Copie échouée');
+            // Dernière option : sélectionner pour copie manuelle
+            linkInput.select();
+            showNotification('Lien sélectionné - copiez manuellement', 'info');
         }
         
     } catch (error) {
         console.error('Erreur copie:', error);
+        // En dernier recours, sélectionner le texte pour copie manuelle
         linkInput.select();
-        showNotification('Veuillez copier manuellement le lien sélectionné', 'info');
+        showNotification('Lien sélectionné - copiez manuellement', 'info');
     }
 }
 
@@ -197,7 +252,7 @@ async function initializeLiveView(liveId) {
     console.log('Initialisation du mode live, ID:', liveId);
     
     try {
-        // Cacher les éléments de navigation et actions
+        // Cacher les éléments de navigation
         const navbar = document.querySelector('.navbar');
         if (navbar) {
             navbar.style.display = 'none';
@@ -207,19 +262,26 @@ async function initializeLiveView(liveId) {
         const waitingMessage = document.getElementById('waitingMessage');
         if (waitingMessage) {
             waitingMessage.innerHTML = `
-                <h3>📡 Chargement du match live...</h3>
-                <p>Récupération des données en cours...</p>
+                <div style="text-align: center; padding: 3rem;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📡</div>
+                    <h3>Chargement du match live...</h3>
+                    <p>Récupération des données en cours...</p>
+                    <div style="margin-top: 2rem;">
+                        <div style="width: 50px; height: 50px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                    </div>
+                </div>
             `;
         }
         
         // Charger les données depuis l'API
+        console.log('Chargement des données live...');
         const liveData = await getLiveData(liveId);
         console.log('Données live récupérées:', liveData);
         
         // Mettre à jour les variables globales
         stats = liveData.stats || {
-            team1: { goals: 0, shots: 0, fouls: 0, yellowCards: 0, redCards: 0, whiteCards: 0 },
-            team2: { goals: 0, shots: 0, fouls: 0, yellowCards: 0, redCards: 0, whiteCards: 0 }
+            team1: { goals: 0, shots: 0, shotsOn: 0, shotsOff: 0, saves: 0, fouls: 0, freeKicks: 0, yellowCards: 0, redCards: 0, whiteCards: 0 },
+            team2: { goals: 0, shots: 0, shotsOn: 0, shotsOff: 0, saves: 0, fouls: 0, freeKicks: 0, yellowCards: 0, redCards: 0, whiteCards: 0 }
         };
         events = liveData.events || [];
         
@@ -234,8 +296,11 @@ async function initializeLiveView(liveId) {
             team1: liveData.team1,
             team2: liveData.team2,
             venue: liveData.venue,
-            liveId: liveId
+            liveId: liveId,
+            lastUpdate: liveData.lastUpdate
         };
+        
+        console.log('Données live chargées, affichage...');
         
         // Afficher les données live
         displayLiveMatch();
@@ -245,7 +310,7 @@ async function initializeLiveView(liveId) {
         
     } catch (error) {
         console.error('Erreur chargement live:', error);
-        showLiveError();
+        showLiveError(error.message);
     }
 }
 
@@ -262,6 +327,8 @@ function displayLiveMatch() {
 
 // Mettre à jour l'affichage live
 function updateLiveDisplay() {
+    console.log('Mise à jour affichage live');
+    
     // Noms des équipes
     const liveTeam1 = document.getElementById('liveTeam1');
     const liveTeam2 = document.getElementById('liveTeam2');
@@ -304,7 +371,7 @@ function updateLiveEvents() {
     container.innerHTML = '<h3>⏱️ Événements du match</h3>';
     
     if (events.length === 0) {
-        container.innerHTML += '<p style="text-align: center; color: #bdc3c7;">Aucun événement pour le moment</p>';
+        container.innerHTML += '<p style="text-align: center; color: #bdc3c7; padding: 2rem;">Aucun événement pour le moment</p>';
         return;
     }
     
@@ -317,10 +384,15 @@ function updateLiveEvents() {
         `;
         container.appendChild(div);
     });
+    
+    // Scroll vers le bas pour voir les derniers événements
+    container.scrollTop = container.scrollHeight;
 }
 
 // Démarrer les mises à jour automatiques
 function startLiveUpdates(liveId) {
+    console.log('Démarrage des mises à jour automatiques live');
+    
     // Mettre à jour toutes les 5 secondes
     setInterval(async () => {
         try {
@@ -345,21 +417,56 @@ function startLiveUpdates(liveId) {
             
         } catch (error) {
             console.error('Erreur mise à jour live:', error);
+            // Continuer à essayer même en cas d'erreur
         }
     }, 5000);
 }
 
 // Afficher une erreur en mode live
-function showLiveError() {
+function showLiveError(errorMessage = '') {
     const waitingMessage = document.getElementById('waitingMessage');
     if (waitingMessage) {
         waitingMessage.innerHTML = `
-            <h3>❌ Erreur de chargement</h3>
-            <p>Impossible de charger les données du match live.</p>
-            <p>Vérifiez le lien ou réessayez plus tard.</p>
-            <button class="btn btn-primary" onclick="window.location.href = window.location.pathname">
-                🏠 Retour à l'accueil
-            </button>
+            <div style="text-align: center; padding: 3rem;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+                <h3>Erreur de chargement</h3>
+                <p>Impossible de charger les données du match live.</p>
+                ${errorMessage ? `<p style="color: #e74c3c; font-size: 0.9rem;">Détail: ${errorMessage}</p>` : ''}
+                <div style="margin-top: 2rem;">
+                    <button class="btn btn-primary" onclick="window.location.href = window.location.pathname">
+                        🏠 Retour à l'accueil
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.location.reload()" style="margin-left: 1rem;">
+                        🔄 Réessayer
+                    </button>
+                </div>
+            </div>
         `;
+    }
+}
+
+// Test de connexion API (fonction de debug)
+async function testAPIConnection() {
+    try {
+        console.log('Test de connexion à jsonbin.io...');
+        
+        const testData = {
+            test: true,
+            timestamp: new Date().toISOString()
+        };
+        
+        const binId = await createLiveBin(testData);
+        console.log('Test réussi, bin créé:', binId);
+        
+        const retrievedData = await getLiveData(binId);
+        console.log('Test récupération réussi:', retrievedData);
+        
+        showNotification('Test API réussi !', 'success');
+        return true;
+        
+    } catch (error) {
+        console.error('Test API échoué:', error);
+        showNotification(`Test API échoué: ${error.message}`, 'error');
+        return false;
     }
 }

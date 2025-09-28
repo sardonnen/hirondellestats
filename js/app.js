@@ -724,11 +724,40 @@ function closeModal(modalId) {
         modal.style.display = 'none';
     }
     
-    // Reset des sélections
-    selectedPlayerId = null;
-    selectedCardType = null;
-    currentActionType = null;
-    currentActionTeam = null;
+    // Reset des sélections selon le modal
+    if (modalId === 'actionModal' || modalId === 'actionChoiceModal') {
+        selectedPlayerId = null;
+        selectedCardType = null;
+        currentActionType = null;
+        currentActionTeam = null;
+    } else if (modalId === 'saveModal') {
+        selectedSavePlayerId = null;
+    } else if (modalId === 'freeKickModal') {
+        selectedFreeKickPlayerId = null;
+    } else if (modalId === 'substitutionModal') {
+        selectedOutPlayer = null;
+        selectedInPlayer = null;
+    }
+}
+
+// S'assurer que les variables globales des actions sont définies
+if (typeof selectedPlayerId === 'undefined') {
+    var selectedPlayerId = null;
+}
+if (typeof selectedCardType === 'undefined') {
+    var selectedCardType = null;
+}
+if (typeof currentActionType === 'undefined') {
+    var currentActionType = null;
+}
+if (typeof currentActionTeam === 'undefined') {
+    var currentActionTeam = null;
+}
+if (typeof selectedSavePlayerId === 'undefined') {
+    var selectedSavePlayerId = null;
+}
+if (typeof selectedFreeKickPlayerId === 'undefined') {
+    var selectedFreeKickPlayerId = null;
 }
 
 // Notifications
