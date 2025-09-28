@@ -1,11 +1,11 @@
 // ===== CONFIGURATION API JSONBIN.IO =====
 const JSONBIN_CONFIG = {
     // Remplacez par votre clé API JSONBin.io
-    API_KEY: '$2a$10$r5MbOaRyivoihBZSwAHKkO',
+    API_KEY: '$2a$10$L3uaRDnltfCsdgv50dAJ0.aTJsslnmT2SPju9EPNd6HvXqW6u9KmS',
     BASE_URL: 'https://api.jsonbin.io/v3/b',
     HEADERS: {
         'Content-Type': 'application/json',
-        'X-Master-Key': '$2a$10$r5MbOaRyivoihBZSwAHKkO'
+        'X-Master-Key': '$2a$10$L3uaRDnltfCsdgv50dAJ0.aTJsslnmT2SPju9EPNd6HvXqW6u9KmS'
     }
 };
 
