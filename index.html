@@ -138,7 +138,11 @@
          */
         document.addEventListener('DOMContentLoaded', function() {
             loadMatchConfig();
-            updateRecentStats();
+            
+            // Attendre que footballApp soit chargé
+            setTimeout(() => {
+                updateRecentStats();
+            }, 100);
             
             // Configuration de la date par défaut
             const now = new Date();
@@ -173,8 +177,15 @@
          */
         function saveMatchConfig() {
             const config = getMatchConfig();
-            setMatchConfig(config);
-            footballApp.showNotification('💾 Configuration sauvegardée !', 'success');
+            if (typeof setMatchConfig === 'function') {
+                setMatchConfig(config);
+            }
+            
+            if (typeof footballApp !== 'undefined' && footballApp.showNotification) {
+                footballApp.showNotification('💾 Configuration sauvegardée !', 'success');
+            } else {
+                alert('💾 Configuration sauvegardée !');
+            }
         }
 
         /**
@@ -194,7 +205,12 @@
          */
         function loadMatchConfig() {
             const config = getMatchConfig();
-            const saved = loadData('matchConfig');
+            let saved = null;
+            
+            // Essayer de charger depuis storage.js
+            if (typeof loadData === 'function') {
+                saved = loadData('matchConfig');
+            }
             
             if (saved) {
                 document.getElementById('teamName').value = saved.teamName || config.teamName;
@@ -211,6 +227,13 @@
          */
         function updateRecentStats() {
             const container = document.getElementById('recentStats');
+            
+            // Vérifier que footballApp est disponible
+            if (typeof footballApp === 'undefined' || !footballApp.getHomePageStats) {
+                container.innerHTML = '<p>Chargement des statistiques...</p>';
+                return;
+            }
+            
             const stats = footballApp.getHomePageStats();
             
             if (!stats.hasData) {
@@ -255,17 +278,35 @@
          * Télécharger les données du match actuel
          */
         function downloadCurrentMatch() {
-            const exportData = footballApp.exportCurrentMatch();
-            
-            const dataStr = JSON.stringify(exportData, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(dataBlob);
-            link.download = `football-stats-${new Date().toISOString().slice(0, 10)}.json`;
-            link.click();
-            
-            footballApp.showNotification('💾 Sauvegarde téléchargée !', 'success');
+            try {
+                if (typeof footballApp === 'undefined' || !footballApp.exportCurrentMatch) {
+                    alert('❌ Application non chargée, veuillez réessayer');
+                    return;
+                }
+                
+                const exportData = footballApp.exportCurrentMatch();
+                
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `football-stats-${new Date().toISOString().slice(0, 10)}.json`;
+                link.click();
+                
+                if (footballApp.showNotification) {
+                    footballApp.showNotification('💾 Sauvegarde téléchargée !', 'success');
+                } else {
+                    alert('💾 Sauvegarde téléchargée !');
+                }
+            } catch (error) {
+                console.error('Erreur export:', error);
+                if (typeof footballApp !== 'undefined' && footballApp.showNotification) {
+                    footballApp.showNotification('❌ Erreur lors de l\'export', 'error');
+                } else {
+                    alert('❌ Erreur lors de l\'export');
+                }
+            }
         }
 
         /**
@@ -288,19 +329,36 @@
                     const data = JSON.parse(e.target.result);
                     
                     if (confirm('📂 Charger cette sauvegarde ?\n\n⚠️ Les données actuelles seront remplacées !')) {
+                        if (typeof footballApp === 'undefined' || !footballApp.importMatchData) {
+                            alert('❌ Application non chargée, veuillez recharger la page');
+                            return;
+                        }
+                        
                         const success = footballApp.importMatchData(data);
                         
                         if (success) {
-                            footballApp.showNotification('📂 Sauvegarde chargée avec succès !', 'success');
+                            if (footballApp.showNotification) {
+                                footballApp.showNotification('📂 Sauvegarde chargée avec succès !', 'success');
+                            } else {
+                                alert('📂 Sauvegarde chargée avec succès !');
+                            }
                             updateRecentStats();
                             loadMatchConfig();
                         } else {
-                            footballApp.showNotification('❌ Erreur lors du chargement', 'error');
+                            if (footballApp.showNotification) {
+                                footballApp.showNotification('❌ Erreur lors du chargement', 'error');
+                            } else {
+                                alert('❌ Erreur lors du chargement');
+                            }
                         }
                     }
                 } catch (error) {
                     console.error('Erreur lors du chargement:', error);
-                    footballApp.showNotification('❌ Erreur: fichier invalide', 'error');
+                    if (typeof footballApp !== 'undefined' && footballApp.showNotification) {
+                        footballApp.showNotification('❌ Erreur: fichier invalide', 'error');
+                    } else {
+                        alert('❌ Erreur: fichier invalide');
+                    }
                 }
             };
             reader.readAsText(file);

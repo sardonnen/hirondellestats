@@ -27,18 +27,19 @@ function clearMatchData() {
  */
 function resetCompositionData() {
     // Remettre tous les joueurs sur le banc
-    const players = JSON.parse(localStorage.getItem('players') || '[]');
-    if (players.length > 0) {
-        const resetPlayers = players.map(player => ({
+    if (appState.players && appState.players.length > 0) {
+        appState.players = appState.players.map(player => ({
             ...player,
             status: 'bench'  // Remettre tous sur le banc
         }));
-        localStorage.setItem('players', JSON.stringify(resetPlayers));
-        console.log('👥 Composition reset - tous les joueurs remis sur le banc');
         
-        // Mettre à jour l'état de l'application
-        appState.players = resetPlayers;
+        // Sauvegarder dans localStorage directement aussi
+        if (typeof saveData === 'function') {
+            saveData('players', appState.players);
+        }
+        
         saveAppState();
+        console.log('👥 Composition reset - tous les joueurs remis sur le banc');
     }
 }
 
@@ -46,7 +47,12 @@ function resetCompositionData() {
  * Créer un nouveau match vide
  */
 function createNewMatch() {
-    const config = getMatchConfig();
+    // Utiliser getMatchConfig depuis storage.js
+    const config = typeof getMatchConfig === 'function' ? getMatchConfig() : {
+        teamName: 'Mon Équipe',
+        opponentName: 'Équipe Adverse',
+        venue: 'Terrain'
+    };
     
     const newMatchData = {
         id: Date.now().toString(),
@@ -84,6 +90,7 @@ function createNewMatch() {
     appState.score = { team: 0, opponent: 0 };
     appState.time = 0;
     appState.half = 1;
+    appState.currentMatch = newMatchData;
     saveAppState();
     
     console.log('🆕 Nouveau match créé avec données vides');
@@ -214,7 +221,7 @@ function getHomePageStats() {
 function exportCurrentMatch() {
     const players = appState.players || [];
     const currentMatch = localStorage.getItem('currentMatch');
-    const matchConfig = loadData('matchConfig');
+    const matchConfig = typeof loadData === 'function' ? loadData('matchConfig') : null;
     
     const exportData = {
         players: players,
@@ -241,17 +248,20 @@ function importMatchData(data) {
         // Importer les joueurs
         if (data.players) {
             appState.players = data.players;
-            saveData('players', data.players);
+            if (typeof saveData === 'function') {
+                saveData('players', data.players);
+            }
         }
         
         // Importer la configuration du match
-        if (data.matchConfig) {
+        if (data.matchConfig && typeof setMatchConfig === 'function') {
             setMatchConfig(data.matchConfig);
         }
         
         // Importer les données du match actuel
         if (data.currentMatch) {
             localStorage.setItem('currentMatch', JSON.stringify(data.currentMatch));
+            appState.currentMatch = data.currentMatch;
         }
         
         // Importer l'état de l'application
