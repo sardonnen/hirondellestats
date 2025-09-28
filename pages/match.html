@@ -157,11 +157,124 @@
             backdrop-filter: blur(5px);
         }
         
-        .assist-btn.selected {
+        .goalkeeper-choice-btn {
+            padding: 20px 30px;
+            border: 3px solid;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+            font-weight: bold;
+            min-width: 120px;
+            text-align: center;
+            margin: 10px;
+        }
+        
+        .goalkeeper-choice-btn.my-gk {
+            background: rgba(230, 126, 34, 0.3);
+            border-color: #e67e22;
+            color: white;
+        }
+        
+        .goalkeeper-choice-btn.opponent-gk {
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #e74c3c;
+            color: white;
+        }
+        
+        .goalkeeper-choice-btn.selected {
             background: rgba(255, 255, 255, 0.5) !important;
             color: #2c3e50 !important;
-            border-color: #f39c12 !important;
+            transform: scale(1.05);
             backdrop-filter: blur(5px);
+        }
+        
+        .save-type-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .save-type-btn {
+            padding: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .save-type-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .save-type-btn.selected {
+            background: rgba(255, 255, 255, 0.5) !important;
+            color: #2c3e50 !important;
+            border-color: #27ae60 !important;
+            backdrop-filter: blur(5px);
+        }
+        
+        .global-stats-compact {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .compact-stat-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .compact-stat-card:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-3px);
+        }
+        
+        .compact-stat-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+        
+        .compact-stat-values {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+        
+        .compact-team-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .compact-separator {
+            font-size: 1.2em;
+            color: #bdc3c7;
+        }
+        
+        .compact-opponent-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        
+        .compact-stat-label {
+            font-size: 0.9em;
+            color: #ecf0f1;
+            opacity: 0.9;
         }
         
         .timeline-container {
@@ -328,8 +441,66 @@
             <!-- Résumé rapide -->
             <div class="team-card">
                 <h3>📊 Résumé Rapide</h3>
-                <div id="quickStats" class="quick-stats">
-                    <!-- Les stats s'afficheront ici -->
+                <div class="global-stats-compact">
+                    <div class="compact-stat-card goals">
+                        <div class="compact-stat-icon">⚽</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamGoals">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentGoals">0</span>
+                        </div>
+                        <div class="compact-stat-label">Buts</div>
+                    </div>
+                    
+                    <div class="compact-stat-card shots">
+                        <div class="compact-stat-icon">🎯</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamShots">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentShots">0</span>
+                        </div>
+                        <div class="compact-stat-label">Tirs</div>
+                    </div>
+                    
+                    <div class="compact-stat-card cards">
+                        <div class="compact-stat-icon">🟨</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamCards">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentCards">0</span>
+                        </div>
+                        <div class="compact-stat-label">Cartons</div>
+                    </div>
+                    
+                    <div class="compact-stat-card fouls">
+                        <div class="compact-stat-icon">⚠️</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamFouls">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentFouls">0</span>
+                        </div>
+                        <div class="compact-stat-label">Fautes</div>
+                    </div>
+                    
+                    <div class="compact-stat-card saves">
+                        <div class="compact-stat-icon">🧤</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamSaves">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentSaves">0</span>
+                        </div>
+                        <div class="compact-stat-label">Arrêts</div>
+                    </div>
+                    
+                    <div class="compact-stat-card freekicks">
+                        <div class="compact-stat-icon">⚽</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamFreeKicks">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentFreeKicks">0</span>
+                        </div>
+                        <div class="compact-stat-label">Coups Francs</div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -374,27 +545,36 @@
             <span class="close" onclick="closeGoalkeeperModal()">&times;</span>
             <h3>🧤 Arrêt de Gardien</h3>
             
-            <div class="team-choice-buttons">
-                <div class="team-choice-btn my-team" onclick="selectGoalkeeperTeam('my-team')">
-                    🟢 Mon Gardien
-                </div>
-                <div class="team-choice-btn opponent-team" onclick="selectGoalkeeperTeam('opponent')">
-                    🔴 Gardien Adverse
+            <!-- Choix du gardien -->
+            <div class="goalkeeper-choice-section">
+                <h4>Qui a fait l'arrêt ?</h4>
+                <div class="goalkeeper-choices">
+                    <div class="goalkeeper-choice-btn my-gk" onclick="selectGoalkeeperTeam('my-team')">
+                        🟢 <span id="myGoalkeeperName">Mon Gardien</span>
+                    </div>
+                    <div class="goalkeeper-choice-btn opponent-gk" onclick="selectGoalkeeperTeam('opponent')">
+                        🔴 Gardien Adverse
+                    </div>
                 </div>
             </div>
             
-            <div id="goalkeeperPlayerButtons" class="player-grid" style="display: none;">
-                <!-- Boutons des gardiens -->
-            </div>
-            
-            <div class="form-group" id="saveTypeGroup" style="display: none;">
-                <label for="saveType">Type d'arrêt :</label>
-                <select id="saveType">
-                    <option value="line">Sur sa ligne</option>
-                    <option value="out">En sortie</option>
-                    <option value="penalty">Penalty</option>
-                    <option value="corner">Corner</option>
-                </select>
+            <!-- Types d'arrêt -->
+            <div class="save-type-section" id="saveTypeSection" style="display: none;">
+                <h4>Type d'arrêt :</h4>
+                <div class="save-type-buttons">
+                    <div class="save-type-btn" onclick="selectSaveType('line')" data-type="line">
+                        🥅 Sur sa ligne
+                    </div>
+                    <div class="save-type-btn" onclick="selectSaveType('out')" data-type="out">
+                        🏃‍♀️ En sortie
+                    </div>
+                    <div class="save-type-btn" onclick="selectSaveType('penalty')" data-type="penalty">
+                        ⚽ Penalty
+                    </div>
+                    <div class="save-type-btn" onclick="selectSaveType('corner')" data-type="corner">
+                        📐 Corner
+                    </div>
+                </div>
             </div>
             
             <div class="modal-actions">
@@ -414,8 +594,9 @@
         let selectedCardType = null;
         let selectedTeam = null;
         let currentActionType = null;
-        let currentGoalkeeperTeam = null;
-        let selectedGoalkeeperId = null;
+        // Variables pour le modal gardien
+        let selectedGoalkeeperTeam = null;
+        let selectedSaveType = null;
         
         // Variables pour le timer
         let matchTimer = {
@@ -431,8 +612,8 @@
         
         // Stats du match
         let matchStats = {
-            myTeam: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0 },
-            opponent: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0 }
+            myTeam: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0, freeKicks: 0 },
+            opponent: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0, freeKicks: 0 }
         };
 
         // Initialisation de la page
@@ -906,96 +1087,104 @@
         
         function showGoalkeeperModal() {
             // Reset des sélections
-            currentGoalkeeperTeam = null;
-            selectedGoalkeeperId = null;
+            selectedGoalkeeperTeam = null;
+            selectedSaveType = null;
             
-            // Cacher les éléments avancés
-            document.getElementById('goalkeeperPlayerButtons').style.display = 'none';
-            document.getElementById('saveTypeGroup').style.display = 'none';
+            // Cacher la section types d'arrêt
+            document.getElementById('saveTypeSection').style.display = 'none';
             
             // Reset des boutons
-            const buttons = document.querySelectorAll('.team-choice-btn');
-            buttons.forEach(btn => btn.classList.remove('selected'));
+            resetGoalkeeperButtons();
+            
+            // Charger le nom du gardien de mon équipe
+            loadMyGoalkeeperName();
             
             document.getElementById('goalkeeperModal').style.display = 'block';
         }
         
+        function loadMyGoalkeeperName() {
+            const players = getMyTeamPlayers();
+            const goalkeeper = players.find(p => 
+                p.status === 'field' && 
+                p.position && 
+                p.position.toLowerCase().includes('garden')
+            );
+            
+            const nameElement = document.getElementById('myGoalkeeperName');
+            if (goalkeeper) {
+                nameElement.textContent = goalkeeper.name;
+            } else {
+                nameElement.textContent = 'Mon Gardien';
+            }
+        }
+        
         function selectGoalkeeperTeam(team) {
-            currentGoalkeeperTeam = team;
+            selectedGoalkeeperTeam = team;
             
             // Mise à jour visuelle
-            const buttons = document.querySelectorAll('#goalkeeperModal .team-choice-btn');
-            buttons.forEach(btn => btn.classList.remove('selected'));
-            const selectedBtn = document.querySelector(`#goalkeeperModal .team-choice-btn.${team === 'my-team' ? 'my-team' : 'opponent-team'}`);
+            resetGoalkeeperButtons();
+            const selectedBtn = document.querySelector(`.goalkeeper-choice-btn.${team === 'my-team' ? 'my-gk' : 'opponent-gk'}`);
             if (selectedBtn) {
                 selectedBtn.classList.add('selected');
             }
             
-            // Afficher la sélection des gardiens
-            loadGoalkeepers();
-            document.getElementById('goalkeeperPlayerButtons').style.display = 'block';
-            document.getElementById('saveTypeGroup').style.display = 'block';
-        }
-        
-        function loadGoalkeepers() {
-            const container = document.getElementById('goalkeeperPlayerButtons');
-            container.innerHTML = '';
+            // Afficher la section types d'arrêt
+            document.getElementById('saveTypeSection').style.display = 'block';
             
-            if (currentGoalkeeperTeam === 'my-team') {
-                const goalkeepers = getMyTeamGoalkeepers();
-                goalkeepers.forEach(gk => {
-                    const button = document.createElement('button');
-                    button.className = 'player-btn goalkeeper-btn';
-                    button.innerHTML = `
-                        <div>${gk.name}</div>
-                        <div style="font-size: 0.8rem; opacity: 0.8;">Gardien</div>
-                    `;
-                    button.onclick = () => selectGoalkeeper(gk.id, button);
-                    container.appendChild(button);
-                });
-            } else {
-                // Gardien adverse
-                const button = document.createElement('button');
-                button.className = 'player-btn goalkeeper-btn opponent';
-                button.innerHTML = `
-                    <div>Gardien Adverse</div>
-                    <div style="font-size: 0.8rem; opacity: 0.8;">Gardien</div>
-                `;
-                button.onclick = () => selectGoalkeeper('opponent_gk', button);
-                container.appendChild(button);
-            }
+            // Reset la sélection du type d'arrêt
+            selectedSaveType = null;
+            resetSaveTypeButtons();
+            updateGoalkeeperSaveButton();
         }
         
-        function selectGoalkeeper(goalkeeperId, buttonElement) {
-            selectedGoalkeeperId = goalkeeperId;
+        function selectSaveType(saveType) {
+            selectedSaveType = saveType;
             
             // Mise à jour visuelle
-            const buttons = document.querySelectorAll('#goalkeeperPlayerButtons .goalkeeper-btn');
-            buttons.forEach(btn => btn.classList.remove('selected'));
-            buttonElement.classList.add('selected');
+            resetSaveTypeButtons();
+            const selectedBtn = document.querySelector(`.save-type-btn[data-type="${saveType}"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('selected');
+            }
             
-            document.getElementById('saveGoalkeeperBtn').disabled = false;
+            updateGoalkeeperSaveButton();
+        }
+        
+        function resetGoalkeeperButtons() {
+            const buttons = document.querySelectorAll('.goalkeeper-choice-btn');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+        }
+        
+        function resetSaveTypeButtons() {
+            const buttons = document.querySelectorAll('.save-type-btn');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+        }
+        
+        function updateGoalkeeperSaveButton() {
+            const saveBtn = document.getElementById('saveGoalkeeperBtn');
+            saveBtn.disabled = !selectedGoalkeeperTeam || !selectedSaveType;
         }
         
         function closeGoalkeeperModal() {
             document.getElementById('goalkeeperModal').style.display = 'none';
-            currentGoalkeeperTeam = null;
-            selectedGoalkeeperId = null;
+            selectedGoalkeeperTeam = null;
+            selectedSaveType = null;
+            resetGoalkeeperButtons();
+            resetSaveTypeButtons();
         }
         
         function saveGoalkeeperAction() {
-            if (!selectedGoalkeeperId) {
-                alert('Sélectionnez un gardien');
+            if (!selectedGoalkeeperTeam || !selectedSaveType) {
+                alert('Sélectionnez un gardien et un type d\'arrêt');
                 return;
             }
             
-            const saveType = document.getElementById('saveType').value;
-            
+            // Créer l'événement
             const eventData = {
                 type: 'save',
-                team: currentGoalkeeperTeam,
-                playerId: selectedGoalkeeperId,
-                saveType: saveType,
+                team: selectedGoalkeeperTeam,
+                playerId: selectedGoalkeeperTeam === 'my-team' ? 'my_goalkeeper' : 'opponent_goalkeeper',
+                saveType: selectedSaveType,
                 time: getCurrentMatchTime()
             };
             
@@ -1111,7 +1300,13 @@
                 case 'foul':
                     return `⚠️ Faute - ${playerName}`;
                 case 'save':
-                    return `🧤 Arrêt - ${playerName}`;
+                    const saveTypeText = {
+                        'line': 'sur sa ligne',
+                        'out': 'en sortie',
+                        'penalty': 'penalty',
+                        'corner': 'corner'
+                    };
+                    return `🧤 Arrêt ${saveTypeText[event.saveType] || ''} - ${playerName}`;
                 case 'freekick':
                     return `⚽ Coup Franc - ${playerName}`;
                 default:
@@ -1120,8 +1315,22 @@
         }
         
         function getPlayerName(playerId) {
-            if (typeof playerId === 'string' && playerId.startsWith('opponent_')) {
-                return 'Joueur Adverse';
+            if (typeof playerId === 'string') {
+                if (playerId.startsWith('opponent_') || playerId === 'opponent_player') {
+                    return 'Joueur Adverse';
+                }
+                if (playerId === 'my_goalkeeper') {
+                    const players = getMyTeamPlayers();
+                    const goalkeeper = players.find(p => 
+                        p.status === 'field' && 
+                        p.position && 
+                        p.position.toLowerCase().includes('garden')
+                    );
+                    return goalkeeper ? goalkeeper.name : 'Mon Gardien';
+                }
+                if (playerId === 'opponent_goalkeeper') {
+                    return 'Gardien Adverse';
+                }
             }
             
             // Récupérer le nom du joueur depuis les données de l'équipe
@@ -1149,6 +1358,9 @@
                 case 'save':
                     matchStats[team].saves++;
                     break;
+                case 'freekick':
+                    matchStats[team].freeKicks++;
+                    break;
             }
         }
         
@@ -1162,27 +1374,19 @@
         }
         
         function updateQuickStats() {
-            const container = document.getElementById('quickStats');
-            container.innerHTML = `
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value">${matchStats.myTeam.goals}</div>
-                        <div class="stat-label">Buts</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${matchStats.myTeam.shots}</div>
-                        <div class="stat-label">Tirs</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${matchStats.myTeam.cards}</div>
-                        <div class="stat-label">Cartons</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${matchStats.myTeam.saves}</div>
-                        <div class="stat-label">Arrêts</div>
-                    </div>
-                </div>
-            `;
+            // Mettre à jour les statistiques compactes
+            document.getElementById('compactTeamGoals').textContent = matchStats.myTeam.goals;
+            document.getElementById('compactOpponentGoals').textContent = matchStats.opponent.goals;
+            document.getElementById('compactTeamShots').textContent = matchStats.myTeam.shots;
+            document.getElementById('compactOpponentShots').textContent = matchStats.opponent.shots;
+            document.getElementById('compactTeamCards').textContent = matchStats.myTeam.cards;
+            document.getElementById('compactOpponentCards').textContent = matchStats.opponent.cards;
+            document.getElementById('compactTeamFouls').textContent = matchStats.myTeam.fouls;
+            document.getElementById('compactOpponentFouls').textContent = matchStats.opponent.fouls;
+            document.getElementById('compactTeamSaves').textContent = matchStats.myTeam.saves;
+            document.getElementById('compactOpponentSaves').textContent = matchStats.opponent.saves;
+            document.getElementById('compactTeamFreeKicks').textContent = matchStats.myTeam.freeKicks || 0;
+            document.getElementById('compactOpponentFreeKicks').textContent = matchStats.opponent.freeKicks || 0;
         }
 
         // ===== FONCTIONS UTILITAIRES =====
