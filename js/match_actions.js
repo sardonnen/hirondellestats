@@ -90,14 +90,18 @@ function createPlayerButtons() {
         container.appendChild(button);
     } else {
         // Boutons joueurs de notre équipe
-        const availablePlayers = players.filter(player => {
-            // Pour buts et tirs, seulement les joueurs sur le terrain
-            if (currentActionType === 'goal' || currentActionType === 'shot') {
-                return player.status === 'field';
-            }
-            // Pour cartons et fautes, tous les joueurs actifs
-            return player.status === 'field' || player.status === 'bench';
-        });
+        let availablePlayers = [];
+        
+        // Filtrage selon le type d'action
+        if (currentActionType === 'goal' || currentActionType === 'shot_on' || currentActionType === 'shot_off') {
+            // Seulement les joueurs sur le terrain
+            availablePlayers = players.filter(player => player.status === 'field');
+        } else {
+            // Tous les joueurs actifs (terrain + banc)
+            availablePlayers = players.filter(player => 
+                player.status === 'field' || player.status === 'bench'
+            );
+        }
         
         if (availablePlayers.length === 0) {
             container.innerHTML = '<p style="text-align: center; color: #bdc3c7;">Aucun joueur disponible</p>';
@@ -107,7 +111,17 @@ function createPlayerButtons() {
         availablePlayers.forEach(player => {
             const button = document.createElement('button');
             button.className = `player-btn ${player.position === 'gardienne' ? 'goalkeeper' : ''}`;
-            button.textContent = player.name;
+            
+            // Indiquer le statut du joueur
+            let statusIcon = '';
+            if (player.status === 'field') statusIcon = '🟢';
+            else if (player.status === 'bench') statusIcon = '🔵';
+            
+            button.innerHTML = `
+                <div>${statusIcon} ${player.name}</div>
+                <div style="font-size: 0.8rem; opacity: 0.8;">${getPositionIcon(player.position)} ${player.position}</div>
+            `;
+            
             button.onclick = () => selectPlayer(player.id, button);
             container.appendChild(button);
         });
@@ -175,8 +189,9 @@ function saveAction() {
         case 'goal':
             handleGoal(teamKey);
             break;
-        case 'shot':
-            handleShot(teamKey);
+        case 'shot_on':
+        case 'shot_off':
+            handleShot(teamKey, currentActionType);
             break;
         case 'card':
             handleCard(teamKey);
@@ -215,18 +230,25 @@ function handleGoal(teamKey) {
     showNotification(`But marqué par ${playerName} !`, 'success');
 }
 
-function handleShot(teamKey) {
+function handleShot(teamKey, actionType) {
+    const shotOnTarget = actionType === 'shot_on';
+    
     stats[teamKey].shots++;
+    if (shotOnTarget) {
+        stats[teamKey].shotsOn++;
+    } else {
+        stats[teamKey].shotsOff++;
+    }
     
     let playerName, description;
     
     if (selectedPlayerId === 'opponent') {
         playerName = currentMatch.team2 || 'Équipe Adverse';
-        description = 'Tir tenté';
+        description = shotOnTarget ? 'Tir cadré' : 'Tir non cadré';
     } else {
         const player = players.find(p => p.id === selectedPlayerId);
         playerName = player ? player.name : 'Joueur inconnu';
-        description = 'Tir tenté';
+        description = shotOnTarget ? 'Tir cadré' : 'Tir non cadré';
         
         // Mise à jour des stats joueur
         if (playerStats[selectedPlayerId]) {
@@ -234,8 +256,9 @@ function handleShot(teamKey) {
         }
     }
     
-    addEvent('🎯', description, playerName, teamKey);
-    showNotification(`Tir enregistré pour ${playerName}`, 'info');
+    const icon = shotOnTarget ? '🎯' : '📐';
+    addEvent(icon, description, playerName, teamKey);
+    showNotification(`${description} enregistré pour ${playerName}`, 'info');
 }
 
 function handleCard(teamKey) {
@@ -307,6 +330,170 @@ function handleFoul(teamKey) {
     
     addEvent('⚠️', description, playerName, teamKey);
     showNotification(`Faute enregistrée pour ${playerName}`, 'info');
+}
+
+// Variables pour les arrêts de gardienne
+let selectedSavePlayerId = null;
+
+// Afficher le modal d'arrêt gardienne
+function showSaveModal() {
+    selectedSavePlayerId = null;
+    
+    createGoalkeeperButtons();
+    updateSaveButton();
+    
+    document.getElementById('saveModal').style.display = 'block';
+}
+
+// Créer les boutons pour les gardiennes
+function createGoalkeeperButtons() {
+    const container = document.getElementById('savePlayerButtons');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Filtrer seulement les gardiennes sur le terrain
+    const goalkeepers = players.filter(p => p.position === 'gardienne' && p.status === 'field');
+    
+    if (goalkeepers.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #bdc3c7;">Aucune gardienne sur le terrain</p>';
+        return;
+    }
+    
+    goalkeepers.forEach(player => {
+        const button = document.createElement('button');
+        button.className = 'player-btn goalkeeper';
+        button.textContent = player.name;
+        button.onclick = () => selectGoalkeeper(player.id, button);
+        container.appendChild(button);
+    });
+}
+
+// Sélectionner la gardienne
+function selectGoalkeeper(playerId, buttonElement) {
+    selectedSavePlayerId = playerId;
+    
+    // Mise à jour visuelle
+    const buttons = document.querySelectorAll('#savePlayerButtons .player-btn');
+    buttons.forEach(btn => btn.classList.remove('selected'));
+    buttonElement.classList.add('selected');
+    
+    updateSaveButton();
+}
+
+// Mettre à jour le bouton d'arrêt
+function updateSaveButton() {
+    const saveBtn = document.getElementById('saveSaveBtn');
+    if (saveBtn) {
+        saveBtn.disabled = !selectedSavePlayerId;
+    }
+}
+
+// Enregistrer l'arrêt de gardienne
+function saveGoalkeeperSave() {
+    if (!selectedSavePlayerId) {
+        showNotification('Sélectionnez une gardienne', 'error');
+        return;
+    }
+    
+    const player = players.find(p => p.id === selectedSavePlayerId);
+    const saveType = document.getElementById('saveType').value;
+    
+    // Mise à jour des stats
+    stats.team1.saves++;
+    if (playerStats[selectedSavePlayerId]) {
+        playerStats[selectedSavePlayerId].saves++;
+    }
+    
+    const description = saveType === 'line' ? 'Arrêt sur sa ligne' : 'Arrêt en sortie';
+    addEvent('🧤', description, player.name, 'team1');
+    
+    closeModal('saveModal');
+    updateDisplay();
+    updateStatsDisplay();
+    
+    showNotification(`Arrêt enregistré pour ${player.name}`, 'success');
+}
+
+// Variables pour les coups francs
+let selectedFreeKickPlayerId = null;
+
+// Afficher le modal coup franc
+function showFreeKickModal() {
+    selectedFreeKickPlayerId = null;
+    
+    createFreeKickButtons();
+    updateFreeKickButton();
+    
+    document.getElementById('freeKickModal').style.display = 'block';
+}
+
+// Créer les boutons pour les coups francs
+function createFreeKickButtons() {
+    const container = document.getElementById('freeKickPlayerButtons');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Joueurs sur le terrain
+    const availablePlayers = players.filter(p => p.status === 'field');
+    
+    if (availablePlayers.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #bdc3c7;">Aucun joueur sur le terrain</p>';
+        return;
+    }
+    
+    availablePlayers.forEach(player => {
+        const button = document.createElement('button');
+        button.className = `player-btn ${player.position === 'gardienne' ? 'goalkeeper' : ''}`;
+        button.textContent = player.name;
+        button.onclick = () => selectFreeKickPlayer(player.id, button);
+        container.appendChild(button);
+    });
+}
+
+// Sélectionner le joueur pour le coup franc
+function selectFreeKickPlayer(playerId, buttonElement) {
+    selectedFreeKickPlayerId = playerId;
+    
+    // Mise à jour visuelle
+    const buttons = document.querySelectorAll('#freeKickPlayerButtons .player-btn');
+    buttons.forEach(btn => btn.classList.remove('selected'));
+    buttonElement.classList.add('selected');
+    
+    updateFreeKickButton();
+}
+
+// Mettre à jour le bouton coup franc
+function updateFreeKickButton() {
+    const saveBtn = document.getElementById('saveFreeKickBtn');
+    if (saveBtn) {
+        saveBtn.disabled = !selectedFreeKickPlayerId;
+    }
+}
+
+// Enregistrer le coup franc
+function saveFreeKick() {
+    if (!selectedFreeKickPlayerId) {
+        showNotification('Sélectionnez un joueur', 'error');
+        return;
+    }
+    
+    const player = players.find(p => p.id === selectedFreeKickPlayerId);
+    
+    // Mise à jour des stats
+    stats.team1.freeKicks++;
+    if (playerStats[selectedFreeKickPlayerId]) {
+        playerStats[selectedFreeKickPlayerId].freeKicks++;
+    }
+    
+    addEvent('⚽', 'Coup de pied arrêté', player.name, 'team1');
+    
+    closeModal('freeKickModal');
+    updateDisplay();
+    updateStatsDisplay();
+    
+    showNotification(`Coup franc enregistré pour ${player.name}`, 'success');
 }
 
 // Fonctions utilitaires pour les changements de joueurs

@@ -4,12 +4,23 @@ Une application web moderne pour suivre les statistiques de matchs de football e
 
 ## 🚀 Fonctionnalités
 
-- **Configuration d'équipe** : Ajout et gestion des joueuses
-- **Suivi en temps réel** : Chronomètre, score, événements
-- **Actions rapides** : Interface intuitive avec popups pour enregistrer buts, tirs, cartons, fautes
+- **Configuration d'équipe** : Ajout et gestion des joueuses avec positions
+- **Composition d'équipe** : Sélection des 11 titulaires et gestion banc/terrain
+- **Gestion des remplacements** : Interface dédiée pour les substitutions
+- **Suivi en temps réel** : Chronomètre, score, événements avec mi-temps
+- **Actions complètes** : 
+  - ⚽ Buts (équipe/adversaire)
+  - 🎯 Tirs cadrés / 📐 Tirs non cadrés  
+  - 🟨 Cartons (jaune/rouge/blanc)
+  - 🧤 Arrêts de gardienne (ligne/sortie)
+  - ⚠️ Fautes
+  - ⚽ Coups francs
+  - 🔄 Changements de joueurs
+- **Interface intuitive** : Popups en 2 étapes avec feedback visuel
 - **Mode Live** : Partage du match en temps réel via jsonbin.io
+- **Statistiques complètes** : Équipe et individuelles
 - **Responsive** : Compatible mobile et desktop
-- **Sauvegarde automatique** : Données persistantes dans le navigateur
+- **Sauvegarde** : Compositions et données persistantes
 
 ## 📁 Structure du projet
 
@@ -21,6 +32,7 @@ football-stats/
 ├── js/
 │   ├── app.js          # Logique principale
 │   ├── match-actions.js # Gestion des actions du match
+│   ├── lineup.js       # Gestion de la composition d'équipe
 │   └── api.js          # Intégration jsonbin.io
 └── README.md           # Ce fichier
 ```
@@ -84,123 +96,179 @@ Votre application sera disponible à : `https://votre-username.github.io/votre-r
    - Définissez les noms des équipes
    - Choisissez le lieu et la durée
 
-3. **Démarrer un match** :
+3. **Composer l'équipe** :
+   - Allez dans l'onglet "Composition"
+   - Sélectionnez vos 11 titulaires (max)
+   - Visualisez terrain/banc en temps réel
+
+4. **Démarrer un match** :
    - Cliquez sur "Nouveau Match"
 
 ### Pendant le match
 
 1. **Gestion du temps** :
-   - Utilisez les boutons ▶️ et 🔄 pour contrôler le chronomètre
+   - Utilisez les boutons ▶️, 🔄 Mi-temps et ⏹️ Reset
+   - Le chrono se met en pause automatiquement
 
-2. **Enregistrer des actions** :
-   - Cliquez sur un type d'action (But, Tir, Carton, Faute)
-   - Choisissez l'équipe (vôtre ou adverse)
-   - Sélectionnez le joueur concerné
-   - Validez l'action
+2. **Enregistrer des actions** (2 étapes) :
+   - Cliquez sur un type d'action (8 actions disponibles)
+   - **Étape 1** : Choisissez l'équipe (vôtre ou adverse)
+   - **Étape 2** : Sélectionnez le joueur + détails
+   - **Feedback visuel** : Fond blanc sur les choix sélectionnés
 
-3. **Mode Live** :
+3. **Actions disponibles** :
+   - ⚽ **But** : Mon équipe ou adverse
+   - 🎯 **Tir Cadré** / 📐 **Tir Non Cadré**
+   - 🟨 **Carton** : Jaune/Rouge/Blanc avec choix joueur
+   - 🧤 **Arrêt Gardienne** : Ligne ou sortie
+   - ⚠️ **Faute** : Équipe ou adverse
+   - ⚽ **Coup Franc** : Joueur de votre équipe
+   - 🔄 **Changement** : Substitution joueur
+
+4. **Gestion des remplacements** :
+   - Interface dédiée sortant/entrant
+   - Validation automatique des règles (11 max sur terrain)
+
+5. **Mode Live** :
    - Cliquez sur "Générer Lien Live"
    - Partagez le lien pour que d'autres suivent le match
-   - Les données se synchronisent automatiquement
+   - Synchronisation automatique toutes les 5 secondes
 
 ### Navigation
 
 - **Configuration** : Gestion des équipes et paramètres
+- **Composition** : Sélection titulaires et visualisation terrain
 - **Match** : Interface principale pendant le match
-- **Statistiques** : Vue d'ensemble des stats
+- **Statistiques** : Vue d'ensemble équipe + stats individuelles
 - **Live** : Affichage pour le suivi à distance
 
 ## 🎮 Interface des Actions
 
-L'application utilise un système de popup en deux étapes :
+L'application utilise un système de popup en deux étapes avec feedback visuel clair :
 
-1. **Choix de l'équipe** : Sélectionnez qui est concerné par l'action
-   - Bouton vert : Votre équipe
-   - Bouton rouge : Équipe adverse
-   - Fond blanc sur le choix sélectionné
+### 1️⃣ Choix de l'équipe 
+- **Bouton vert** : Votre équipe
+- **Bouton rouge** : Équipe adverse  
+- **Feedback** : Fond blanc + bordure verte sur le choix sélectionné
 
-2. **Détails de l'action** :
-   - Pour les **cartons** : Choisissez la couleur (jaune/rouge/blanc)
-   - Pour tous : Sélectionnez le joueur concerné
-   - Validation de l'action
+### 2️⃣ Détails de l'action
+- **Pour les cartons** : Choisissez la couleur (🟨 Jaune / 🟥 Rouge / ⬜ Blanc)
+- **Pour tous** : Sélectionnez le joueur concerné
+- **Indicateurs visuels** :
+  - 🟢 Joueur sur le terrain
+  - 🔵 Joueur sur le banc  
+  - 🥅 Gardienne (arrière-plan orange)
+- **Validation** : Bouton actif seulement quand tout est sélectionné
 
-## 🔄 Synchronisation Live
+### 📋 Actions spéciales
 
-L'application utilise jsonbin.io pour la synchronisation en temps réel :
+- **🧤 Arrêt Gardienne** : Seulement les gardiennes sur terrain + type d'arrêt
+- **🔄 Changement** : Interface dédiée avec sortant (terrain) et entrant (banc)
+- **⚽ Coup Franc** : Directement les joueurs de votre équipe sur terrain
 
-- **Génération du lien** : Crée un bin unique sur jsonbin.io
-- **Partage mobile** : Le lien peut être ouvert sur n'importe quel appareil
-- **Mise à jour automatique** : Les données se synchronisent toutes les 5 secondes
-- **Mode lecture seule** : Les spectateurs voient les événements en temps réel
-
-## 💾 Sauvegarde
-
-- **Automatique** : Toutes les données sont sauvegardées dans le navigateur
-- **Persistante** : Les informations restent disponibles après fermeture
-- **Export** : Possibilité d'exporter les données (fonctionnalité à ajouter)
-
-## 🛠️ Personnalisation
-
-### Modifier l'API Key
-
-Dans `js/api.js`, changez la variable :
-```javascript
-const API_KEY = 'votre-nouvelle-cle-api';
+### 🎯 Grille des Actions
+**2 boutons par ligne** pour un accès rapide :
+```
+⚽ But           🎯 Tir Cadré
+📐 Tir Non Cadré  🟨 Carton  
+🧤 Arrêt Gardienne ⚠️ Faute
+⚽ Coup Franc     🔄 Changement
 ```
 
-### Ajouter des positions
+## 🔑 Raccourcis Clavier
 
-Dans `js/app.js`, modifiez la fonction `getPositionIcon()` :
+L'application inclut des raccourcis clavier pour une utilisation rapide :
+
+- **Espace** : Démarrer/Arrêter le chronomètre
+- **R** : Reset du chronomètre
+- **G** : Enregistrer un but (ouvre le modal de choix)
+- **T** : Enregistrer un tir (ouvre le modal de choix)
+- **C** : Enregistrer un carton (ouvre le modal de choix)
+- **F** : Enregistrer une faute (ouvre le modal de choix)
+- **Échap** : Fermer tous les modals ouverts
+
+## 📱 Installation en tant qu'App Mobile
+
+1. Ouvrez l'application dans votre navigateur mobile
+2. **iOS Safari** : Appuyez sur "Partager" puis "Sur l'écran d'accueil"
+3. **Android Chrome** : Menu ⋮ puis "Ajouter à l'écran d'accueil"
+4. L'application s'ouvrira comme une app native !
+
+## 🏆 Fonctionnalités Avancées
+
+### Gestion Intelligente des Joueurs
+- **Validation automatique** : Impossible d'avoir plus de 11 joueurs sur le terrain
+- **Statuts visuels** : 🟢 Terrain, 🔵 Banc, 🟡 Sanctionné, 🔴 Exclu
+- **Historique complet** : Tous les mouvements sont enregistrés
+
+### Statistiques Complètes
+- **Équipe** : Buts, tirs (cadrés/non cadrés), arrêts, fautes, cartons
+- **Individuelles** : Stats détaillées par joueuse avec historique
+- **Temps réel** : Mise à jour instantanée pendant le match
+
+### Synchronisation Live Avancée
+- **Reconnexion automatique** : En cas de perte de connexion
+- **Mise à jour temps réel** : Toutes les 5 secondes
+- **Mode lecture seule** : Les spectateurs ne peuvent pas modifier
+- **Partage multi-plateforme** : Fonctionne sur tous les appareils
+
+## 🔧 Personnalisation
+
+### Modifier les Positions
+Dans `js/app.js`, fonction `getPositionIcon()` :
 ```javascript
 const icons = {
     'gardienne': '🥅',
-    'defenseure': '🛡️',
+    'defenseure': '🛡️', 
     'milieu': '⚡',
     'attaquante': '⚽',
-    'nouvelle-position': '🆕'
+    'libero': '🔄' // Nouvelle position
 };
 ```
 
-### Modifier les couleurs
-
-Dans `css/styles.css`, ajustez les variables CSS ou les gradients :
-```css
-body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+### Ajouter des Actions
+Dans `index.html`, section actions-grid :
+```html
+<div class="action-card" onclick="showActionChoiceModal('nouvelle_action')">
+    <div class="action-icon">🆕</div>
+    <div>Nouvelle Action</div>
+</div>
 ```
 
-## 🐛 Dépannage
+Puis implémentez dans `js/match-actions.js`.
 
-### L'application ne fonctionne pas sur GitHub Pages
+## 🚨 Limitations Importantes
 
-1. Vérifiez que tous les fichiers sont présents
-2. Assurez-vous que les chemins sont relatifs (pas d'URLs absolues)
-3. Consultez la console du navigateur pour les erreurs
+- **Stockage local** : Les données sont sauvées dans le navigateur
+- **Pas de base de données** : Utilisez l'export pour sauvegarder
+- **Mode live** : Dépendant de jsonbin.io (gratuit avec limites)
+- **Hors ligne** : Fonctionne mais pas de sync en mode live
 
-### Le mode live ne fonctionne pas
+## 🔄 Évolutions Futures Possibles
 
-1. Vérifiez votre clé API jsonbin.io
-2. Assurez-vous d'avoir une connexion internet
-3. Testez avec un autre navigateur
+- **Backend complet** : Base de données pour multi-utilisateurs
+- **Statistiques avancées** : Cartes de chaleur, graphiques
+- **Export avancé** : PDF automatique, partage réseaux sociaux
+- **Mode tournoi** : Gestion de plusieurs matchs
+- **IA Assistant** : Suggestions tactiques basées sur les stats
 
-### Problèmes de responsive
+## 📋 Changelog
 
-1. Testez sur différentes tailles d'écran
-2. Vérifiez les media queries dans le CSS
-3. Assurez-vous que la meta viewport est présente
+### Version 2.0 (Actuelle)
+- ✅ Composition d'équipe avec 11 titulaires
+- ✅ Gestion complète des remplacements  
+- ✅ 8 types d'actions (buts, tirs, cartons, etc.)
+- ✅ Interface 2x2 avec popups en 2 étapes
+- ✅ Feedback visuel (fond blanc sur sélection)
+- ✅ Terrain visuel avec statuts joueurs
+- ✅ Statistiques individuelles complètes
+- ✅ Mode live avec jsonbin.io
+- ✅ Responsive design complet
+- ✅ Raccourcis clavier
+- ✅ Sauvegarde/chargement compositions
 
-## 📞 Support
-
-Pour toute question ou problème :
-1. Consultez la console du navigateur pour les erreurs
-2. Vérifiez que tous les fichiers sont bien chargés
-3. Testez en mode incognito pour éliminer les problèmes de cache
-
-## 🔮 Évolutions futures
-
-- Export des données en PDF/Excel
-- Gestion des remplacements
-- Statistiques avancées par joueur
-- Mode hors-ligne avec synchronisation différée
-- Interface d'administration pour modifier les matchs passés
+### Prochaines Versions
+- 🔲 Mode sombre
+- 🔲 Export PDF des stats
+- 🔲 Notifications push pour le live
+- 🔲 Mode multi-matchs

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Football Stats - App</title>
+    <title>Football Stats - App Complète</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -13,6 +13,7 @@
             <h1>⚽ Football Stats</h1>
             <div class="nav-menu">
                 <button class="nav-btn" onclick="showPage('setup')">⚙️ Configuration</button>
+                <button class="nav-btn" onclick="showPage('lineup')">👥 Composition</button>
                 <button class="nav-btn" onclick="showPage('match')">🏟️ Match</button>
                 <button class="nav-btn" onclick="showPage('stats')">📊 Statistiques</button>
                 <button class="nav-btn" onclick="showPage('live')">📡 Live</button>
@@ -48,6 +49,17 @@
             </div>
 
             <div class="team-card">
+                <h3>💾 Gestion des Compositions</h3>
+                <div class="form-group">
+                    <label for="compositionName">Nom de la composition:</label>
+                    <input type="text" id="compositionName" placeholder="Ex: Équipe Titulaire">
+                </div>
+                <button class="btn btn-primary" onclick="saveComposition()">💾 Sauvegarder Composition</button>
+                <button class="btn btn-secondary" onclick="loadComposition()">📂 Charger Composition</button>
+                <select id="compositionsList" style="width: 100%; margin: 10px 0;"></select>
+            </div>
+
+            <div class="team-card">
                 <h3>⚙️ Paramètres du Match</h3>
                 <div class="form-group">
                     <label for="team1Name">Nom de votre équipe:</label>
@@ -79,6 +91,51 @@
         </div>
     </div>
 
+    <!-- Page Composition d'équipe -->
+    <div id="lineup" class="page">
+        <div class="page-container">
+            <h2>👥 Composition de l'Équipe</h2>
+            
+            <div class="team-card">
+                <h3>🏟️ Sélectionner votre 11 de départ</h3>
+                <p style="margin-bottom: 20px;">Cliquez sur les joueuses pour les sélectionner comme titulaires (maximum 11)</p>
+                
+                <div class="players-grid" id="lineupPlayersList">
+                    <!-- Les joueuses seront affichées ici -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="saveLineup()">💾 Confirmer la Composition</button>
+                    <button class="btn btn-secondary" onclick="clearLineup()">🔄 Effacer la Sélection</button>
+                </div>
+                
+                <div id="lineupSummary" style="margin-top: 20px; display: none;">
+                    <h4>📋 Composition Confirmée:</h4>
+                    <div id="lineupDisplay"></div>
+                </div>
+            </div>
+
+            <!-- Terrain de football visuel -->
+            <div class="team-card">
+                <h3>🏟️ Terrain</h3>
+                <div class="field-container">
+                    <div class="field-section">
+                        <h4>Sur le terrain</h4>
+                        <div id="fieldPlayers" class="field-players">
+                            <!-- Joueurs sur le terrain -->
+                        </div>
+                    </div>
+                    <div class="field-section">
+                        <h4>Banc de touche</h4>
+                        <div id="benchPlayers" class="bench-players">
+                            <!-- Joueurs sur le banc -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Page Match -->
     <div id="match" class="page">
         <div class="page-container">
@@ -92,7 +149,8 @@
                         <div class="timer" id="timer">00:00</div>
                         <div class="timer-controls">
                             <button class="btn btn-small" onclick="toggleTimer()">▶️</button>
-                            <button class="btn btn-small" onclick="resetTimer()">🔄</button>
+                            <button class="btn btn-small" onclick="showHalfTimeConfirm()">🔄 Mi-temps</button>
+                            <button class="btn btn-small" onclick="resetTimer()">⏹️</button>
                         </div>
                     </div>
                     <div class="team team2">
@@ -102,23 +160,42 @@
                 </div>
             </div>
 
-            <!-- Actions Rapides avec Popup -->
+            <!-- Actions du Match - 2 boutons par ligne -->
             <div class="actions-grid">
                 <div class="action-card" onclick="showActionChoiceModal('goal')">
                     <div class="action-icon">⚽</div>
                     <div>But</div>
                 </div>
-                <div class="action-card" onclick="showActionChoiceModal('shot')">
+                <div class="action-card" onclick="showActionChoiceModal('shot_on')">
                     <div class="action-icon">🎯</div>
-                    <div>Tir</div>
+                    <div>Tir Cadré</div>
+                </div>
+                
+                <div class="action-card" onclick="showActionChoiceModal('shot_off')">
+                    <div class="action-icon">📐</div>
+                    <div>Tir Non Cadré</div>
                 </div>
                 <div class="action-card" onclick="showActionChoiceModal('card')">
                     <div class="action-icon">🟨</div>
                     <div>Carton</div>
                 </div>
+                
+                <div class="action-card" onclick="showSaveModal()">
+                    <div class="action-icon">🧤</div>
+                    <div>Arrêt Gardienne</div>
+                </div>
                 <div class="action-card" onclick="showActionChoiceModal('foul')">
                     <div class="action-icon">⚠️</div>
                     <div>Faute</div>
+                </div>
+                
+                <div class="action-card" onclick="showFreeKickModal()">
+                    <div class="action-icon">⚽</div>
+                    <div>Coup Franc</div>
+                </div>
+                <div class="action-card" onclick="showSubstitutionModal()">
+                    <div class="action-icon">🔄</div>
+                    <div>Changement</div>
                 </div>
             </div>
 
@@ -142,6 +219,13 @@
             <h2>📊 Statistiques du Match</h2>
             <div class="stats-grid" id="statsGrid">
                 <!-- Les statistiques seront affichées ici -->
+            </div>
+            
+            <div class="team-card">
+                <h3>👥 Statistiques Individuelles</h3>
+                <div id="playerStatsGrid">
+                    <!-- Stats des joueuses -->
+                </div>
             </div>
         </div>
     </div>
@@ -222,6 +306,89 @@
         </div>
     </div>
 
+    <!-- Modal Arrêt Gardienne -->
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('saveModal')">&times;</span>
+            <h3>🧤 Arrêt de la Gardienne</h3>
+            
+            <div class="players-grid" id="savePlayerButtons">
+                <!-- Boutons des gardiennes -->
+            </div>
+            
+            <div class="form-group">
+                <label>Type d'arrêt:</label>
+                <select id="saveType">
+                    <option value="line">Sur sa ligne</option>
+                    <option value="out">En sortie</option>
+                </select>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="saveSaveBtn" class="btn btn-primary" onclick="saveGoalkeeperSave()" disabled>💾 Enregistrer</button>
+                <button class="btn btn-secondary" onclick="closeModal('saveModal')">❌ Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Coup Franc -->
+    <div id="freeKickModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('freeKickModal')">&times;</span>
+            <h3>⚽ Coup de Pied Arrêté</h3>
+            
+            <div class="players-grid" id="freeKickPlayerButtons">
+                <!-- Boutons des joueuses -->
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="saveFreeKickBtn" class="btn btn-primary" onclick="saveFreeKick()" disabled>💾 Enregistrer</button>
+                <button class="btn btn-secondary" onclick="closeModal('freeKickModal')">❌ Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Changement -->
+    <div id="substitutionModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('substitutionModal')">&times;</span>
+            <h3>🔄 Changement de Joueuse</h3>
+            
+            <div class="substitution-container">
+                <div class="substitution-section">
+                    <h4>Sortante (sur le terrain)</h4>
+                    <div class="players-grid" id="outPlayerButtons">
+                        <!-- Joueurs sur le terrain -->
+                    </div>
+                </div>
+                
+                <div class="substitution-section">
+                    <h4>Entrante (sur le banc)</h4>
+                    <div class="players-grid" id="inPlayerButtons">
+                        <!-- Joueurs sur le banc -->
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="saveSubstitutionBtn" class="btn btn-primary" onclick="saveSubstitution()" disabled>💾 Effectuer le Changement</button>
+                <button class="btn btn-secondary" onclick="closeModal('substitutionModal')">❌ Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmation Mi-temps -->
+    <div id="confirmHalfTimeModal" class="modal">
+        <div class="modal-content">
+            <h3>🔄 Confirmer la Mi-temps</h3>
+            <p>Passer à la seconde mi-temps ? Le timer sera remis à zéro.</p>
+            <div style="text-align: center;">
+                <button class="btn btn-primary" onclick="confirmHalfTime()">✅ Oui, Mi-temps</button>
+                <button class="btn btn-secondary" onclick="closeModal('confirmHalfTimeModal')">❌ Annuler</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Confirmation Reset -->
     <div id="confirmResetModal" class="modal">
         <div class="modal-content">
@@ -238,6 +405,7 @@
     <script src="js/app.js"></script>
     <script src="js/api.js"></script>
     <script src="js/match-actions.js"></script>
+    <script src="js/lineup.js"></script>
     
     <script>
         // Initialisation
