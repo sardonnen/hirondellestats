@@ -151,9 +151,17 @@
         }
         
         .player-btn.selected {
-            background: white !important;
+            background: rgba(255, 255, 255, 0.5) !important;
             color: #2c3e50 !important;
             border-color: #27ae60 !important;
+            backdrop-filter: blur(5px);
+        }
+        
+        .assist-btn.selected {
+            background: rgba(255, 255, 255, 0.5) !important;
+            color: #2c3e50 !important;
+            border-color: #f39c12 !important;
+            backdrop-filter: blur(5px);
         }
         
         .timeline-container {
@@ -438,6 +446,15 @@
         function initializeMatchPage() {
             loadMatchConfig();
             loadSavedMatchData(); // Charger les données sauvegardées
+            
+            // Debug: Vérifier les données des joueurs
+            const players = getMyTeamPlayers();
+            const fieldPlayers = players.filter(p => p.status === 'field');
+            console.log(`Joueurs chargés: ${players.length} total, ${fieldPlayers.length} sur le terrain`);
+            if (fieldPlayers.length === 0) {
+                console.warn('Aucun joueur sur le terrain - configurez votre composition d\'équipe');
+            }
+            
             updateMatchDisplay();
             startPeriodicSave();
             console.log('Page de match initialisée');
@@ -464,14 +481,45 @@
                     // Restaurer le timer
                     if (data.timer) {
                         matchTimer = { ...matchTimer, ...data.timer };
-                        updateTimerDisplay();
                         
-                        // Mettre à jour l'interface du bouton play
-                        const playBtn = document.getElementById('playBtn');
-                        if (matchTimer.isRunning) {
-                            // Si le timer était en cours, le reprendre
-                            startTimer();
+                        // Si le timer était en cours, recalculer le temps écoulé
+                        if (matchTimer.isRunning && matchTimer.startTime) {
+                            const now = Date.now();
+                            
+                            // Convertir la startTime ISO en timestamp
+                            let savedStartTime;
+                            if (typeof matchTimer.startTime === 'string') {
+                                savedStartTime = new Date(matchTimer.startTime).getTime();
+                            } else {
+                                savedStartTime = matchTimer.startTime;
+                            }
+                            
+                            // Calculer le temps écoulé depuis la sauvegarde
+                            const savedAt = data.timer.savedAt ? new Date(data.timer.savedAt).getTime() : now;
+                            const timeSinceSave = now - savedAt;
+                            
+                            // Ajouter le temps écoulé depuis la sauvegarde
+                            const elapsedSinceStart = (savedAt - savedStartTime) / 1000;
+                            matchTimer.pausedTime = elapsedSinceStart + (timeSinceSave / 1000);
+                            
+                            // Redémarrer le timer
+                            matchTimer.startTime = now - (matchTimer.pausedTime * 1000);
+                            matchTimer.interval = setInterval(updateTimer, 1000);
+                            
+                            // Mettre à jour l'interface
+                            document.getElementById('playBtn').innerHTML = '⏸️ Pause';
+                            document.getElementById('playBtn').classList.remove('btn-success');
+                            document.getElementById('playBtn').classList.add('btn-warning');
+                            
+                            console.log('Timer restauré et relancé automatiquement');
+                        } else {
+                            // Timer en pause, juste restaurer l'état
+                            document.getElementById('playBtn').innerHTML = '▶️ Reprendre';
+                            document.getElementById('playBtn').classList.remove('btn-warning');
+                            document.getElementById('playBtn').classList.add('btn-success');
                         }
+                        
+                        updateTimerDisplay();
                         
                         // Mettre à jour l'affichage de la mi-temps
                         document.getElementById('matchHalf').textContent = 
@@ -517,6 +565,8 @@
             document.getElementById('playBtn').innerHTML = '⏸️ Pause';
             document.getElementById('playBtn').classList.remove('btn-success');
             document.getElementById('playBtn').classList.add('btn-warning');
+            
+            console.log('Timer démarré:', new Date(matchTimer.startTime));
             
             // Sauvegarder automatiquement
             autoSave();
@@ -685,11 +735,13 @@
             container.innerHTML = '';
             if (assistContainer) assistContainer.innerHTML = '';
             
-            // Charger les joueurs de mon équipe (11 titulaires)
-            const players = getMyTeamPlayers();
-            const activePlayers = players.filter(p => p.status === 'field'); // Seulement les joueurs sur le terrain
+            // Charger SEULEMENT les 11 joueurs sur le terrain
+            const allPlayers = getMyTeamPlayers();
+            const fieldPlayers = allPlayers.filter(p => p.status === 'field'); // Seulement les titulaires
             
-            activePlayers.forEach(player => {
+            console.log(`Affichage de ${fieldPlayers.length} joueurs sur le terrain`);
+            
+            fieldPlayers.forEach(player => {
                 // Vérifier si le joueur a un carton rouge (ne pas l'afficher)
                 const hasRedCard = matchEvents.some(event => 
                     event.type === 'card' && 
@@ -709,7 +761,7 @@
                     
                     button.innerHTML = `
                         <div>${statusIcon} ${player.name}</div>
-                        <div style="font-size: 0.8rem; opacity: 0.8;">${player.position}</div>
+                        <div style="font-size: 0.8rem; opacity: 0.8;">${player.position || 'Joueur'}</div>
                     `;
                     button.onclick = () => selectPlayer(player.id, button, 'my-team');
                     container.appendChild(button);
@@ -720,7 +772,7 @@
                         assistButton.className = 'player-btn assist-btn';
                         assistButton.innerHTML = `
                             <div>${statusIcon} ${player.name}</div>
-                            <div style="font-size: 0.8rem; opacity: 0.8;">${player.position}</div>
+                            <div style="font-size: 0.8rem; opacity: 0.8;">${player.position || 'Joueur'}</div>
                         `;
                         assistButton.onclick = () => selectAssistPlayer(player.id, assistButton);
                         assistContainer.appendChild(assistButton);
@@ -728,15 +780,21 @@
                 }
             });
             
-            // Ajouter le bouton adversaire
+            // Ajouter le bouton adversaire (un seul bouton)
             const opponentButton = document.createElement('button');
             opponentButton.className = 'player-btn opponent';
+            opponentButton.style.background = 'rgba(231, 76, 60, 0.3)';
             opponentButton.innerHTML = `
                 <div>🔴 Équipe Adverse</div>
                 <div style="font-size: 0.8rem; opacity: 0.8;">Joueur adverse</div>
             `;
             opponentButton.onclick = () => selectPlayer('opponent_player', opponentButton, 'opponent');
             container.appendChild(opponentButton);
+            
+            // Message informatif si moins de 11 joueurs
+            if (fieldPlayers.length < 11) {
+                console.warn(`Attention: seulement ${fieldPlayers.length} joueurs sur le terrain (11 attendus)`);
+            }
         }
         
         function selectPlayer(playerId, buttonElement, team) {
@@ -1130,14 +1188,24 @@
         // ===== FONCTIONS UTILITAIRES =====
         
         function getMyTeamPlayers() {
-            // Récupérer les joueurs depuis le stockage local
-            const players = JSON.parse(localStorage.getItem('players') || '[]');
+            // D'abord essayer de récupérer depuis l'état de l'application (app.js)
+            if (typeof footballApp !== 'undefined' && footballApp.getState) {
+                const appState = footballApp.getState();
+                if (appState.players && appState.players.length > 0) {
+                    console.log('Joueurs récupérés depuis footballApp:', appState.players.length);
+                    return appState.players;
+                }
+            }
             
-            // Si pas de statut défini, marquer tous comme sur le banc
+            // Sinon récupérer depuis le stockage local direct
+            const players = JSON.parse(localStorage.getItem('players') || '[]');
+            console.log('Joueurs récupérés depuis localStorage:', players.length);
+            
+            // Si pas de statut défini, marquer tous comme sur le banc par défaut
             return players.map(player => ({
                 ...player,
                 status: player.status || 'bench',
-                id: player.id || Date.now() + Math.random()
+                id: player.id || `player_${Date.now()}_${Math.random()}`
             }));
         }
         
@@ -1157,7 +1225,12 @@
         
         async function autoSave() {
             const matchData = {
-                timer: matchTimer,
+                timer: {
+                    ...matchTimer,
+                    // Sauvegarder les timestamps comme chaînes ISO pour éviter les problèmes de sérialisation
+                    startTime: matchTimer.startTime ? new Date(matchTimer.startTime).toISOString() : null,
+                    savedAt: new Date().toISOString()
+                },
                 events: matchEvents,
                 stats: matchStats,
                 lastUpdate: new Date().toISOString()
@@ -1180,18 +1253,9 @@
         }
         
         async function saveToJsonBin(data) {
-            // Pour utiliser JsonBin.io, vous devez:
-            // 1. Créer un compte sur https://jsonbin.io/
-            // 2. Obtenir votre API key depuis le dashboard
-            // 3. Remplacer YOUR_JSONBIN_API_KEY ci-dessous
-            
-            const API_KEY = 'YOUR_JSONBIN_API_KEY'; // À remplacer par votre vraie API key
+            // Votre API key JsonBin.io configurée
+            const API_KEY = '$2a$10$L3uaRDnltfCsdgv50dAJ0.aTJsslnmT2SPju9EPNd6HvXqW6u9KmS';
             const API_BASE_URL = 'https://api.jsonbin.io/v3/b';
-            
-            if (API_KEY === 'YOUR_JSONBIN_API_KEY') {
-                console.log('API key JsonBin non configurée - sauvegarde locale uniquement');
-                return null;
-            }
             
             try {
                 // D'abord vérifier si on a déjà un bin ID
@@ -1248,7 +1312,23 @@
             }
         }
         
-        // Fonction pour générer le lien live
+        // Nettoyage avant fermeture de la page
+        window.addEventListener('beforeunload', function() {
+            if (matchTimer.interval) {
+                clearInterval(matchTimer.interval);
+                console.log('Timer arrêté avant fermeture de page');
+            }
+            // Dernière sauvegarde
+            autoSave();
+        });
+        
+        // Nettoyage lors du changement de page
+        window.addEventListener('pagehide', function() {
+            if (matchTimer.interval) {
+                clearInterval(matchTimer.interval);
+                console.log('Timer arrêté lors du changement de page');
+            }
+        });
         async function generateLiveLink() {
             try {
                 // Sauvegarder le match actuel
