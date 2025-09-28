@@ -8,6 +8,70 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
     <style>
         /* Styles spécifiques pour la page match */
+        
+        /* Styles pour le header du match */
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .team-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .team-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .team-score {
+            font-size: 3em;
+            font-weight: bold;
+            color: #3498db;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .match-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .match-time {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #f39c12;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .match-half {
+            font-size: 1.1em;
+            color: #ecf0f1;
+            margin-bottom: 15px;
+        }
+        
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .timer-controls .btn {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
         .action-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -263,23 +327,6 @@
         </main>
     </div>
 
-    <!-- Modal Choix d'équipe -->
-    <div id="teamChoiceModal" class="modal team-choice-modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeTeamChoiceModal()">&times;</span>
-            <h3 id="teamChoiceTitle">Choisir l'équipe</h3>
-            
-            <div class="team-choice-buttons">
-                <div class="team-choice-btn my-team" onclick="selectTeam('my-team')">
-                    🟢 Mon Équipe
-                </div>
-                <div class="team-choice-btn opponent-team" onclick="selectTeam('opponent')">
-                    🔴 Adversaire
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal Action -->
     <div id="actionModal" class="modal">
         <div class="modal-content">
@@ -390,6 +437,7 @@
          */
         function initializeMatchPage() {
             loadMatchConfig();
+            loadSavedMatchData(); // Charger les données sauvegardées
             updateMatchDisplay();
             startPeriodicSave();
             console.log('Page de match initialisée');
@@ -402,6 +450,50 @@
             const config = getMatchConfig();
             document.getElementById('teamName').textContent = config.teamName || 'Mon Équipe';
             document.getElementById('opponentName').textContent = config.opponentName || 'Équipe Adverse';
+        }
+        
+        /**
+         * Chargement des données de match sauvegardées
+         */
+        function loadSavedMatchData() {
+            try {
+                const savedData = localStorage.getItem('currentMatch');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    
+                    // Restaurer le timer
+                    if (data.timer) {
+                        matchTimer = { ...matchTimer, ...data.timer };
+                        updateTimerDisplay();
+                        
+                        // Mettre à jour l'interface du bouton play
+                        const playBtn = document.getElementById('playBtn');
+                        if (matchTimer.isRunning) {
+                            // Si le timer était en cours, le reprendre
+                            startTimer();
+                        }
+                        
+                        // Mettre à jour l'affichage de la mi-temps
+                        document.getElementById('matchHalf').textContent = 
+                            matchTimer.currentHalf === 1 ? '1ère Mi-temps' : '2ème Mi-temps';
+                    }
+                    
+                    // Restaurer les événements
+                    if (data.events) {
+                        matchEvents = data.events;
+                        updateTimeline();
+                    }
+                    
+                    // Restaurer les stats
+                    if (data.stats) {
+                        matchStats = data.stats;
+                    }
+                    
+                    console.log('Données de match restaurées');
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement des données:', error);
+            }
         }
 
         // ===== GESTION DU TIMER =====
@@ -552,56 +644,17 @@
         function showTeamChoiceModal(actionType) {
             currentActionType = actionType;
             
+            // Aller directement au modal d'action avec tous les joueurs
+            showActionModal();
+        }
+        
+        function showActionModal() {
             const titles = {
                 'goal': 'Qui a marqué le but ?',
                 'shot': 'Qui a tiré ?',
                 'card': 'Qui reçoit le carton ?',
                 'foul': 'Qui a commis la faute ?',
                 'freekick': 'Qui tire le coup franc ?'
-            };
-            
-            document.getElementById('teamChoiceTitle').textContent = titles[actionType] || 'Choisir l\'équipe';
-            
-            // Reset des sélections
-            resetTeamChoiceButtons();
-            
-            document.getElementById('teamChoiceModal').style.display = 'block';
-        }
-        
-        function resetTeamChoiceButtons() {
-            const buttons = document.querySelectorAll('.team-choice-btn');
-            buttons.forEach(btn => btn.classList.remove('selected'));
-        }
-        
-        function selectTeam(team) {
-            selectedTeam = team;
-            
-            // Mise à jour visuelle
-            resetTeamChoiceButtons();
-            const selectedBtn = document.querySelector(`.team-choice-btn.${team === 'my-team' ? 'my-team' : 'opponent-team'}`);
-            if (selectedBtn) {
-                selectedBtn.classList.add('selected');
-            }
-            
-            // Attendre un peu pour l'effet visuel puis ouvrir le modal d'action
-            setTimeout(() => {
-                closeTeamChoiceModal();
-                showActionModal();
-            }, 300);
-        }
-        
-        function closeTeamChoiceModal() {
-            document.getElementById('teamChoiceModal').style.display = 'none';
-            resetTeamChoiceButtons();
-        }
-        
-        function showActionModal() {
-            const titles = {
-                'goal': selectedTeam === 'my-team' ? 'But marqué - Mon Équipe' : 'But marqué - Équipe Adverse',
-                'shot': selectedTeam === 'my-team' ? 'Tir - Mon Équipe' : 'Tir - Équipe Adverse',
-                'card': selectedTeam === 'my-team' ? 'Carton - Mon Équipe' : 'Carton - Équipe Adverse',
-                'foul': selectedTeam === 'my-team' ? 'Faute - Mon Équipe' : 'Faute - Équipe Adverse',
-                'freekick': selectedTeam === 'my-team' ? 'Coup Franc - Mon Équipe' : 'Coup Franc - Équipe Adverse'
             };
             
             document.getElementById('actionModalTitle').textContent = titles[currentActionType] || 'Action';
@@ -611,74 +664,97 @@
             const assistSelection = document.getElementById('assistSelection');
             
             cardButtons.style.display = currentActionType === 'card' ? 'block' : 'none';
-            assistSelection.style.display = (currentActionType === 'goal' && selectedTeam === 'my-team') ? 'block' : 'none';
+            assistSelection.style.display = currentActionType === 'goal' ? 'block' : 'none';
             
-            // Charger les joueurs appropriés
-            loadPlayersForAction();
+            // Charger tous les joueurs + bouton adversaire
+            loadAllPlayersForAction();
             
             // Reset des sélections
             selectedPlayerId = null;
             selectedAssistPlayerId = null;
             selectedCardType = null;
+            selectedTeam = null;
             
             document.getElementById('actionModal').style.display = 'block';
             updateSaveButton();
         }
         
-        function loadPlayersForAction() {
+        function loadAllPlayersForAction() {
             const container = document.getElementById('actionPlayerButtons');
             const assistContainer = document.getElementById('assistPlayerButtons');
             container.innerHTML = '';
             if (assistContainer) assistContainer.innerHTML = '';
             
-            if (selectedTeam === 'my-team') {
-                // Charger les joueurs de mon équipe
-                const players = getMyTeamPlayers();
-                players.forEach(player => {
+            // Charger les joueurs de mon équipe (11 titulaires)
+            const players = getMyTeamPlayers();
+            const activePlayers = players.filter(p => p.status === 'field'); // Seulement les joueurs sur le terrain
+            
+            activePlayers.forEach(player => {
+                // Vérifier si le joueur a un carton rouge (ne pas l'afficher)
+                const hasRedCard = matchEvents.some(event => 
+                    event.type === 'card' && 
+                    event.cardType === 'red' && 
+                    event.playerId === player.id
+                );
+                
+                if (!hasRedCard) {
                     const button = document.createElement('button');
                     button.className = 'player-btn';
+                    
+                    // Indicateur de statut
+                    let statusIcon = '🟢'; // Sur le terrain
+                    if (player.position && player.position.toLowerCase().includes('garden')) {
+                        button.style.background = 'rgba(230, 126, 34, 0.3)'; // Orange pour gardiens
+                    }
+                    
                     button.innerHTML = `
-                        <div>${player.name}</div>
+                        <div>${statusIcon} ${player.name}</div>
                         <div style="font-size: 0.8rem; opacity: 0.8;">${player.position}</div>
                     `;
-                    button.onclick = () => selectPlayer(player.id, button);
+                    button.onclick = () => selectPlayer(player.id, button, 'my-team');
                     container.appendChild(button);
                     
-                    // Ajouter aussi dans la sélection d'assistance si nécessaire
+                    // Ajouter aussi dans la sélection d'assistance si c'est un but
                     if (currentActionType === 'goal' && assistContainer) {
                         const assistButton = document.createElement('button');
                         assistButton.className = 'player-btn assist-btn';
                         assistButton.innerHTML = `
-                            <div>${player.name}</div>
+                            <div>${statusIcon} ${player.name}</div>
                             <div style="font-size: 0.8rem; opacity: 0.8;">${player.position}</div>
                         `;
                         assistButton.onclick = () => selectAssistPlayer(player.id, assistButton);
                         assistContainer.appendChild(assistButton);
                     }
-                });
-            } else {
-                // Pour l'équipe adverse, afficher des options génériques
-                const adversaryPositions = ['Gardien', 'Défenseur', 'Milieu', 'Attaquant'];
-                adversaryPositions.forEach((position, index) => {
-                    const button = document.createElement('button');
-                    button.className = 'player-btn opponent';
-                    button.innerHTML = `
-                        <div>Joueur Adverse</div>
-                        <div style="font-size: 0.8rem; opacity: 0.8;">${position}</div>
-                    `;
-                    button.onclick = () => selectPlayer(`opponent_${index}`, button);
-                    container.appendChild(button);
-                });
-            }
+                }
+            });
+            
+            // Ajouter le bouton adversaire
+            const opponentButton = document.createElement('button');
+            opponentButton.className = 'player-btn opponent';
+            opponentButton.innerHTML = `
+                <div>🔴 Équipe Adverse</div>
+                <div style="font-size: 0.8rem; opacity: 0.8;">Joueur adverse</div>
+            `;
+            opponentButton.onclick = () => selectPlayer('opponent_player', opponentButton, 'opponent');
+            container.appendChild(opponentButton);
         }
         
-        function selectPlayer(playerId, buttonElement) {
+        function selectPlayer(playerId, buttonElement, team) {
             selectedPlayerId = playerId;
+            selectedTeam = team;
             
             // Mise à jour visuelle
             const buttons = document.querySelectorAll('#actionPlayerButtons .player-btn');
             buttons.forEach(btn => btn.classList.remove('selected'));
             buttonElement.classList.add('selected');
+            
+            // Gérer l'affichage de la sélection d'assistance
+            const assistSelection = document.getElementById('assistSelection');
+            if (currentActionType === 'goal' && team === 'my-team') {
+                assistSelection.style.display = 'block';
+            } else {
+                assistSelection.style.display = 'none';
+            }
             
             updateSaveButton();
         }
@@ -1056,7 +1132,13 @@
         function getMyTeamPlayers() {
             // Récupérer les joueurs depuis le stockage local
             const players = JSON.parse(localStorage.getItem('players') || '[]');
-            return players;
+            
+            // Si pas de statut défini, marquer tous comme sur le banc
+            return players.map(player => ({
+                ...player,
+                status: player.status || 'bench',
+                id: player.id || Date.now() + Math.random()
+            }));
         }
         
         function getMyTeamGoalkeepers() {
@@ -1081,47 +1163,117 @@
                 lastUpdate: new Date().toISOString()
             };
             
-            // Sauvegarder localement
+            // Sauvegarder localement (toujours fonctionnel)
             localStorage.setItem('currentMatch', JSON.stringify(matchData));
             
-            // Sauvegarder sur jsonbin.io
+            // Sauvegarder sur jsonbin.io (optionnel)
             try {
-                await saveToJsonBin(matchData);
-                console.log('Match sauvegardé automatiquement');
+                const binId = await saveToJsonBin(matchData);
+                if (binId) {
+                    console.log('Match sauvegardé automatiquement sur JsonBin');
+                } else {
+                    console.log('Match sauvegardé localement seulement');
+                }
             } catch (error) {
-                console.error('Erreur sauvegarde automatique:', error);
+                console.log('Sauvegarde locale uniquement (JsonBin indisponible)');
             }
         }
         
         async function saveToJsonBin(data) {
-            const API_KEY = '$2a$10$L3uaRDnltfCsdgv50dAJ0.aTJsslnmT2SPju9EPNd6HvXqW6u9KmS';
+            // Pour utiliser JsonBin.io, vous devez:
+            // 1. Créer un compte sur https://jsonbin.io/
+            // 2. Obtenir votre API key depuis le dashboard
+            // 3. Remplacer YOUR_JSONBIN_API_KEY ci-dessous
+            
+            const API_KEY = 'YOUR_JSONBIN_API_KEY'; // À remplacer par votre vraie API key
             const API_BASE_URL = 'https://api.jsonbin.io/v3/b';
             
+            if (API_KEY === 'YOUR_JSONBIN_API_KEY') {
+                console.log('API key JsonBin non configurée - sauvegarde locale uniquement');
+                return null;
+            }
+            
             try {
-                const response = await fetch(API_BASE_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': API_KEY
-                    },
-                    body: JSON.stringify(data)
-                });
+                // D'abord vérifier si on a déjà un bin ID
+                let binId = localStorage.getItem('matchBinId');
                 
-                if (!response.ok) {
-                    throw new Error('Erreur sauvegarde JsonBin');
+                if (binId) {
+                    // Mettre à jour le bin existant
+                    const response = await fetch(`${API_BASE_URL}/${binId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Master-Key': API_KEY,
+                            'X-Bin-Versioning': 'false'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Erreur mise à jour JsonBin: ${response.status}`);
+                    }
+                    
+                    console.log('Match mis à jour sur JsonBin');
+                    return binId;
+                } else {
+                    // Créer un nouveau bin
+                    const response = await fetch(API_BASE_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Master-Key': API_KEY,
+                            'X-Bin-Private': 'false'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Erreur création JsonBin: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    binId = result.metadata.id;
+                    
+                    // Sauvegarder le bin ID
+                    localStorage.setItem('matchBinId', binId);
+                    console.log('Nouveau bin créé sur JsonBin:', binId);
+                    
+                    return binId;
                 }
-                
-                const result = await response.json();
-                return result.metadata.id;
             } catch (error) {
                 console.error('Erreur JsonBin:', error);
-                throw error;
+                // Ne pas lever l'erreur pour ne pas bloquer l'application
+                // La sauvegarde locale fonctionne toujours
+                return null;
             }
         }
         
-        // Fonction pour générer le lien live (à implémenter selon vos besoins)
-        function generateLiveLink() {
-            alert('Fonctionnalité de lien live à implémenter');
+        // Fonction pour générer le lien live
+        async function generateLiveLink() {
+            try {
+                // Sauvegarder le match actuel
+                await autoSave();
+                
+                const binId = localStorage.getItem('matchBinId');
+                
+                if (binId) {
+                    const liveLink = `${window.location.origin}${window.location.pathname}?live=${binId}`;
+                    
+                    // Copier le lien dans le presse-papiers
+                    if (navigator.clipboard) {
+                        await navigator.clipboard.writeText(liveLink);
+                        alert(`Lien live copié dans le presse-papiers !\n\n${liveLink}`);
+                    } else {
+                        // Fallback pour les navigateurs plus anciens
+                        prompt('Copiez ce lien live:', liveLink);
+                    }
+                } else {
+                    alert('Configurez d\'abord votre API key JsonBin.io pour activer le live');
+                }
+            } catch (error) {
+                console.error('Erreur génération lien live:', error);
+                alert('Erreur lors de la génération du lien live');
+            }
         }
     </script>
 </body>
