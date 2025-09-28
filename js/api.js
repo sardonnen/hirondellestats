@@ -1,6 +1,6 @@
 // js/api.js - Gestion API jsonbin.io pour le live
 
-const API_KEY = '$2a$10$r5MbOaRyivoihBZSwAHKkO';
+const API_KEY = '$2a$10$L3uaRDnltfCsdgv50dAJ0.aTJsslnmT2SPju9EPNd6HvXqW6u9KmS';
 const API_BASE_URL = 'https://api.jsonbin.io/v3/b';
 
 // Fonction pour générer un lien live

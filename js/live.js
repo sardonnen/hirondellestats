@@ -8,7 +8,7 @@
 // ===== CONFIGURATION =====
 const LIVE_CONFIG = {
     // Clé API JSONBin.io (à remplacer par votre clé)
-    API_KEY: '$2a$10$r5MbOaRyivoihBZSwAHKkOmtvWIkz6d7lOgfXHlj/0V.YKj4HSQfe',
+    API_KEY: '$2a$10$L3uaRDnltfCsdgv50dAJ0.aTJsslnmT2SPju9EPNd6HvXqW6u9KmS',
     BASE_URL: 'https://api.jsonbin.io/v3/b',
     UPDATE_INTERVAL: 5000, // 5 secondes
     MAX_RETRIES: 3,
