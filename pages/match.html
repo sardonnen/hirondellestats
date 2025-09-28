@@ -659,9 +659,14 @@
                 if (savedData) {
                     const data = JSON.parse(savedData);
                     
+                    // Support ancien et nouveau format
+                    const timerData = data.timer || data;
+                    const eventsData = data.events || [];
+                    const statsData = data.stats || { myTeam: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0, freeKicks: 0 }, opponent: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0, freeKicks: 0 } };
+                    
                     // Restaurer le timer
-                    if (data.timer) {
-                        matchTimer = { ...matchTimer, ...data.timer };
+                    if (timerData) {
+                        matchTimer = { ...matchTimer, ...timerData };
                         
                         // Si le timer était en cours, recalculer le temps écoulé
                         if (matchTimer.isRunning && matchTimer.startTime) {
@@ -676,7 +681,7 @@
                             }
                             
                             // Calculer le temps écoulé depuis la sauvegarde
-                            const savedAt = data.timer.savedAt ? new Date(data.timer.savedAt).getTime() : now;
+                            const savedAt = timerData.savedAt ? new Date(timerData.savedAt).getTime() : now;
                             const timeSinceSave = now - savedAt;
                             
                             // Ajouter le temps écoulé depuis la sauvegarde
@@ -692,7 +697,7 @@
                             document.getElementById('playBtn').classList.remove('btn-success');
                             document.getElementById('playBtn').classList.add('btn-warning');
                             
-                            console.log('Timer restauré et relancé automatiquement');
+                            console.log('⏱️ Timer restauré et relancé automatiquement');
                         } else {
                             // Timer en pause, juste restaurer l'état
                             document.getElementById('playBtn').innerHTML = '▶️ Reprendre';
@@ -708,20 +713,29 @@
                     }
                     
                     // Restaurer les événements
-                    if (data.events) {
-                        matchEvents = data.events;
+                    if (eventsData && eventsData.length > 0) {
+                        matchEvents = eventsData;
                         updateTimeline();
+                        console.log(`📝 ${matchEvents.length} événements restaurés`);
                     }
                     
                     // Restaurer les stats
-                    if (data.stats) {
-                        matchStats = data.stats;
+                    if (statsData) {
+                        matchStats = statsData;
+                        console.log('📊 Statistiques restaurées');
                     }
                     
-                    console.log('Données de match restaurées');
+                    // Restaurer les informations du match si disponibles
+                    if (data.matchInfo) {
+                        document.getElementById('teamName').textContent = data.matchInfo.teamName;
+                        document.getElementById('opponentName').textContent = data.matchInfo.opponentName;
+                        console.log('ℹ️ Informations du match restaurées');
+                    }
+                    
+                    console.log('✅ Données de match restaurées complètement');
                 }
             } catch (error) {
-                console.error('Erreur lors du chargement des données:', error);
+                console.error('❌ Erreur lors du chargement des données:', error);
             }
         }
 
@@ -747,10 +761,12 @@
             document.getElementById('playBtn').classList.remove('btn-success');
             document.getElementById('playBtn').classList.add('btn-warning');
             
-            console.log('Timer démarré:', new Date(matchTimer.startTime));
+            console.log('⏱️ Timer démarré:', new Date(matchTimer.startTime));
             
-            // Sauvegarder automatiquement
-            autoSave();
+            // Sauvegarder immédiatement pour le live
+            autoSave().then(() => {
+                console.log('🔴 Démarrage timer sauvegardé pour le live');
+            });
         }
         
         function stopTimer() {
@@ -765,8 +781,12 @@
             document.getElementById('playBtn').classList.remove('btn-warning');
             document.getElementById('playBtn').classList.add('btn-success');
             
-            // Sauvegarder automatiquement
-            autoSave();
+            console.log('⏸️ Timer arrêté');
+            
+            // Sauvegarder immédiatement pour le live
+            autoSave().then(() => {
+                console.log('🔴 Arrêt timer sauvegardé pour le live');
+            });
         }
         
         function resetTimer() {
@@ -779,8 +799,12 @@
             document.getElementById('playBtn').classList.remove('btn-warning');
             document.getElementById('playBtn').classList.add('btn-success');
             
-            // Sauvegarder automatiquement
-            autoSave();
+            console.log('🔄 Timer remis à zéro');
+            
+            // Sauvegarder immédiatement pour le live
+            autoSave().then(() => {
+                console.log('🔴 Reset timer sauvegardé pour le live');
+            });
         }
         
         function updateTimer() {
@@ -853,8 +877,10 @@
                 team: null
             });
             
-            // Sauvegarder automatiquement
-            autoSave();
+            // Sauvegarder immédiatement pour le live
+            autoSave().then(() => {
+                console.log('🔄 Début 2ème mi-temps sauvegardé pour le live');
+            });
         }
         
         function endMatch() {
@@ -864,10 +890,13 @@
                 team: null
             });
             
-            // Sauvegarder automatiquement
-            autoSave();
+            // Sauvegarder immédiatement pour le live
+            autoSave().then(() => {
+                console.log('🏁 Fin de match sauvegardée pour le live');
+            });
             
-            alert('Match terminé ! Consultez les statistiques dans l\'onglet Stats.');
+            alert('🏁 Match terminé ! Consultez les statistiques dans l\'onglet Stats.\n\n' +
+                  '📱 Le lien live reste actif pour consulter les résultats finaux.');
         }
 
         // ===== GESTION DES MODALS =====
@@ -1079,8 +1108,20 @@
             closeActionModal();
             updateMatchDisplay();
             
-            // Sauvegarder automatiquement
-            autoSave();
+            // Sauvegarder immédiatement pour le live
+            autoSave().then(() => {
+                console.log('🔴 Action sauvegardée immédiatement pour le live');
+            });
+            
+            // Notification de succès
+            const actionNames = {
+                'goal': 'But',
+                'shot': 'Tir',
+                'card': 'Carton',
+                'foul': 'Faute',
+                'freekick': 'Coup franc'
+            };
+            console.log(`✅ ${actionNames[currentActionType]} enregistré !`);
         }
 
         // ===== GESTION DU MODAL GARDIEN =====
@@ -1104,17 +1145,27 @@
         
         function loadMyGoalkeeperName() {
             const players = getMyTeamPlayers();
+            
+            // Chercher le gardien sur le terrain (titulaire)
             const goalkeeper = players.find(p => 
                 p.status === 'field' && 
                 p.position && 
-                p.position.toLowerCase().includes('garden')
+                (p.position.toLowerCase().includes('garden') || 
+                 p.position.toLowerCase().includes('goal') ||
+                 p.position.toLowerCase().includes('gb'))
             );
             
             const nameElement = document.getElementById('myGoalkeeperName');
-            if (goalkeeper) {
+            if (goalkeeper && goalkeeper.name) {
                 nameElement.textContent = goalkeeper.name;
+                console.log(`🧤 Gardien titulaire trouvé: ${goalkeeper.name}`);
             } else {
                 nameElement.textContent = 'Mon Gardien';
+                console.warn('⚠️ Aucun gardien trouvé dans la composition');
+                
+                // Debug: afficher tous les joueurs sur le terrain
+                const fieldPlayers = players.filter(p => p.status === 'field');
+                console.log('Joueurs sur le terrain:', fieldPlayers.map(p => `${p.name} (${p.position})`));
             }
         }
         
@@ -1194,8 +1245,12 @@
             closeGoalkeeperModal();
             updateMatchDisplay();
             
-            // Sauvegarder automatiquement
-            autoSave();
+            // Sauvegarder immédiatement pour le live
+            autoSave().then(() => {
+                console.log('🧤 Arrêt gardien sauvegardé immédiatement pour le live');
+            });
+            
+            console.log('✅ Arrêt gardien enregistré !');
         }
 
         // ===== GESTION DES ÉVÉNEMENTS =====
@@ -1425,34 +1480,97 @@
         function startPeriodicSave() {
             // Sauvegarder automatiquement toutes les 30 secondes
             setInterval(autoSave, 30000);
+            
+            // Sauvegarder aussi quand le timer est en marche (toutes les 10 secondes pour le live)
+            setInterval(() => {
+                if (matchTimer.isRunning) {
+                    autoSave();
+                }
+            }, 10000);
+            
+            console.log('💾 Sauvegarde automatique configurée (30s + 10s si timer actif)');
         }
         
         async function autoSave() {
-            const matchData = {
+            // Préparer TOUTES les données nécessaires pour le live
+            const config = getMatchConfig();
+            const players = getMyTeamPlayers();
+            
+            const completeMatchData = {
+                // Informations du match
+                matchInfo: {
+                    teamName: config.teamName || 'Mon Équipe',
+                    opponentName: config.opponentName || 'Équipe Adverse',
+                    venue: config.venue || 'Terrain',
+                    date: new Date().toISOString().split('T')[0],
+                    startTime: config.startTime || '15:00'
+                },
+                
+                // Timer complet
                 timer: {
                     ...matchTimer,
                     // Sauvegarder les timestamps comme chaînes ISO pour éviter les problèmes de sérialisation
                     startTime: matchTimer.startTime ? new Date(matchTimer.startTime).toISOString() : null,
-                    savedAt: new Date().toISOString()
+                    savedAt: new Date().toISOString(),
+                    currentTime: getCurrentMatchTime(),
+                    isRunning: matchTimer.isRunning,
+                    currentHalf: matchTimer.currentHalf,
+                    pausedTime: matchTimer.pausedTime
                 },
-                events: matchEvents,
-                stats: matchStats,
-                lastUpdate: new Date().toISOString()
+                
+                // Tous les joueurs et leur composition
+                players: players.map(player => ({
+                    id: player.id,
+                    name: player.name,
+                    position: player.position,
+                    status: player.status || 'bench',
+                    number: player.number || null
+                })),
+                
+                // Événements complets
+                events: matchEvents.map(event => ({
+                    ...event,
+                    playerName: getPlayerName(event.playerId),
+                    formattedDescription: getEventDescription(event)
+                })),
+                
+                // Statistiques complètes
+                stats: {
+                    ...matchStats,
+                    // Score actuel (pour affichage rapide)
+                    score: {
+                        myTeam: matchStats.myTeam.goals,
+                        opponent: matchStats.opponent.goals
+                    }
+                },
+                
+                // Métadonnées pour le live
+                live: {
+                    lastUpdate: new Date().toISOString(),
+                    isActive: true,
+                    spectatorCount: 0, // Peut être mis à jour côté serveur
+                    version: '1.0'
+                }
             };
             
             // Sauvegarder localement (toujours fonctionnel)
-            localStorage.setItem('currentMatch', JSON.stringify(matchData));
+            localStorage.setItem('currentMatch', JSON.stringify(completeMatchData));
             
-            // Sauvegarder sur jsonbin.io (optionnel)
+            // Sauvegarder sur jsonbin.io (pour le live)
             try {
-                const binId = await saveToJsonBin(matchData);
+                const binId = await saveToJsonBin(completeMatchData);
                 if (binId) {
-                    console.log('Match sauvegardé automatiquement sur JsonBin');
+                    console.log('🔴 Match complet sauvegardé automatiquement sur JsonBin pour le live');
+                    
+                    // Sauvegarder l'ID du bin pour le lien live
+                    if (!localStorage.getItem('matchBinId')) {
+                        localStorage.setItem('matchBinId', binId);
+                    }
                 } else {
-                    console.log('Match sauvegardé localement seulement');
+                    console.log('💾 Match sauvegardé localement seulement');
                 }
             } catch (error) {
-                console.log('Sauvegarde locale uniquement (JsonBin indisponible)');
+                console.log('⚠️ Sauvegarde locale uniquement (JsonBin indisponible)');
             }
         }
         
