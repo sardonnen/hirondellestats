@@ -759,6 +759,8 @@
         // Variable globale pour l'édition
         let currentEditEventId = null;
         let newSelectedActionType = null;
+        let isEditingMode = false;
+        let editingEventId = null;
 
         function syncMatchEventsWithApp() {
             if (typeof footballApp !== 'undefined') {
@@ -1289,14 +1291,15 @@
         }
 
         function selectNewActionType(actionType, e) {
-            newSelectedActionType = actionType;
+            // Fermer la modale de sélection
+            closeEditActionTypeModal();
             
-            const actionBtns = document.querySelectorAll('#editActionTypeModal .action-btn');
-            actionBtns.forEach(btn => btn.classList.remove('selected-for-replace'));
+            // Activer le mode édition
+            window.isEditingMode = true;
+            window.editingEventId = currentEditActionId;
             
-            e.currentTarget.classList.add('selected-for-replace');
-            
-            document.getElementById('replaceActionBtn').disabled = false;
+            // Ouvrir la modale complète
+            showUnifiedActionModal(actionType);
         }
 
         function replaceAction() {

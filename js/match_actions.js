@@ -95,6 +95,47 @@ function showUnifiedActionModal(actionType) {
     
     document.getElementById('saveUnifiedActionBtn').disabled = true;
     document.getElementById('unifiedActionModal').style.display = 'block';
+    
+    // AJOUT : Si on est en mode édition, pré-remplir les données
+    if (window.isEditingMode && window.editingEventId) {
+        setTimeout(() => preloadEditingData(), 150);
+    }
+}
+
+/**
+ * Pré-charger les données de l'événement en cours d'édition
+ */
+function preloadEditingData() {
+    const events = footballApp.getState().events;
+    const event = events.find(e => e.id == window.editingEventId);
+    
+    if (!event) return;
+    
+    // Pré-sélectionner l'option si elle existe
+    if (event.option) {
+        const optionButtons = document.querySelectorAll('.option-btn');
+        optionButtons.forEach(btn => {
+            if (btn.textContent === event.option) {
+                btn.click();
+            }
+        });
+    }
+    
+    // Pré-sélectionner le joueur ou adversaire
+    if (event.isTeam === false) {
+        // C'était l'adversaire
+        const opponentBtn = document.getElementById('opponentBtn');
+        if (opponentBtn) opponentBtn.click();
+    } else if (event.playerId) {
+        // C'était un joueur de l'équipe
+        const playerButtons = document.querySelectorAll('#teamPlayerButtons .player-btn');
+        playerButtons.forEach(btn => {
+            const onclickStr = btn.onclick.toString();
+            if (onclickStr.includes(event.playerId)) {
+                btn.click();
+            }
+        });
+    }
 }
 
 /**
@@ -258,10 +299,67 @@ function saveUnifiedAction() {
     if (!currentActionType) return;
     
     console.log('💾 Sauvegarde action:', currentActionType);
-    console.log('📍 Joueur sélectionné:', selectedPlayerId);
-    console.log('🔴 Adversaire:', isOpponentAction);
-    console.log('⚙️ Option:', selectedOption);
     
+    // MODE ÉDITION
+    if (window.isEditingMode && window.editingEventId) {
+        const state = footballApp.getState();
+        const eventIndex = state.events.findIndex(e => e.id == window.editingEventId);
+        
+        if (eventIndex === -1) {
+            alert('Événement introuvable !');
+            return;
+        }
+        
+        const oldEvent = state.events[eventIndex];
+        
+        // Créer le nouvel événement
+        const newEvent = {
+            ...oldEvent,
+            type: currentActionType,
+            isTeam: !isOpponentAction
+        };
+        
+        // Option
+        if (selectedOption) {
+            newEvent.option = selectedOption;
+        } else {
+            delete newEvent.option;
+        }
+        
+        // Joueur
+        if (selectedPlayerId) {
+            const player = state.players.find(p => p.id === selectedPlayerId);
+            newEvent.playerId = selectedPlayerId;
+            newEvent.playerName = player ? player.name : 'Inconnue';
+        } else {
+            newEvent.playerName = 'Adversaire';
+            delete newEvent.playerId;
+        }
+        
+        // Nettoyer les anciennes propriétés
+        delete newEvent.customDescription;
+        delete newEvent.cardType;
+        delete newEvent.saveType;
+        delete newEvent.assistPlayerId;
+        
+        // Remplacer
+        state.events[eventIndex] = newEvent;
+        footballApp.saveState();
+        
+        updateTimelineDisplay();
+        
+        if (typeof autoSave === 'function') {
+            autoSave();
+        }
+        
+        closeUnifiedActionModal();
+        showNotification('Action modifiée !', 'success');
+        
+        console.log('✅ Action modifiée avec succès');
+        return;
+    }
+    
+    // MODE CRÉATION (code original)
     const eventData = {
         type: currentActionType,
         time: getCurrentMatchTime(),
@@ -283,22 +381,16 @@ function saveUnifiedAction() {
     
     handleSpecialCases(eventData);
     
-    console.log('📝 Ajout événement:', eventData);
     footballApp.addEvent(currentActionType, eventData);
     
-    // Mettre à jour la timeline
-    console.log('🔄 Mise à jour timeline...');
     updateTimelineDisplay();
     
-    // Mettre à jour le live
     if (typeof footballApp.updateLive === 'function') {
         footballApp.updateLive();
     }
     
-    // Sauvegarder l'état
     footballApp.saveState();
     
-    // Appeler autoSave de match.html si disponible
     if (typeof autoSave === 'function') {
         autoSave();
     }
@@ -435,6 +527,10 @@ function closeUnifiedActionModal() {
     selectedOption = null;
     selectedPlayerId = null;
     isOpponentAction = false;
+    
+    // Reset du mode édition
+    window.isEditingMode = false;
+    window.editingEventId = null;
 }
 
 // ============================================
