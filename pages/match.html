@@ -742,11 +742,8 @@
     <script src="../js/match_actions.js"></script>
     <script>
         // Variables locales de la page match
-        let selectedPlayerId = null;
         let selectedAssistPlayerId = null;
-        let selectedCardType = null;
         let selectedTeam = null;
-        let currentActionType = null;
         let selectedOutPlayer = null;
         let selectedInPlayer = null;
         let selectedSavePlayer = null;
@@ -1953,6 +1950,52 @@
                 alert('Erreur lors de la génération du lien live');
             }
         }
+
+        // === CONNEXION AVEC match_actions.js ===
+
+        /**
+         * Fonction appelée par match_actions.js pour mettre à jour la timeline
+         */
+        function updateTimelineDisplay() {
+            updateTimeline();
+        }
+
+        /**
+         * Fonction appelée par match_actions.js pour obtenir le temps actuel
+         */
+        function getCurrentMatchTime() {
+            let totalSeconds = matchTimer.pausedTime;
+            if (matchTimer.isRunning && matchTimer.startTime) {
+                totalSeconds = (Date.now() - matchTimer.startTime) / 1000;
+            }
+            
+            if (matchTimer.currentHalf === 2) {
+                totalSeconds += 45 * 60;
+            }
+            
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            
+            if (minutes >= 45 && matchTimer.currentHalf === 1) {
+                const overtimeMinutes = minutes - 45;
+                return `45+${overtimeMinutes}:${seconds.toString().padStart(2, '0')}`;
+            } else if (minutes >= 90 && matchTimer.currentHalf === 2) {
+                const overtimeMinutes = minutes - 90;
+                return `90+${overtimeMinutes}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        /**
+         * Exposer les fonctions pour match_actions.js
+         */
+        window.matchPageFunctions = {
+            getCurrentTime: getCurrentMatchTime,
+            updateTimeline: updateTimelineDisplay,
+            getPlayers: getMyTeamPlayers,
+            autoSave: autoSave
+        };        
     </script>
 </body>
 </html>

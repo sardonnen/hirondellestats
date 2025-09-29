@@ -1,4 +1,4 @@
-// match_actions.js - Gestion des actions de match (VERSION CORRIGÉE)
+// match-actions.js - Gestion des actions de match
 
 // Variables globales pour les sélections
 let currentActionType = null;
@@ -24,7 +24,7 @@ const ACTION_CONFIG = {
     },
     assist: {
         title: 'Passe Décisive',
-        options: null
+        options: null // Pas d'options
     },
     shot: {
         title: 'Tir',
@@ -64,8 +64,10 @@ function showUnifiedActionModal(actionType) {
     const config = ACTION_CONFIG[actionType];
     if (!config) return;
     
+    // Titre
     document.getElementById('unifiedActionTitle').textContent = config.title;
     
+    // Options (si applicable)
     const optionsZone = document.getElementById('actionOptionsZone');
     const optionsButtons = document.getElementById('actionOptionsButtons');
     
@@ -84,14 +86,17 @@ function showUnifiedActionModal(actionType) {
         optionsZone.style.display = 'none';
     }
     
+    // Charger les joueurs
     loadTeamPlayers();
     
+    // Réinitialiser le bouton adversaire
     const opponentBtn = document.getElementById('opponentBtn');
-    if (opponentBtn) {
-        opponentBtn.classList.remove('selected');
-    }
+    opponentBtn.classList.remove('selected');
     
+    // Désactiver le bouton sauvegarder
     document.getElementById('saveUnifiedActionBtn').disabled = true;
+    
+    // Afficher la modale
     document.getElementById('unifiedActionModal').style.display = 'block';
 }
 
@@ -101,6 +106,7 @@ function showUnifiedActionModal(actionType) {
 function selectActionOption(option, btnElement) {
     selectedOption = option;
     
+    // Feedback visuel
     const buttons = document.querySelectorAll('.option-btn');
     buttons.forEach(btn => btn.classList.remove('selected'));
     btnElement.classList.add('selected');
@@ -113,19 +119,21 @@ function selectActionOption(option, btnElement) {
  */
 function loadTeamPlayers() {
     const container = document.getElementById('teamPlayerButtons');
-    if (!container) return;
-    
     container.innerHTML = '';
     
+    // Récupérer les joueurs depuis footballApp
     const players = footballApp.getState().players || [];
     
+    // Filtrer selon le type d'action
     let availablePlayers = [];
     
     if (currentActionType === 'save') {
+        // Uniquement les gardiennes sur le terrain
         availablePlayers = players.filter(p => 
             p.position === 'gardienne' && p.status === 'field'
         );
     } else {
+        // Tous les joueurs sur le terrain
         availablePlayers = players.filter(p => p.status === 'field');
     }
     
@@ -138,7 +146,8 @@ function loadTeamPlayers() {
         const btn = document.createElement('button');
         btn.className = 'player-btn';
         
-        let statusIcon = '🟢';
+        // Icône de statut
+        let statusIcon = '🟢'; // Sur le terrain
         if (player.position === 'gardienne') {
             statusIcon = '🧤';
         }
@@ -160,14 +169,13 @@ function selectPlayer(playerId, btnElement) {
     selectedPlayerId = playerId;
     isOpponentAction = false;
     
+    // Feedback visuel
     const buttons = document.querySelectorAll('#teamPlayerButtons .player-btn');
     buttons.forEach(btn => btn.classList.remove('selected'));
     btnElement.classList.add('selected');
     
-    const opponentBtn = document.getElementById('opponentBtn');
-    if (opponentBtn) {
-        opponentBtn.classList.remove('selected');
-    }
+    // Retirer la sélection adversaire
+    document.getElementById('opponentBtn').classList.remove('selected');
     
     checkUnifiedActionReadiness();
 }
@@ -179,11 +187,11 @@ function selectOpponent() {
     isOpponentAction = true;
     selectedPlayerId = null;
     
+    // Feedback visuel
     const opponentBtn = document.getElementById('opponentBtn');
-    if (opponentBtn) {
-        opponentBtn.classList.add('selected');
-    }
+    opponentBtn.classList.add('selected');
     
+    // Retirer les sélections de joueurs
     const buttons = document.querySelectorAll('#teamPlayerButtons .player-btn');
     buttons.forEach(btn => btn.classList.remove('selected'));
     
@@ -195,13 +203,14 @@ function selectOpponent() {
  */
 function checkUnifiedActionReadiness() {
     const saveBtn = document.getElementById('saveUnifiedActionBtn');
-    if (!saveBtn) return;
-    
     const config = ACTION_CONFIG[currentActionType];
     
     let canSave = false;
+    
+    // Il faut soit un joueur, soit adversaire
     const hasSelection = selectedPlayerId !== null || isOpponentAction;
     
+    // Si options requises, vérifier qu'une option est sélectionnée
     if (config.options && config.options.length > 0) {
         canSave = hasSelection && selectedOption !== null;
     } else {
@@ -217,6 +226,7 @@ function checkUnifiedActionReadiness() {
 function saveUnifiedAction() {
     if (!currentActionType) return;
     
+    // Construire l'événement
     const eventData = {
         type: currentActionType,
         time: getCurrentMatchTime(),
@@ -224,10 +234,12 @@ function saveUnifiedAction() {
         isTeam: !isOpponentAction
     };
     
+    // Ajouter l'option si applicable
     if (selectedOption) {
         eventData.option = selectedOption;
     }
     
+    // Ajouter le joueur si applicable
     if (selectedPlayerId) {
         const player = footballApp.getState().players.find(p => p.id === selectedPlayerId);
         eventData.playerId = selectedPlayerId;
@@ -236,17 +248,23 @@ function saveUnifiedAction() {
         eventData.playerName = 'Adversaire';
     }
     
+    // Cas spéciaux
     handleSpecialCases(eventData);
+    
+    // Ajouter l'événement
     footballApp.addEvent(currentActionType, eventData);
     
-    // Mettre à jour la timeline
-    updateTimelineDisplay();
+    // Mettre à jour l'affichage
+    updateMatchDisplay();
     
+    // Mettre à jour le live
     if (typeof footballApp.updateLive === 'function') {
         footballApp.updateLive();
     }
     
+    // Fermer la modale
     closeUnifiedActionModal();
+    
     showNotification('Action enregistrée !', 'success');
 }
 
@@ -254,15 +272,13 @@ function saveUnifiedAction() {
  * Gérer les cas spéciaux
  */
 function handleSpecialCases(eventData) {
-    const state = footballApp.getState();
-    
     // Carton rouge : retirer du terrain
     if (currentActionType === 'card' && selectedOption === 'Rouge' && selectedPlayerId) {
-        const players = state.players;
-        const playerIndex = players.findIndex(p => p.id === selectedPlayerId);
-        if (playerIndex !== -1) {
-            players[playerIndex].status = 'out';
-            footballApp.saveState();
+        const players = footballApp.getState().players;
+        const player = players.find(p => p.id === selectedPlayerId);
+        if (player) {
+            player.status = 'out';
+            footballApp.updatePlayer(selectedPlayerId, { status: 'out' });
         }
     }
     
@@ -273,18 +289,13 @@ function handleSpecialCases(eventData) {
     
     // But : mettre à jour le score
     if (currentActionType === 'goal') {
+        const score = footballApp.getState().score;
         if (isOpponentAction) {
-            state.score.opponent++;
+            score.opponent++;
         } else {
-            state.score.team++;
+            score.team++;
         }
-        footballApp.saveState();
-        
-        // Mettre à jour l'affichage du score
-        const teamScoreEl = document.getElementById('teamScore');
-        const opponentScoreEl = document.getElementById('opponentScore');
-        if (teamScoreEl) teamScoreEl.textContent = state.score.team;
-        if (opponentScoreEl) opponentScoreEl.textContent = state.score.opponent;
+        footballApp.updateScore(score);
     }
 }
 
@@ -300,13 +311,14 @@ function startWhiteCardTimer(playerId) {
         playerId: playerId,
         playerName: player.name,
         startTime: Date.now(),
-        duration: 10 * 60 * 1000,
+        duration: 10 * 60 * 1000, // 10 minutes en ms
         remaining: 10 * 60 * 1000
     };
     
     whiteCardTimers.push(timer);
     displayWhiteCardTimers();
     
+    // Démarrer le décompte
     timer.interval = setInterval(() => {
         updateWhiteCardTimer(timer.id);
     }, 1000);
@@ -337,8 +349,6 @@ function displayWhiteCardTimers() {
     const zone = document.getElementById('whiteCardTimersZone');
     const list = document.getElementById('whiteCardTimersList');
     
-    if (!zone || !list) return;
-    
     if (whiteCardTimers.length === 0) {
         zone.style.display = 'none';
         return;
@@ -368,10 +378,7 @@ function displayWhiteCardTimers() {
  * Fermer la modale d'action
  */
 function closeUnifiedActionModal() {
-    const modal = document.getElementById('unifiedActionModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    document.getElementById('unifiedActionModal').style.display = 'none';
     currentActionType = null;
     selectedOption = null;
     selectedPlayerId = null;
@@ -390,10 +397,17 @@ function showSubstitutionModal() {
     playerOutId = null;
     playerInId = null;
     
+    // Réinitialiser les boutons d'équipe
     document.getElementById('subMyTeamBtn').style.opacity = '1';
     document.getElementById('subOpponentBtn').style.opacity = '1';
+    
+    // Cacher la section mon équipe
     document.getElementById('myTeamSubSection').style.display = 'none';
+    
+    // Désactiver le bouton de sauvegarde
     document.getElementById('saveSubstitutionBtn').disabled = true;
+    
+    // Afficher la modale
     document.getElementById('substitutionModal').style.display = 'block';
 }
 
@@ -403,15 +417,21 @@ function showSubstitutionModal() {
 function selectSubstitutionTeam(team) {
     substitutionTeam = team;
     
+    // Feedback visuel
     if (team === 'myTeam') {
         document.getElementById('subMyTeamBtn').style.opacity = '1';
         document.getElementById('subOpponentBtn').style.opacity = '0.5';
         document.getElementById('myTeamSubSection').style.display = 'block';
+        
+        // Charger les joueurs
         loadSubstitutionPlayers();
     } else {
+        // Adversaire : sauvegarder directement
         document.getElementById('subOpponentBtn').style.opacity = '1';
         document.getElementById('subMyTeamBtn').style.opacity = '0.5';
         document.getElementById('myTeamSubSection').style.display = 'none';
+        
+        // Activer le bouton de sauvegarde
         document.getElementById('saveSubstitutionBtn').disabled = false;
     }
 }
@@ -424,50 +444,41 @@ function loadSubstitutionPlayers() {
     
     // Joueurs sur le terrain
     const outContainer = document.getElementById('playerOutButtons');
-    if (outContainer) {
-        outContainer.innerHTML = '';
+    outContainer.innerHTML = '';
+    
+    const fieldPlayers = players.filter(p => p.status === 'field');
+    fieldPlayers.forEach(player => {
+        const btn = document.createElement('button');
+        btn.className = 'player-btn';
         
-        const fieldPlayers = players.filter(p => p.status === 'field');
-        fieldPlayers.forEach(player => {
-            const btn = document.createElement('button');
-            btn.className = 'player-btn';
-            
-            let icon = '🟢';
-            if (player.position === 'gardienne') icon = '🧤';
-            
-            btn.innerHTML = `
-                <div>${icon} ${player.name}</div>
-                <div style="font-size: 0.8rem; opacity: 0.8;">${player.position || ''}</div>
-            `;
-            
-            btn.onclick = () => selectPlayerOut(player.id, btn);
-            outContainer.appendChild(btn);
-        });
-    }
+        let icon = '🟢';
+        if (player.position === 'gardienne') icon = '🧤';
+        
+        btn.innerHTML = `
+            <div>${icon} ${player.name}</div>
+            <div style="font-size: 0.8rem; opacity: 0.8;">${player.position || ''}</div>
+        `;
+        
+        btn.onclick = () => selectPlayerOut(player.id, btn);
+        outContainer.appendChild(btn);
+    });
     
     // Joueurs sur le banc
     const inContainer = document.getElementById('playerInButtons');
-    if (inContainer) {
-        inContainer.innerHTML = '';
+    inContainer.innerHTML = '';
+    
+    const benchPlayers = players.filter(p => p.status === 'bench');
+    benchPlayers.forEach(player => {
+        const btn = document.createElement('button');
+        btn.className = 'player-btn';
+        btn.innerHTML = `
+            <div>🔵 ${player.name}</div>
+            <div style="font-size: 0.8rem; opacity: 0.8;">${player.position || ''}</div>
+        `;
         
-        const benchPlayers = players.filter(p => p.status === 'bench');
-        
-        if (benchPlayers.length === 0) {
-            inContainer.innerHTML = '<p style="text-align: center; padding: 10px;">Aucune joueuse sur le banc</p>';
-        } else {
-            benchPlayers.forEach(player => {
-                const btn = document.createElement('button');
-                btn.className = 'player-btn';
-                btn.innerHTML = `
-                    <div>🔵 ${player.name}</div>
-                    <div style="font-size: 0.8rem; opacity: 0.8;">${player.position || ''}</div>
-                `;
-                
-                btn.onclick = () => selectPlayerIn(player.id, btn);
-                inContainer.appendChild(btn);
-            });
-        }
-    }
+        btn.onclick = () => selectPlayerIn(player.id, btn);
+        inContainer.appendChild(btn);
+    });
 }
 
 /**
@@ -476,6 +487,7 @@ function loadSubstitutionPlayers() {
 function selectPlayerOut(playerId, btnElement) {
     playerOutId = playerId;
     
+    // Feedback visuel
     const buttons = document.querySelectorAll('#playerOutButtons .player-btn');
     buttons.forEach(btn => btn.classList.remove('selected'));
     btnElement.classList.add('selected');
@@ -489,6 +501,7 @@ function selectPlayerOut(playerId, btnElement) {
 function selectPlayerIn(playerId, btnElement) {
     playerInId = playerId;
     
+    // Feedback visuel
     const buttons = document.querySelectorAll('#playerInButtons .player-btn');
     buttons.forEach(btn => btn.classList.remove('selected'));
     btnElement.classList.add('selected');
@@ -516,6 +529,7 @@ function checkSubstitutionReadiness() {
  */
 function saveSubstitution() {
     if (substitutionTeam === 'opponent') {
+        // Changement adverse : juste ajouter à la timeline
         const eventData = {
             type: 'substitution',
             time: getCurrentMatchTime(),
@@ -527,46 +541,49 @@ function saveSubstitution() {
         footballApp.addEvent('substitution', eventData);
         
     } else if (substitutionTeam === 'myTeam' && playerOutId && playerInId) {
-        const state = footballApp.getState();
-        const players = state.players;
+        // Changement de notre équipe
+        const players = footballApp.getState().players;
         const playerOut = players.find(p => p.id === playerOutId);
         const playerIn = players.find(p => p.id === playerInId);
         
         if (!playerOut || !playerIn) return;
         
+        // Gérer le cas du gardien
         const isGoalkeeperChange = playerOut.position === 'gardienne' || playerIn.position === 'gardienne';
         
         if (isGoalkeeperChange) {
             if (playerOut.position === 'gardienne') {
-                const playerOutIndex = players.findIndex(p => p.id === playerOutId);
-                const playerInIndex = players.findIndex(p => p.id === playerInId);
+                // Le gardien sort : retirer la position
+                footballApp.updatePlayer(playerOutId, { 
+                    status: 'bench',
+                    position: playerOut.originalPosition || playerOut.position
+                });
                 
-                players[playerOutIndex].status = 'bench';
-                players[playerOutIndex].position = players[playerOutIndex].originalPosition || players[playerOutIndex].position;
-                
-                players[playerInIndex].status = 'field';
-                players[playerInIndex].originalPosition = players[playerInIndex].position;
-                players[playerInIndex].position = 'gardienne';
+                // Le joueur entrant devient gardien
+                footballApp.updatePlayer(playerInId, { 
+                    status: 'field',
+                    originalPosition: playerIn.position,
+                    position: 'gardienne'
+                });
             } else {
-                const playerInIndex = players.findIndex(p => p.id === playerInId);
-                const playerOutIndex = players.findIndex(p => p.id === playerOutId);
+                // Un joueur entre comme gardien
+                footballApp.updatePlayer(playerInId, { 
+                    status: 'field',
+                    originalPosition: playerIn.position,
+                    position: 'gardienne'
+                });
                 
-                players[playerInIndex].status = 'field';
-                players[playerInIndex].originalPosition = players[playerInIndex].position;
-                players[playerInIndex].position = 'gardienne';
-                
-                players[playerOutIndex].status = 'bench';
+                footballApp.updatePlayer(playerOutId, { 
+                    status: 'bench'
+                });
             }
         } else {
-            const playerOutIndex = players.findIndex(p => p.id === playerOutId);
-            const playerInIndex = players.findIndex(p => p.id === playerInId);
-            
-            players[playerOutIndex].status = 'bench';
-            players[playerInIndex].status = 'field';
+            // Changement normal
+            footballApp.updatePlayer(playerOutId, { status: 'bench' });
+            footballApp.updatePlayer(playerInId, { status: 'field' });
         }
         
-        footballApp.saveState();
-        
+        // Ajouter l'événement
         const eventData = {
             type: 'substitution',
             time: getCurrentMatchTime(),
@@ -579,8 +596,8 @@ function saveSubstitution() {
         footballApp.addEvent('substitution', eventData);
     }
     
-    // Mettre à jour la timeline
-    updateTimelineDisplay();
+    // Mettre à jour l'affichage
+    updateMatchDisplay();
     
     if (typeof footballApp.updateLive === 'function') {
         footballApp.updateLive();
@@ -601,125 +618,6 @@ function closeSubstitutionModal() {
 }
 
 // ============================================
-// TIMELINE
-// ============================================
-
-/**
- * Mettre à jour l'affichage de la timeline
- */
-function updateTimelineDisplay() {
-    const container = document.getElementById('eventsTimeline');
-    if (!container) return;
-    
-    const state = footballApp.getState();
-    const events = state.events || [];
-    
-    if (events.length === 0) {
-        container.innerHTML = '<p class="text-center">Aucun événement enregistré</p>';
-        return;
-    }
-    
-    container.innerHTML = '';
-    
-    // Créer la structure 3 colonnes
-    const timelineGrid = document.createElement('div');
-    timelineGrid.style.cssText = 'display: grid; grid-template-columns: 1fr auto 1fr; gap: 15px; align-items: start;';
-    
-    events.slice().reverse().forEach(event => {
-        const row = document.createElement('div');
-        row.style.cssText = 'display: contents;';
-        
-        // Colonne gauche (mon équipe)
-        const leftCol = document.createElement('div');
-        leftCol.style.cssText = 'text-align: right; padding: 10px; background: rgba(76, 175, 80, 0.1); border-radius: 8px;';
-        
-        // Colonne centre (timer)
-        const centerCol = document.createElement('div');
-        centerCol.style.cssText = 'text-align: center; padding: 10px; font-weight: bold; color: #ffd700;';
-        centerCol.textContent = event.time;
-        
-        // Colonne droite (adversaire)
-        const rightCol = document.createElement('div');
-        rightCol.style.cssText = 'text-align: left; padding: 10px; background: rgba(244, 67, 54, 0.1); border-radius: 8px;';
-        
-        // Placer l'événement dans la bonne colonne
-        if (event.isTeam) {
-            leftCol.innerHTML = getEventHTML(event);
-            rightCol.innerHTML = '&nbsp;';
-        } else {
-            leftCol.innerHTML = '&nbsp;';
-            rightCol.innerHTML = getEventHTML(event);
-        }
-        
-        row.appendChild(leftCol);
-        row.appendChild(centerCol);
-        row.appendChild(rightCol);
-        
-        timelineGrid.appendChild(leftCol);
-        timelineGrid.appendChild(centerCol);
-        timelineGrid.appendChild(rightCol);
-    });
-    
-    container.appendChild(timelineGrid);
-}
-
-/**
- * Obtenir le HTML d'un événement
- */
-function getEventHTML(event) {
-    let icon = '';
-    let text = '';
-    
-    switch (event.type) {
-        case 'goal':
-            icon = '⚽';
-            text = `But${event.option ? ' (' + event.option + ')' : ''} - ${event.playerName}`;
-            break;
-        case 'assist':
-            icon = '🎯';
-            text = `Passe décisive - ${event.playerName}`;
-            break;
-        case 'shot':
-            icon = '🏹';
-            text = `Tir${event.option ? ' ' + event.option.toLowerCase() : ''} - ${event.playerName}`;
-            break;
-        case 'save':
-            icon = '🧤';
-            text = `Arrêt${event.option ? ' ' + event.option.toLowerCase() : ''} - ${event.playerName}`;
-            break;
-        case 'foul':
-            icon = '⚠️';
-            text = `Faute${event.option ? ' (' + event.option + ')' : ''} - ${event.playerName}`;
-            break;
-        case 'card':
-            icon = event.option === 'Jaune' ? '🟨' : event.option === 'Rouge' ? '🟥' : '⬜';
-            text = `Carton ${event.option} - ${event.playerName}`;
-            break;
-        case 'corner':
-            icon = '🚩';
-            text = `Corner - ${event.playerName}`;
-            break;
-        case 'offside':
-            icon = '🏴';
-            text = `Hors-jeu - ${event.playerName}`;
-            break;
-        case 'substitution':
-            icon = '🔄';
-            if (event.playerOutName && event.playerInName) {
-                text = `${event.playerInName} ➡️ ${event.playerOutName}`;
-            } else {
-                text = event.playerName;
-            }
-            break;
-        default:
-            icon = '📝';
-            text = event.playerName || 'Événement';
-    }
-    
-    return `<span style="font-size: 1.2em;">${icon}</span> ${text}`;
-}
-
-// ============================================
 // FONCTIONS UTILITAIRES
 // ============================================
 
@@ -727,11 +625,10 @@ function getEventHTML(event) {
  * Obtenir le temps actuel du match
  */
 function getCurrentMatchTime() {
-    const state = footballApp.getState();
-    const time = state.time || 0;
-    const minutes = Math.floor(time);
-    const seconds = Math.floor((time % 1) * 60);
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    if (typeof footballApp.getCurrentTime === 'function') {
+        return footballApp.getCurrentTime();
+    }
+    return '00:00';
 }
 
 /**
@@ -742,6 +639,15 @@ function showNotification(message, type) {
         footballApp.showNotification(message, type);
     } else {
         console.log(`[${type}] ${message}`);
+    }
+}
+
+/**
+ * Mettre à jour l'affichage du match
+ */
+function updateMatchDisplay() {
+    if (typeof footballApp.updateDisplay === 'function') {
+        footballApp.updateDisplay();
     }
 }
 

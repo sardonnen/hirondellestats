@@ -950,4 +950,16 @@ window.footballApp = {
     importMatchData
 };
 
+/**
+ * Obtenir le temps actuel formaté
+ */
+function getCurrentTime() {
+    const minutes = Math.floor(appState.time);
+    const seconds = Math.floor((appState.time % 1) * 60);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+// Ajouter à l'export footballApp
+window.footballApp.getCurrentTime = getCurrentTime;
+
 console.log('🎯 Football Stats App - Fonctions principales chargées (version corrigée)');
