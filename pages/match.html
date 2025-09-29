@@ -605,7 +605,7 @@
                     </div>
                     
                     <div class="compact-stat-card shots">
-                        <div class="compact-stat-icon">🎯</div>
+                        <div class="compact-stat-icon">➡️</div>
                         <div class="compact-stat-values">
                             <span class="compact-team-value" id="compactTeamShots">0</span>
                             <span class="compact-separator">-</span>
@@ -1647,7 +1647,7 @@
                     let goalText = `⚽ ${playerName}`;
                     if (event.assistPlayerId) {
                         const assistName = getPlayerName(event.assistPlayerId);
-                        goalText += `<br><small>🎯 Passe: ${assistName}</small>`;
+                        goalText += `<br><small>➡️ Passe: ${assistName}</small>`;
                     }
                     return goalText;
                 case 'shot':
