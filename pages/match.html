@@ -598,6 +598,27 @@
                 </div>
             </div>
 
+            <!-- Modal Édition d'événement -->
+            <div id="editEventModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeEditEventModal()">&times;</span>
+                    <h3>✏️ Modifier l'événement</h3>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold;">Description de l'événement :</label>
+                        <textarea id="editEventDescription" 
+                                  rows="3" 
+                                  style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 16px; resize: vertical;"
+                                  placeholder="Modifiez la description de l'événement..."></textarea>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="btn btn-primary" onclick="saveEventEdit()">💾 Sauvegarder</button>
+                        <button class="btn btn-secondary" onclick="closeEditEventModal()">❌ Annuler</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Timeline des événements -->
             <div class="team-card">
                 <h3>📝 Timeline du Match</h3>
@@ -634,14 +655,24 @@
                         <div class="compact-stat-label">Buts</div>
                     </div>
                     
-                    <div class="compact-stat-card shots">
-                        <div class="compact-stat-icon">➡️</div>
+                    <div class="compact-stat-card shots-on-target">
+                        <div class="compact-stat-icon">🎯</div>
                         <div class="compact-stat-values">
-                            <span class="compact-team-value" id="compactTeamShots">0</span>
+                            <span class="compact-team-value" id="compactTeamShotsOnTarget">0</span>
                             <span class="compact-separator">-</span>
-                            <span class="compact-opponent-value" id="compactOpponentShots">0</span>
+                            <span class="compact-opponent-value" id="compactOpponentShotsOnTarget">0</span>
                         </div>
-                        <div class="compact-stat-label">Tirs</div>
+                        <div class="compact-stat-label">Tirs cadrés</div>
+                    </div>
+                    
+                    <div class="compact-stat-card shots-off-target">
+                        <div class="compact-stat-icon">↗️</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamShotsOffTarget">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentShotsOffTarget">0</span>
+                        </div>
+                        <div class="compact-stat-label">Tirs non cadrés</div>
                     </div>
                     
                     <div class="compact-stat-card cards">
@@ -673,16 +704,6 @@
                         </div>
                         <div class="compact-stat-label">Arrêts</div>
                     </div>
-                    
-                    <div class="compact-stat-card freekicks">
-                        <div class="compact-stat-icon">⚽</div>
-                        <div class="compact-stat-values">
-                            <span class="compact-team-value" id="compactTeamFreeKicks">0</span>
-                            <span class="compact-separator">-</span>
-                            <span class="compact-opponent-value" id="compactOpponentFreeKicks">0</span>
-                        </div>
-                        <div class="compact-stat-label">Coups Francs</div>
-                    </div>
                 </div>
             </div>
         </main>
@@ -704,9 +725,12 @@
         
         let matchEvents = [];
         let matchStats = {
-            myTeam: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0, freeKicks: 0 },
-            opponent: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0, freeKicks: 0 }
+            myTeam: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 },
+            opponent: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 }
         };
+
+        // Variable globale pour l'édition
+        let currentEditEventId = null;
 
         function syncMatchEventsWithApp() {
             if (typeof footballApp !== 'undefined') {
@@ -745,9 +769,12 @@
             document.getElementById('matchHalf').textContent = '1ère Mi-temps';
             document.getElementById('eventsTimeline').innerHTML = '<div style="text-align: center; padding: 20px; color: #bbb;">Aucun événement enregistré</div>';
             
-            const statElements = ['compactTeamGoals', 'compactOpponentGoals', 'compactTeamShots', 'compactOpponentShots', 
-                                'compactTeamCards', 'compactOpponentCards', 'compactTeamFouls', 'compactOpponentFouls',
-                                'compactTeamSaves', 'compactOpponentSaves', 'compactTeamFreeKicks', 'compactOpponentFreeKicks'];
+            const statElements = ['compactTeamGoals', 'compactOpponentGoals', 
+                                  'compactTeamShotsOnTarget', 'compactOpponentShotsOnTarget',
+                                  'compactTeamShotsOffTarget', 'compactOpponentShotsOffTarget',
+                                  'compactTeamCards', 'compactOpponentCards', 
+                                  'compactTeamFouls', 'compactOpponentFouls',
+                                  'compactTeamSaves', 'compactOpponentSaves'];
             statElements.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) element.textContent = '0';
@@ -755,8 +782,8 @@
 
             matchEvents = [];
             matchStats = {
-                myTeam: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0, freeKicks: 0 },
-                opponent: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0, freeKicks: 0 }
+                myTeam: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 },
+                opponent: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 }
             };
         }
 
@@ -823,7 +850,7 @@
                     const data = JSON.parse(savedData);
                     const timerData = data.timer || data;
                     const eventsData = data.events || [];
-                    const statsData = data.stats || { myTeam: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0, freeKicks: 0 }, opponent: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0, freeKicks: 0 } };
+                    const statsData = data.stats || { myTeam: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 }, opponent: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 } };
                     
                     if (timerData) {
                         matchTimer = { ...matchTimer, ...timerData };
@@ -1053,7 +1080,6 @@
             updateTimeline();
         }
         
-        // FONCTION MODIFIÉE POUR AJOUTER LES BOUTONS MODIFIER/SUPPRIMER
         function updateTimeline() {
             syncMatchEventsWithApp();
             const container = document.getElementById('eventsTimeline');
@@ -1103,16 +1129,15 @@
                 container.appendChild(eventDiv);
             });
             
-            // MISE À JOUR DU RÉSUMÉ RAPIDE
             updateQuickStatsFromEvents();
         }
         
-        // NOUVELLE FONCTION: Calculer les stats depuis les événements
+        // FONCTION MODIFIÉE: Calculer les stats depuis les événements
         function updateQuickStatsFromEvents() {
             // Réinitialiser les stats
             matchStats = {
-                myTeam: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0, freeKicks: 0 },
-                opponent: { goals: 0, shots: 0, cards: 0, fouls: 0, saves: 0, freeKicks: 0 }
+                myTeam: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 },
+                opponent: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 }
             };
             
             // Recalculer depuis les événements
@@ -1124,7 +1149,12 @@
                         matchStats[team].goals++;
                         break;
                     case 'shot':
-                        matchStats[team].shots++;
+                        // Compter séparément les tirs cadrés et non cadrés
+                        if (event.option === 'Cadré') {
+                            matchStats[team].shotsOnTarget++;
+                        } else if (event.option === 'Non cadré') {
+                            matchStats[team].shotsOffTarget++;
+                        }
                         break;
                     case 'card':
                         matchStats[team].cards++;
@@ -1135,26 +1165,22 @@
                     case 'save':
                         matchStats[team].saves++;
                         break;
-                    case 'corner':
-                    case 'freekick':
-                        matchStats[team].freeKicks++;
-                        break;
                 }
             });
             
             // Mettre à jour l'affichage
             document.getElementById('compactTeamGoals').textContent = matchStats.myTeam.goals;
             document.getElementById('compactOpponentGoals').textContent = matchStats.opponent.goals;
-            document.getElementById('compactTeamShots').textContent = matchStats.myTeam.shots;
-            document.getElementById('compactOpponentShots').textContent = matchStats.opponent.shots;
+            document.getElementById('compactTeamShotsOnTarget').textContent = matchStats.myTeam.shotsOnTarget;
+            document.getElementById('compactOpponentShotsOnTarget').textContent = matchStats.opponent.shotsOnTarget;
+            document.getElementById('compactTeamShotsOffTarget').textContent = matchStats.myTeam.shotsOffTarget;
+            document.getElementById('compactOpponentShotsOffTarget').textContent = matchStats.opponent.shotsOffTarget;
             document.getElementById('compactTeamCards').textContent = matchStats.myTeam.cards;
             document.getElementById('compactOpponentCards').textContent = matchStats.opponent.cards;
             document.getElementById('compactTeamFouls').textContent = matchStats.myTeam.fouls;
             document.getElementById('compactOpponentFouls').textContent = matchStats.opponent.fouls;
             document.getElementById('compactTeamSaves').textContent = matchStats.myTeam.saves;
             document.getElementById('compactOpponentSaves').textContent = matchStats.opponent.saves;
-            document.getElementById('compactTeamFreeKicks').textContent = matchStats.myTeam.freeKicks;
-            document.getElementById('compactOpponentFreeKicks').textContent = matchStats.opponent.freeKicks;
             
             // Mettre à jour les scores affichés
             document.getElementById('teamScore').textContent = matchStats.myTeam.goals;
@@ -1182,7 +1208,7 @@
             }
         }
         
-        // NOUVELLE FONCTION: Modifier un événement
+        // NOUVELLE FONCTION: Modifier un événement (implémentation complète)
         function editEvent(eventId) {
             const event = matchEvents.find(e => e.id == eventId);
             if (!event) {
@@ -1190,11 +1216,77 @@
                 return;
             }
             
-            alert('Fonction de modification en cours de développement.\nPour le moment, supprimez l\'événement et recréez-le.');
-            // TODO: Implémenter la modification complète
+            // Stocker l'ID de l'événement en cours d'édition
+            currentEditEventId = eventId;
+            
+            // Récupérer la description actuelle
+            let currentDescription = '';
+            if (event.type === 'substitution') {
+                if (event.playerOutName && event.playerInName) {
+                    currentDescription = `Changement : ${event.playerInName} ➡️ ${event.playerOutName}`;
+                } else {
+                    currentDescription = 'Changement';
+                }
+            } else {
+                currentDescription = getEventDescription(event).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+            }
+            
+            // Remplir le textarea avec la description actuelle
+            document.getElementById('editEventDescription').value = currentDescription;
+            
+            // Afficher la modale
+            document.getElementById('editEventModal').style.display = 'block';
+        }
+
+        // Fermer la modale d'édition
+        function closeEditEventModal() {
+            document.getElementById('editEventModal').style.display = 'none';
+            currentEditEventId = null;
+        }
+
+        // Sauvegarder la modification
+        function saveEventEdit() {
+            if (!currentEditEventId) return;
+            
+            const newDescription = document.getElementById('editEventDescription').value.trim();
+            
+            if (!newDescription) {
+                alert('La description ne peut pas être vide !');
+                return;
+            }
+            
+            // Trouver et modifier l'événement dans matchEvents
+            const eventIndex = matchEvents.findIndex(e => e.id == currentEditEventId);
+            if (eventIndex !== -1) {
+                matchEvents[eventIndex].customDescription = newDescription;
+            }
+            
+            // Modifier aussi dans footballApp
+            if (typeof footballApp !== 'undefined') {
+                const appState = footballApp.getState();
+                const appEventIndex = appState.events.findIndex(e => e.id == currentEditEventId);
+                if (appEventIndex !== -1) {
+                    appState.events[appEventIndex].customDescription = newDescription;
+                    footballApp.saveState();
+                }
+            }
+            
+            // Mettre à jour l'affichage
+            updateTimeline();
+            autoSave();
+            
+            // Fermer la modale
+            closeEditEventModal();
+            
+            alert('✅ Événement modifié !');
         }
             
         function getEventDescription(event) {
+            // Si une description personnalisée existe, l'utiliser
+            if (event.customDescription) {
+                return event.customDescription;
+            }
+            
             const playerName = getPlayerName(event.playerId);
             
             switch (event.type) {
@@ -1259,7 +1351,11 @@
                     matchStats[team].goals++;
                     break;
                 case 'shot':
-                    matchStats[team].shots++;
+                    if (eventData.option === 'Cadré') {
+                        matchStats[team].shotsOnTarget++;
+                    } else if (eventData.option === 'Non cadré') {
+                        matchStats[team].shotsOffTarget++;
+                    }
                     break;
                 case 'card':
                     matchStats[team].cards++;
@@ -1269,9 +1365,6 @@
                     break;
                 case 'save':
                     matchStats[team].saves++;
-                    break;
-                case 'freekick':
-                    matchStats[team].freeKicks++;
                     break;
             }
         }
@@ -1285,16 +1378,16 @@
         function updateQuickStats() {
             document.getElementById('compactTeamGoals').textContent = matchStats.myTeam.goals;
             document.getElementById('compactOpponentGoals').textContent = matchStats.opponent.goals;
-            document.getElementById('compactTeamShots').textContent = matchStats.myTeam.shots;
-            document.getElementById('compactOpponentShots').textContent = matchStats.opponent.shots;
+            document.getElementById('compactTeamShotsOnTarget').textContent = matchStats.myTeam.shotsOnTarget || 0;
+            document.getElementById('compactOpponentShotsOnTarget').textContent = matchStats.opponent.shotsOnTarget || 0;
+            document.getElementById('compactTeamShotsOffTarget').textContent = matchStats.myTeam.shotsOffTarget || 0;
+            document.getElementById('compactOpponentShotsOffTarget').textContent = matchStats.opponent.shotsOffTarget || 0;
             document.getElementById('compactTeamCards').textContent = matchStats.myTeam.cards;
             document.getElementById('compactOpponentCards').textContent = matchStats.opponent.cards;
             document.getElementById('compactTeamFouls').textContent = matchStats.myTeam.fouls;
             document.getElementById('compactOpponentFouls').textContent = matchStats.opponent.fouls;
             document.getElementById('compactTeamSaves').textContent = matchStats.myTeam.saves;
             document.getElementById('compactOpponentSaves').textContent = matchStats.opponent.saves;
-            document.getElementById('compactTeamFreeKicks').textContent = matchStats.myTeam.freeKicks || 0;
-            document.getElementById('compactOpponentFreeKicks').textContent = matchStats.opponent.freeKicks || 0;
         }
 
         function getMyTeamPlayers() {
