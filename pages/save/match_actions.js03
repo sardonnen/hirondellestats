@@ -96,20 +96,14 @@ function showUnifiedActionModal(actionType) {
 }
 
 /**
- * Sélectionner une option (avec toggle)
+ * Sélectionner une option
  */
 function selectActionOption(option, btnElement) {
-    // Si déjà sélectionné, désélectionner
-    if (selectedOption === option) {
-        selectedOption = null;
-        btnElement.classList.remove('selected');
-    } else {
-        // Sinon, sélectionner
-        selectedOption = option;
-        const buttons = document.querySelectorAll('.option-btn');
-        buttons.forEach(btn => btn.classList.remove('selected'));
-        btnElement.classList.add('selected');
-    }
+    selectedOption = option;
+    
+    const buttons = document.querySelectorAll('.option-btn');
+    buttons.forEach(btn => btn.classList.remove('selected'));
+    btnElement.classList.add('selected');
     
     checkUnifiedActionReadiness();
 }
@@ -160,57 +154,38 @@ function loadTeamPlayers() {
 }
 
 /**
- * Sélectionner un joueur (avec toggle)
+ * Sélectionner un joueur
  */
 function selectPlayer(playerId, btnElement) {
-    // Si déjà sélectionné, désélectionner
-    if (selectedPlayerId === playerId) {
-        selectedPlayerId = null;
-        isOpponentAction = false;
-        btnElement.classList.remove('selected');
-    } else {
-        // Sinon, sélectionner
-        selectedPlayerId = playerId;
-        isOpponentAction = false;
-        
-        const buttons = document.querySelectorAll('#teamPlayerButtons .player-btn');
-        buttons.forEach(btn => btn.classList.remove('selected'));
-        btnElement.classList.add('selected');
-        
-        const opponentBtn = document.getElementById('opponentBtn');
-        if (opponentBtn) {
-            opponentBtn.classList.remove('selected');
-        }
+    selectedPlayerId = playerId;
+    isOpponentAction = false;
+    
+    const buttons = document.querySelectorAll('#teamPlayerButtons .player-btn');
+    buttons.forEach(btn => btn.classList.remove('selected'));
+    btnElement.classList.add('selected');
+    
+    const opponentBtn = document.getElementById('opponentBtn');
+    if (opponentBtn) {
+        opponentBtn.classList.remove('selected');
     }
     
     checkUnifiedActionReadiness();
 }
 
 /**
- * Sélectionner adversaire (avec toggle)
+ * Sélectionner adversaire
  */
 function selectOpponent() {
-    const opponentBtn = document.getElementById('opponentBtn');
+    isOpponentAction = true;
+    selectedPlayerId = null;
     
-    // Si déjà sélectionné, désélectionner
-    if (isOpponentAction) {
-        isOpponentAction = false;
-        selectedPlayerId = null;
-        if (opponentBtn) {
-            opponentBtn.classList.remove('selected');
-        }
-    } else {
-        // Sinon, sélectionner
-        isOpponentAction = true;
-        selectedPlayerId = null;
-        
-        if (opponentBtn) {
-            opponentBtn.classList.add('selected');
-        }
-        
-        const buttons = document.querySelectorAll('#teamPlayerButtons .player-btn');
-        buttons.forEach(btn => btn.classList.remove('selected'));
+    const opponentBtn = document.getElementById('opponentBtn');
+    if (opponentBtn) {
+        opponentBtn.classList.add('selected');
     }
+    
+    const buttons = document.querySelectorAll('#teamPlayerButtons .player-btn');
+    buttons.forEach(btn => btn.classList.remove('selected'));
     
     checkUnifiedActionReadiness();
 }
@@ -633,14 +608,6 @@ function closeSubstitutionModal() {
  * Mettre à jour l'affichage de la timeline
  */
 function updateTimelineDisplay() {
-    // Synchroniser matchEvents local avec footballApp
-    if (typeof matchEvents !== 'undefined' && typeof footballApp !== 'undefined') {
-        const state = footballApp.getState();
-        if (state.events) {
-            matchEvents = state.events;
-        }
-    }
-    
     const container = document.getElementById('eventsTimeline');
     if (!container) return;
     
