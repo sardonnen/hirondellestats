@@ -743,65 +743,71 @@ function updateTimelineDisplay() {
     console.log('✅ Timeline mise à jour avec succès');
 }
 
-/**
- * Obtenir le HTML d'un événement
+//**
+ * Obtenir le HTML d un événement pour la timeline
  */
 function getEventHTML(event) {
     let icon = '';
-    let text = '';
+    let actionLabel = '';
     
     switch (event.type) {
         case 'goal':
             icon = '⚽';
-            text = `But${event.option ? ' (' + event.option + ')' : ''}`;
+            actionLabel = `But${event.option ? ' (' + event.option + ')' : ''}`;
             break;
         case 'assist':
             icon = '➡️';
-            text = `Passe décisive`;
+            actionLabel = `Passe décisive`;
             break;
         case 'shot':
             icon = '🎯';
-            text = `Tir${event.option ? ' ' + event.option.toLowerCase() : ''}`;
+            actionLabel = `Tir${event.option ? ' (' + event.option + ')' : ''}`;
             break;
         case 'save':
             icon = '🧤';
-            text = `Arrêt${event.option ? ' ' + event.option.toLowerCase() : ''}`;
+            actionLabel = `Arrêt${event.option ? ' (' + event.option + ')' : ''}`;
             break;
         case 'foul':
             icon = '⚠️';
-            text = `Faute${event.option ? ' (' + event.option + ')' : ''}`;
+            actionLabel = `Faute${event.option ? ' (' + event.option + ')' : ''}`;
             break;
         case 'card':
             icon = event.option === 'Jaune' ? '🟨' : event.option === 'Rouge' ? '🟥' : '⬜';
-            text = `Carton ${event.option}`;
+            actionLabel = `Carton ${event.option}`;
             break;
         case 'corner':
             icon = '🚩';
-            text = `Corner`;
+            actionLabel = `Corner`;
             break;
         case 'offside':
             icon = '🛑';
-            text = `Hors-jeu`;
+            actionLabel = `Hors-jeu`;
             break;
         case 'substitution':
             icon = '🔄';
             if (event.playerOutName && event.playerInName) {
-                text = `Changement : ${event.playerInName} ➡️ ${event.playerOutName}`;
+                actionLabel = `Changement : ${event.playerInName} ➡️ ${event.playerOutName}`;
             } else {
-                text = 'Changement';
+                actionLabel = 'Changement';
             }
             break;
         default:
             icon = '📝';
-            text = 'Événement';
+            actionLabel = 'Événement';
     }
     
-    // Ajouter le nom du joueur (sauf pour substitution qui a déjà les noms)
-    if (event.type !== 'substitution' && event.playerName) {
-        text += ` - ${event.playerName}`;
+    // Pour mon équipe : afficher l'action + le nom de la joueuse
+    if (event.isTeam) {
+        if (event.type !== 'substitution' && event.playerName && event.playerName !== 'Adversaire') {
+            return `<span style="font-size: 1.2em;">${icon}</span> ${actionLabel}<br><small style="opacity: 0.8;">${event.playerName}</small>`;
+        } else {
+            return `<span style="font-size: 1.2em;">${icon}</span> ${actionLabel}`;
+        }
+    } 
+    // Pour l'adversaire : afficher seulement l'action (pas de nom)
+    else {
+        return `<span style="font-size: 1.2em;">${icon}</span> ${actionLabel}`;
     }
-    
-    return `<span style="font-size: 1.2em;">${icon}</span> ${text}`;
 }
 
 // ============================================
