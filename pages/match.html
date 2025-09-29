@@ -108,7 +108,19 @@
         .action-btn.foul { background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; }
         .action-btn.save { background: rgba(230, 126, 34, 0.2); border-color: #e67e22; }
         .action-btn.freekick { background: rgba(155, 89, 182, 0.2); border-color: #9b59b6; }
-        
+        .action-btn.assist { background: rgba(26, 188, 156, 0.2); border-color: #1abc9c; }
+        .action-btn.corner { background: rgba(52, 73, 94, 0.2); border-color: #34495e; }
+        .action-btn.offside { background: rgba(189, 195, 199, 0.2); border-color: #bdc3c7; }
+        .action-btn.substitution { background: rgba(142, 68, 173, 0.2); border-color: #8e44ad; }
+
+        /* Style pour les boutons sélectionnés dans la modale d'édition */
+        .action-btn.selected-for-replace {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
+            border-color: #2ecc71 !important;
+            border-width: 3px;
+        }
+       
         /* NOUVEAU DESIGN POUR LES BOUTONS D'OPTIONS */
         .option-btn {
             padding: 12px 20px;
@@ -302,15 +314,15 @@
         .timeline-container {
             background: rgba(0,0,0,0.2);
             border-radius: 12px;
-            padding: 20px;
+            padding: 5px;
             margin: 20px 0;
         }
         
         .timeline-header {
             display: grid;
-            grid-template-columns: 1fr auto 1fr auto;
+            grid-template-columns: 1fr auto 1fr;
             gap: 20px;
-            padding: 15px;
+            padding: 5px;
             background: rgba(255,255,255,0.1);
             border-radius: 8px;
             margin-bottom: 15px;
@@ -320,12 +332,18 @@
         
         .timeline-event {
             display: grid;
-            grid-template-columns: 1fr auto 1fr auto;
+            grid-template-columns: 1fr auto 1fr;
             gap: 15px;
-            padding: 10px;
+            padding: 5px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             align-items: center;
+            cursor: pointer;
+            transition: background 0.2s ease;
         }
+
+        .timeline-event:hover {
+           background: rgba(255,255,255,0.05);
+}
         
         .timeline-event:last-child {
             border-bottom: none;
@@ -598,23 +616,33 @@
                 </div>
             </div>
 
-            <!-- Modal Édition d'événement -->
-            <div id="editEventModal" class="modal">
-                <div class="modal-content">
-                    <span class="close" onclick="closeEditEventModal()">&times;</span>
-                    <h3>✏️ Modifier l'événement</h3>
+            <!-- Modal Modifier/Supprimer Action -->
+            <div id="editActionTypeModal" class="modal">
+                <div class="modal-content" style="max-width: 600px;">
+                    <span class="close" onclick="closeEditActionTypeModal()">&times;</span>
+                    <h3>⚙️ Modifier ou Supprimer l'action</h3>
                     
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 10px; font-weight: bold;">Description de l'événement :</label>
-                        <textarea id="editEventDescription" 
-                                  rows="3" 
-                                  style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 16px; resize: vertical;"
-                                  placeholder="Modifiez la description de l'événement..."></textarea>
+                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                        <p style="margin: 0; color: #f39c12;">Action actuelle : <span id="currentActionType" style="font-weight: bold; color: white;"></span></p>
+                    </div>
+                    
+                    <h4 style="margin-bottom: 15px;">Choisir une nouvelle action :</h4>
+                    <div class="action-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+                        <button class="action-btn goal" onclick="selectNewActionType('goal', event)">⚽ But</button>
+                        <button class="action-btn assist" style="background: rgba(26, 188, 156, 0.2); border-color: #1abc9c;" onclick="selectNewActionType('assist', event)">➡️ Passe Décisive</button>
+                        <button class="action-btn shot" onclick="selectNewActionType('shot', event)">🎯 Tir</button>
+                        <button class="action-btn save" onclick="selectNewActionType('save', event)">🧤 Arrêt Gardien</button>
+                        <button class="action-btn foul" onclick="selectNewActionType('foul', event)">⚠️ Faute</button>
+                        <button class="action-btn card" onclick="selectNewActionType('card', event)">🟨 Carton</button>
+                        <button class="action-btn corner" style="background: rgba(52, 73, 94, 0.2); border-color: #34495e;" onclick="selectNewActionType('corner', event)">🚩 Corner</button>
+                        <button class="action-btn offside" style="background: rgba(189, 195, 199, 0.2); border-color: #bdc3c7;" onclick="selectNewActionType('offside', event)">🛑 Hors-jeu</button>
+                        <button class="action-btn substitution" style="background: rgba(142, 68, 173, 0.2); border-color: #8e44ad;" onclick="selectNewActionType('substitution', event)">🔄 Changement</button>
                     </div>
                     
                     <div class="modal-actions">
-                        <button class="btn btn-primary" onclick="saveEventEdit()">💾 Sauvegarder</button>
-                        <button class="btn btn-secondary" onclick="closeEditEventModal()">❌ Annuler</button>
+                        <button id="replaceActionBtn" class="btn btn-primary" disabled onclick="replaceAction()">🔄 Annuler et Remplacer</button>
+                        <button class="btn btn-danger" onclick="deleteActionFromModal()">🗑️ Supprimer</button>
+                        <button class="btn btn-secondary" onclick="closeEditActionTypeModal()">❌ Annuler</button>
                     </div>
                 </div>
             </div>
@@ -631,7 +659,6 @@
                         <div>Mon Équipe</div>
                         <div>Temps</div>
                         <div>Équipe Adverse</div>
-                        <div>Actions</div>
                     </div>
                     <div id="eventsTimeline" class="timeline-events">
                         <div style="text-align: center; padding: 20px; color: #bbb;">
@@ -731,6 +758,7 @@
 
         // Variable globale pour l'édition
         let currentEditEventId = null;
+        let newSelectedActionType = null;
 
         function syncMatchEventsWithApp() {
             if (typeof footballApp !== 'undefined') {
@@ -1094,16 +1122,15 @@
             matchEvents.forEach(event => {
                 const eventDiv = document.createElement('div');
                 eventDiv.className = 'timeline-event';
+                eventDiv.onclick = () => openEditActionTypeModal(event.id);
                 
                 const leftDiv = document.createElement('div');
                 const timeDiv = document.createElement('div');
                 const rightDiv = document.createElement('div');
-                const actionsDiv = document.createElement('div');
                 
                 leftDiv.className = 'event-left';
                 timeDiv.className = 'event-time';
                 rightDiv.className = 'event-right';
-                actionsDiv.className = 'event-actions';
                 
                 timeDiv.textContent = event.time;
                 
@@ -1115,16 +1142,9 @@
                     rightDiv.innerHTML = window.getEventHTML ? window.getEventHTML(event) : getEventDescription(event);
                 }
                 
-                // Ajouter boutons modifier/supprimer
-                actionsDiv.innerHTML = `
-                    <button class="event-action-btn edit" onclick="editEvent('${event.id}')">✏️ Modifier</button>
-                    <button class="event-action-btn delete" onclick="deleteEvent('${event.id}')">🗑️ Supprimer</button>
-                `;
-                
                 eventDiv.appendChild(leftDiv);
                 eventDiv.appendChild(timeDiv);
                 eventDiv.appendChild(rightDiv);
-                eventDiv.appendChild(actionsDiv);
                 
                 container.appendChild(eventDiv);
             });
@@ -1132,7 +1152,7 @@
             updateQuickStatsFromEvents();
         }
         
-        // FONCTION MODIFIÉE: Calculer les stats depuis les événements
+        //Calculer les stats depuis les événements
         function updateQuickStatsFromEvents() {
             // Réinitialiser les stats
             matchStats = {
@@ -1186,57 +1206,6 @@
             document.getElementById('teamScore').textContent = matchStats.myTeam.goals;
             document.getElementById('opponentScore').textContent = matchStats.opponent.goals;
         }
-        
-        // NOUVELLE FONCTION: Supprimer un événement
-        function deleteEvent(eventId) {
-            if (confirm('Voulez-vous vraiment supprimer cet événement ?')) {
-                // Supprimer de matchEvents
-                matchEvents = matchEvents.filter(e => e.id != eventId);
-                
-                // Supprimer aussi de footballApp
-                if (typeof footballApp !== 'undefined') {
-                    const appState = footballApp.getState();
-                    appState.events = appState.events.filter(e => e.id != eventId);
-                    footballApp.saveState();
-                }
-                
-                // Mettre à jour l'affichage
-                updateTimeline();
-                autoSave();
-                
-                alert('✅ Événement supprimé !');
-            }
-        }
-        
-        // NOUVELLE FONCTION: Modifier un événement (implémentation complète)
-        function editEvent(eventId) {
-            const event = matchEvents.find(e => e.id == eventId);
-            if (!event) {
-                alert('Événement introuvable !');
-                return;
-            }
-            
-            // Stocker l'ID de l'événement en cours d'édition
-            currentEditEventId = eventId;
-            
-            // Récupérer la description actuelle
-            let currentDescription = '';
-            if (event.type === 'substitution') {
-                if (event.playerOutName && event.playerInName) {
-                    currentDescription = `Changement : ${event.playerInName} ➡️ ${event.playerOutName}`;
-                } else {
-                    currentDescription = 'Changement';
-                }
-            } else {
-                currentDescription = getEventDescription(event).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-            }
-            
-            // Remplir le textarea avec la description actuelle
-            document.getElementById('editEventDescription').value = currentDescription;
-            
-            // Afficher la modale
-            document.getElementById('editEventModal').style.display = 'block';
-        }
 
         // Fermer la modale d'édition
         function closeEditEventModal() {
@@ -1280,7 +1249,121 @@
             
             alert('✅ Événement modifié !');
         }
+        
+        // FONCTIONS POUR LA MODALE DE MODIFICATION D'ACTION
+        function openEditActionTypeModal(eventId) {
+            const event = matchEvents.find(e => e.id == eventId);
+            if (!event) {
+                alert('Événement introuvable !');
+                return;
+            }
             
+            currentEditActionId = eventId;
+            newSelectedActionType = null;
+            
+            const actionNames = {
+                'goal': '⚽ But',
+                'assist': '➡️ Passe Décisive',
+                'shot': '🎯 Tir',
+                'save': '🧤 Arrêt Gardien',
+                'foul': '⚠️ Faute',
+                'card': '🟨 Carton',
+                'corner': '🚩 Corner',
+                'offside': '🛑 Hors-jeu',
+                'substitution': '🔄 Changement'
+            };
+            
+            document.getElementById('currentActionType').textContent = actionNames[event.type] || event.type;
+            
+            const actionBtns = document.querySelectorAll('#editActionTypeModal .action-btn');
+            actionBtns.forEach(btn => btn.classList.remove('selected-for-replace'));
+            
+            document.getElementById('replaceActionBtn').disabled = true;
+            document.getElementById('editActionTypeModal').style.display = 'block';
+        }
+
+        function closeEditActionTypeModal() {
+            document.getElementById('editActionTypeModal').style.display = 'none';
+            currentEditActionId = null;
+            newSelectedActionType = null;
+        }
+
+        function selectNewActionType(actionType, e) {
+            newSelectedActionType = actionType;
+            
+            const actionBtns = document.querySelectorAll('#editActionTypeModal .action-btn');
+            actionBtns.forEach(btn => btn.classList.remove('selected-for-replace'));
+            
+            e.currentTarget.classList.add('selected-for-replace');
+            
+            document.getElementById('replaceActionBtn').disabled = false;
+        }
+
+        function replaceAction() {
+            if (!currentEditActionId || !newSelectedActionType) return;
+            
+            if (!confirm('Voulez-vous vraiment remplacer cette action ?')) return;
+            
+            const eventIndex = matchEvents.findIndex(e => e.id == currentEditActionId);
+            if (eventIndex === -1) return;
+            
+            const oldEvent = matchEvents[eventIndex];
+            
+            const newEvent = {
+                ...oldEvent,
+                type: newSelectedActionType,
+                customDescription: null
+            };
+            
+            if (newSelectedActionType !== oldEvent.type) {
+                delete newEvent.option;
+                delete newEvent.cardType;
+                delete newEvent.saveType;
+                delete newEvent.assistPlayerId;
+                delete newEvent.playerOutName;
+                delete newEvent.playerInName;
+            }
+            
+            matchEvents[eventIndex] = newEvent;
+            
+            if (typeof footballApp !== 'undefined') {
+                const appState = footballApp.getState();
+                const appEventIndex = appState.events.findIndex(e => e.id == currentEditActionId);
+                if (appEventIndex !== -1) {
+                    appState.events[appEventIndex] = newEvent;
+                    footballApp.saveState();
+                }
+            }
+            
+            updateTimeline();
+            autoSave();
+            
+            closeEditActionTypeModal();
+            
+            alert('✅ Action remplacée avec succès !');
+        }
+
+        function deleteActionFromModal() {
+            if (!currentEditActionId) return;
+            
+            if (!confirm('Voulez-vous vraiment supprimer cette action ?')) return;
+            
+            matchEvents = matchEvents.filter(e => e.id != currentEditActionId);
+            
+            if (typeof footballApp !== 'undefined') {
+                const appState = footballApp.getState();
+                appState.events = appState.events.filter(e => e.id != currentEditActionId);
+                footballApp.saveState();
+            }
+            
+            updateTimeline();
+            autoSave();
+            
+            closeEditActionTypeModal();
+            
+            alert('✅ Action supprimée !');
+        }
+
         function getEventDescription(event) {
             // Si une description personnalisée existe, l'utiliser
             if (event.customDescription) {
