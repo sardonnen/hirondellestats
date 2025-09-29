@@ -743,7 +743,7 @@ function updateTimelineDisplay() {
     console.log('✅ Timeline mise à jour avec succès');
 }
 
-//**
+/**
  * Obtenir le HTML d un événement pour la timeline
  */
 function getEventHTML(event) {
