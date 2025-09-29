@@ -756,11 +756,11 @@ function getEventHTML(event) {
             text = `But${event.option ? ' (' + event.option + ')' : ''}`;
             break;
         case 'assist':
-            icon = '🎯';
+            icon = '➡️';
             text = `Passe décisive`;
             break;
         case 'shot':
-            icon = '🏹';
+            icon = '🎯';
             text = `Tir${event.option ? ' ' + event.option.toLowerCase() : ''}`;
             break;
         case 'save':
@@ -780,7 +780,7 @@ function getEventHTML(event) {
             text = `Corner`;
             break;
         case 'offside':
-            icon = '🏴';
+            icon = '🛑';
             text = `Hors-jeu`;
             break;
         case 'substitution':
