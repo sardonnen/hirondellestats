@@ -1616,20 +1616,18 @@
                 timeDiv.className = 'event-time';
                 rightDiv.className = 'event-right';
                 
+                // COLONNE TEMPS : UNIQUEMENT LE TIMER
                 timeDiv.textContent = event.time;
                 
-                // Utiliser window.getEventHTML de match_actions.js
-                if (event.team === 'my-team') {
+                // COLONNES GAUCHE/DROITE : L'ACTION SELON L'ÉQUIPE
+                if (event.isTeam) {
+                    // Mon équipe -> colonne de gauche
                     leftDiv.innerHTML = window.getEventHTML ? window.getEventHTML(event) : getEventDescription(event);
                     rightDiv.innerHTML = '&nbsp;';
-                } else if (event.team === 'opponent') {
+                } else {
+                    // Adversaire -> colonne de droite
                     leftDiv.innerHTML = '&nbsp;';
                     rightDiv.innerHTML = window.getEventHTML ? window.getEventHTML(event) : getEventDescription(event);
-                } else {
-                    // Événements système (mi-temps, etc.)
-                    leftDiv.innerHTML = '&nbsp;';
-                    rightDiv.innerHTML = '&nbsp;';
-                    timeDiv.innerHTML = `<div style="text-align: center; font-style: italic;">${event.description || (window.getEventHTML ? window.getEventHTML(event) : getEventDescription(event))}</div>`;
                 }
                 
                 eventDiv.appendChild(leftDiv);
@@ -1638,8 +1636,8 @@
                 
                 container.appendChild(eventDiv);
             });
-        }
-        
+        }    
+            
         function getEventDescription(event) {
             const playerName = getPlayerName(event.playerId);
             
