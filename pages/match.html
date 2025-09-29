@@ -765,6 +765,20 @@
         
         // Tableau des événements
         let matchEvents = [];
+
+        // Synchroniser matchEvents avec footballApp au chargement
+        function syncMatchEventsWithApp() {
+            if (typeof footballApp !== 'undefined') {
+                const appEvents = footballApp.getState().events;
+                if (appEvents && appEvents.length > 0) {
+                    matchEvents = appEvents;
+                    console.log(`🔄 Synchronisation: ${matchEvents.length} événements chargés depuis footballApp`);
+                }
+            }
+        }
+
+        // Appeler la synchronisation toutes les secondes
+        setInterval(syncMatchEventsWithApp, 1000);        
         
         // Stats du match
         let matchStats = {
@@ -1560,12 +1574,29 @@
             };
             
             matchEvents.unshift(event); // Ajouter au début pour avoir les plus récents en haut
+
+            // Synchroniser aussi avec footballApp
+            if (typeof footballApp !== 'undefined') {
+                // Mettre à jour footballApp.getState().events
+                const appState = footballApp.getState();
+                if (!appState.events.find(e => e.id === event.id)) {
+                    appState.events.unshift(event);
+                    footballApp.saveState();
+                    console.log('✅ Événement ajouté et synchronisé avec footballApp');
+                }
+            }
+
             updateTimeline();
         }
         
         function updateTimeline() {
+            // Synchroniser d'abord
+            syncMatchEventsWithApp();
+            
             const container = document.getElementById('eventsTimeline');
             
+            console.log(`📊 updateTimeline: ${matchEvents.length} événements à afficher`);
+                        
             if (matchEvents.length === 0) {
                 container.innerHTML = '<div style="text-align: center; padding: 20px; color: #bbb;">Aucun événement enregistré</div>';
                 return;
