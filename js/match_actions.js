@@ -20,7 +20,7 @@ let whiteCardTimers = [];
 const ACTION_CONFIG = {
     goal: {
         title: 'But',
-        options: ['But', 'Penalty', 'Coup franc', 'Corner', 'Contre son camp']
+        options: ['But', 'Penalty', 'Coup franc', 'Corner']
     },
     assist: {
         title: 'Passe Décisive',
