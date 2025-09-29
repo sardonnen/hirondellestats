@@ -1618,17 +1618,18 @@
                 
                 timeDiv.textContent = event.time;
                 
+                // Utiliser window.getEventHTML de match_actions.js
                 if (event.team === 'my-team') {
-                    leftDiv.innerHTML = getEventDescription(event);
-                    rightDiv.innerHTML = '';
+                    leftDiv.innerHTML = window.getEventHTML ? window.getEventHTML(event) : getEventDescription(event);
+                    rightDiv.innerHTML = '&nbsp;';
                 } else if (event.team === 'opponent') {
-                    leftDiv.innerHTML = '';
-                    rightDiv.innerHTML = getEventDescription(event);
+                    leftDiv.innerHTML = '&nbsp;';
+                    rightDiv.innerHTML = window.getEventHTML ? window.getEventHTML(event) : getEventDescription(event);
                 } else {
                     // Événements système (mi-temps, etc.)
-                    leftDiv.innerHTML = '';
-                    rightDiv.innerHTML = '';
-                    timeDiv.innerHTML = `<div style="text-align: center; font-style: italic;">${event.description || getEventDescription(event)}</div>`;
+                    leftDiv.innerHTML = '&nbsp;';
+                    rightDiv.innerHTML = '&nbsp;';
+                    timeDiv.innerHTML = `<div style="text-align: center; font-style: italic;">${event.description || (window.getEventHTML ? window.getEventHTML(event) : getEventDescription(event))}</div>`;
                 }
                 
                 eventDiv.appendChild(leftDiv);

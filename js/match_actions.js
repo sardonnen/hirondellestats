@@ -744,7 +744,7 @@ function updateTimelineDisplay() {
 }
 
 /**
- * Obtenir le HTML d un événement pour la timeline
+ * Obtenir le HTML d'un événement pour la timeline
  */
 function getEventHTML(event) {
     let icon = '';
