@@ -753,47 +753,52 @@ function getEventHTML(event) {
     switch (event.type) {
         case 'goal':
             icon = '⚽';
-            text = `But${event.option ? ' (' + event.option + ')' : ''} - ${event.playerName}`;
+            text = `But${event.option ? ' (' + event.option + ')' : ''}`;
             break;
         case 'assist':
             icon = '🎯';
-            text = `Passe décisive - ${event.playerName}`;
+            text = `Passe décisive`;
             break;
         case 'shot':
             icon = '🏹';
-            text = `Tir${event.option ? ' ' + event.option.toLowerCase() : ''} - ${event.playerName}`;
+            text = `Tir${event.option ? ' ' + event.option.toLowerCase() : ''}`;
             break;
         case 'save':
             icon = '🧤';
-            text = `Arrêt${event.option ? ' ' + event.option.toLowerCase() : ''} - ${event.playerName}`;
+            text = `Arrêt${event.option ? ' ' + event.option.toLowerCase() : ''}`;
             break;
         case 'foul':
             icon = '⚠️';
-            text = `Faute${event.option ? ' (' + event.option + ')' : ''} - ${event.playerName}`;
+            text = `Faute${event.option ? ' (' + event.option + ')' : ''}`;
             break;
         case 'card':
             icon = event.option === 'Jaune' ? '🟨' : event.option === 'Rouge' ? '🟥' : '⬜';
-            text = `Carton ${event.option} - ${event.playerName}`;
+            text = `Carton ${event.option}`;
             break;
         case 'corner':
             icon = '🚩';
-            text = `Corner - ${event.playerName}`;
+            text = `Corner`;
             break;
         case 'offside':
             icon = '🏴';
-            text = `Hors-jeu - ${event.playerName}`;
+            text = `Hors-jeu`;
             break;
         case 'substitution':
             icon = '🔄';
             if (event.playerOutName && event.playerInName) {
-                text = `${event.playerInName} ➡️ ${event.playerOutName}`;
+                text = `Changement : ${event.playerInName} ➡️ ${event.playerOutName}`;
             } else {
-                text = event.playerName;
+                text = 'Changement';
             }
             break;
         default:
             icon = '📝';
-            text = event.playerName || 'Événement';
+            text = 'Événement';
+    }
+    
+    // Ajouter le nom du joueur (sauf pour substitution qui a déjà les noms)
+    if (event.type !== 'substitution' && event.playerName) {
+        text += ` - ${event.playerName}`;
     }
     
     return `<span style="font-size: 1.2em;">${icon}</span> ${text}`;
