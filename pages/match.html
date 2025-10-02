@@ -1260,7 +1260,7 @@
                 return;
             }
             
-            currentEditActionId = eventId;
+            currentEditEventId = eventId;
             newSelectedActionType = null;
             
             const actionNames = {
@@ -1286,7 +1286,7 @@
 
         function closeEditActionTypeModal() {
             document.getElementById('editActionTypeModal').style.display = 'none';
-            currentEditActionId = null;
+            currentEditEventId = null;
             newSelectedActionType = null;
         }
 
@@ -1303,7 +1303,7 @@
         }
 
         function replaceAction() {
-            if (!currentEditActionId || !newSelectedActionType) return;
+            if (!currentEditEventId || !newSelectedActionType) return;
             
             if (!confirm('Voulez-vous vraiment remplacer cette action ?')) return;
             
