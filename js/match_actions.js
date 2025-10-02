@@ -299,19 +299,24 @@ function saveUnifiedAction() {
     if (!currentActionType) return;
     
     console.log('💾 Sauvegarde action:', currentActionType);
+    console.log('🔍 Mode édition ?', window.isEditingMode);
+    console.log('🔍 Event ID édition ?', window.editingEventId);
     
     // MODE ÉDITION
     if (window.isEditingMode && window.editingEventId) {
+        console.log('✅ MODE ÉDITION DÉTECTÉ');
         const state = footballApp.getState();
         const eventIndex = state.events.findIndex(e => e.id == window.editingEventId);
         
         if (eventIndex === -1) {
             alert('Événement introuvable !');
+            console.error('❌ Événement introuvable avec ID:', window.editingEventId);
             return;
         }
         
+        console.log('📍 Événement trouvé à l\'index:', eventIndex);
         const oldEvent = state.events[eventIndex];
-        
+                
         // Créer le nouvel événement
         const newEvent = {
             ...oldEvent,
