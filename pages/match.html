@@ -785,10 +785,24 @@
             initializeMatchPage();
         });
 
+        function updateHalfTimeButton() {
+            const halfTimeBtn = document.querySelector('button[onclick="showHalfTimeConfirm()"]');
+            if (halfTimeBtn) {
+                if (matchTimer.currentHalf === 1) {
+                    halfTimeBtn.innerHTML = '⏭ Mi-temps';
+                    halfTimeBtn.className = 'btn btn-primary';
+                } else if (matchTimer.currentHalf === 2) {
+                    halfTimeBtn.innerHTML = '🏁 Fin du match';
+                    halfTimeBtn.className = 'btn btn-danger';
+                }
+            }
+        }
+        
         function initializeMatchPage() {
             loadMatchConfig();
             loadSavedMatchData();
             updateMatchDisplay();
+            updateHalfTimeButton();
             startPeriodicSave();
         }
 
@@ -841,10 +855,17 @@
                     if (playBtn) {
                         playBtn.innerHTML = '▶️ Démarrer';
                         playBtn.className = 'btn btn-success';
+                        playBtn.disabled = false; // réactiver le bouton
                     }
                     
-                    localStorage.removeItem('matchBinId'); // Nouveau bin pour le nouveau match
-            
+                    // Réactiver le bouton reset
+                    const resetBtn = document.querySelector('button[onclick="resetTimer()"]');
+                    if (resetBtn) resetBtn.disabled = false;
+                    
+                    updateHalfTimeButton(); // reset du bouton Mi-temps
+                    
+                    localStorage.removeItem('matchBinId');
+                    
                     alert('🆕 Nouveau match créé !');
                 });
             }
@@ -882,12 +903,27 @@
                     const data = JSON.parse(savedData);
                     const timerData = data.timer || data;
                     const eventsData = data.events || [];
-                    const statsData = data.stats || { myTeam: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 }, opponent: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 } };
+                    const statsData = data.stats || { 
+                        myTeam: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 }, 
+                        opponent: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 } 
+                    };
                     
                     if (timerData) {
                         matchTimer = { ...matchTimer, ...timerData };
                         
-                        if (matchTimer.isRunning && matchTimer.startTime) {
+                        // Si le match est terminé, désactiver le timer
+                        if (data.matchStatus === 'finished') {
+                            matchTimer.isRunning = false;
+                            document.getElementById('playBtn').disabled = true;
+                            document.getElementById('playBtn').innerHTML = '🏁 Match terminé';
+                            document.getElementById('playBtn').classList.add('btn-secondary');
+                            
+                            // Désactiver aussi le bouton reset
+                            const resetBtn = document.querySelector('button[onclick="resetTimer()"]');
+                            if (resetBtn) resetBtn.disabled = true;
+                            
+                            console.log('🏁 Match terminé chargé depuis la sauvegarde');
+                        } else if (matchTimer.isRunning && matchTimer.startTime) {
                             const now = Date.now();
                             let savedStartTime;
                             if (typeof matchTimer.startTime === 'string') {
@@ -915,6 +951,9 @@
                         updateTimerDisplay();
                         document.getElementById('matchHalf').textContent = 
                             matchTimer.currentHalf === 1 ? '1ère Mi-temps' : '2ème Mi-temps';
+                        
+                        // Mettre à jour le bouton Mi-temps/Fin du match
+                        updateHalfTimeButton(); // AJOUT
                     }
                     
                     if (eventsData && eventsData.length > 0) {
@@ -1047,6 +1086,7 @@
             
             document.getElementById('matchHalf').textContent = '2ème Mi-temps';
             updateTimerDisplay();
+            updateHalfTimeButton();
             
             addEvent('system', {
                 description: 'Début de la 2ème mi-temps',
@@ -1058,13 +1098,27 @@
         
         function endMatch() {
             stopTimer();
+            // Marquer le match comme terminé
+            const matchData = JSON.parse(localStorage.getItem('currentMatch') || '{}');
+            matchData.matchStatus = 'finished';
+            matchData.endTime = new Date().toISOString();
+            localStorage.setItem('currentMatch', JSON.stringify(matchData));
+            
             addEvent('system', {
                 description: 'Fin du match',
                 team: null
             });
             
-            autoSave();
-            alert('🏁 Match terminé ! Consultez les statistiques dans l\'onglet Stats.');
+            // Sauvegarder immédiatement
+            autoSave().then(() => {
+                console.log('🏁 Match terminé et sauvegardé');
+            });
+            
+            // Notification
+            alert('🏁 Match terminé !\n\n' +
+                '✅ Toutes les données ont été sauvegardées.\n' +
+                '📊 Consultez les statistiques dans l\'onglet Stats.\n' +
+                '📱 Le lien live reste actif pour consulter les résultats.');
         }
 
         function getCurrentMatchTime() {
