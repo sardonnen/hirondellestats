@@ -1575,7 +1575,120 @@
         });
         
         async function generateLiveLink() {
-            alert('Fonctionnalité Live en cours de développement');
+            try {
+                // Sauvegarder d'abord les données actuelles
+                await autoSave();
+                
+                // Configuration JsonBin
+                const API_KEY = '$2a$10$L3uaRDnltfCsdgv50dAJ0.aTJsslnmT2SPju9EPNd6HvXqW6u9KmS';
+                const BASE_URL = 'https://api.jsonbin.io/v3/b';
+                
+                // Récupérer ou créer le bin ID
+                let binId = localStorage.getItem('matchBinId');
+                
+                // Préparer les données
+                const config = getMatchConfig();
+                const players = getMyTeamPlayers();
+                
+                const liveData = {
+                    matchInfo: {
+                        teamName: config.teamName || 'Mon Équipe',
+                        opponentName: config.opponentName || 'Équipe Adverse',
+                        venue: config.venue || 'Terrain',
+                        date: new Date().toISOString().split('T')[0],
+                        startTime: config.startTime || '15:00'
+                    },
+                    timer: {
+                        ...matchTimer,
+                        startTime: matchTimer.startTime ? new Date(matchTimer.startTime).toISOString() : null,
+                        savedAt: new Date().toISOString(),
+                        currentTime: getCurrentMatchTime(),
+                        isRunning: matchTimer.isRunning,
+                        currentHalf: matchTimer.currentHalf,
+                        pausedTime: matchTimer.pausedTime
+                    },
+                    players: players.map(player => ({
+                        id: player.id,
+                        name: player.name,
+                        position: player.position,
+                        status: player.status || 'bench',
+                        number: player.number || null
+                    })),
+                    events: matchEvents.map(event => ({
+                        ...event,
+                        playerName: getPlayerName(event.playerId),
+                        formattedDescription: getEventDescription(event)
+                    })),
+                    stats: {
+                        ...matchStats,
+                        score: {
+                            myTeam: matchStats.myTeam.goals,
+                            opponent: matchStats.opponent.goals
+                        }
+                    },
+                    live: {
+                        lastUpdate: new Date().toISOString(),
+                        isActive: true,
+                        version: '1.0'
+                    }
+                };
+                
+                if (binId) {
+                    // Mettre à jour le bin existant
+                    const response = await fetch(`${BASE_URL}/${binId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Master-Key': API_KEY
+                        },
+                        body: JSON.stringify(liveData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Erreur mise à jour JsonBin');
+                    }
+                    
+                    console.log('✅ Bin mis à jour:', binId);
+                } else {
+                    // Créer un nouveau bin
+                    const response = await fetch(BASE_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Master-Key': API_KEY,
+                            'X-Bin-Private': 'false'
+                        },
+                        body: JSON.stringify(liveData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Erreur création JsonBin');
+                    }
+                    
+                    const result = await response.json();
+                    binId = result.metadata.id;
+                    localStorage.setItem('matchBinId', binId);
+                    
+                    console.log('✅ Nouveau bin créé:', binId);
+                }
+                
+                // Générer le lien live
+                const baseUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+                const liveUrl = `${baseUrl}pages/live.html?bin=${binId}`;
+                
+                // Copier dans le presse-papiers
+                try {
+                    await navigator.clipboard.writeText(liveUrl);
+                    alert(`📱 Lien Live copié !\n\nPartagez ce lien pour suivre le match en direct:\n\n${liveUrl}`);
+                } catch (err) {
+                    // Fallback si clipboard API non disponible
+                    prompt('📱 Copiez ce lien Live:', liveUrl);
+                }
+                
+            } catch (error) {
+                console.error('Erreur génération lien live:', error);
+                alert('❌ Erreur lors de la génération du lien live.\nVérifiez votre connexion internet.');
+            }
         }
 
         function updateTimelineDisplay() {
