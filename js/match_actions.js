@@ -316,7 +316,7 @@ function saveUnifiedAction() {
         
         console.log('📍 Événement trouvé à l\'index:', eventIndex);
         const oldEvent = state.events[eventIndex];
-                
+        
         // Créer le nouvel événement
         const newEvent = {
             ...oldEvent,

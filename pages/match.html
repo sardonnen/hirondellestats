@@ -1291,12 +1291,17 @@
         }
 
         function selectNewActionType(actionType, e) {
-            // Fermer la modale de sélection
-            closeEditActionTypeModal();
+            console.log('🎬 selectNewActionType appelée');
+            console.log('📌 currentEditEventId AVANT copie:', currentEditEventId);
             
-            // Activer le mode édition
+            // Activer le mode édition AVANT de fermer la modale
             window.isEditingMode = true;
             window.editingEventId = currentEditEventId;
+            
+            console.log('📌 window.editingEventId APRÈS copie:', window.editingEventId);
+            
+            // Fermer la modale de sélection
+            closeEditActionTypeModal();
             
             // Ouvrir la modale complète
             showUnifiedActionModal(actionType);
