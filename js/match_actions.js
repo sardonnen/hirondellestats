@@ -342,9 +342,17 @@ function saveUnifiedAction() {
         delete newEvent.saveType;
         delete newEvent.assistPlayerId;
         
-        // Remplacer
+        // Remplacer dans footballApp
         state.events[eventIndex] = newEvent;
         footballApp.saveState();
+        
+        // CORRECTION : Aussi remplacer dans matchEvents local de match.html
+        if (typeof window.matchEvents !== 'undefined') {
+            const localEventIndex = window.matchEvents.findIndex(e => e.id == window.editingEventId);
+            if (localEventIndex !== -1) {
+                window.matchEvents[localEventIndex] = newEvent;
+            }
+        }
         
         updateTimelineDisplay();
         
@@ -359,7 +367,7 @@ function saveUnifiedAction() {
         return;
     }
     
-    // MODE CRÉATION (code original)
+    // MODE CRÉATION (code inchangé)
     const eventData = {
         type: currentActionType,
         time: getCurrentMatchTime(),
