@@ -465,6 +465,10 @@
          */
         function displayMatchData(data) {
             try {
+                console.log('📊 displayMatchData appelée avec:', data);
+                console.log('📊 matchInfo:', data.matchInfo);
+                console.log('📊 events:', data.events);
+                console.log('📊 stats:', data.stats);
                 // Informations générales
                 const matchInfo = data.matchInfo || {};
                 const teamName = matchInfo.teamName || 'Mon Équipe';
