@@ -272,3 +272,16 @@ Puis implémentez dans `js/match-actions.js`.
 - 🔲 Export PDF des stats
 - 🔲 Notifications push pour le live
 - 🔲 Mode multi-matchs
+
+
+### Calcul des statistiques des joueurs
+ 
+SYSTÈME DE NOTATION :
+- But : +5 points
+- Tir : +1 point
+- Arrêt gardienne : +2 points
+- Coup franc : +1 point
+- Carton jaune : -1 point
+- Carton rouge : -3 points
+- Carton blanc : -2 points
+- Faute : -0.5 point
