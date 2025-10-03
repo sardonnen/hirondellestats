@@ -309,6 +309,12 @@ function updateMatchSummary() {
  * Mise à jour des statistiques globales
  */
 function updateGlobalStats() {
+    // Vérification de sécurité
+    if (!matchData || !matchData.globalStats) {
+        console.warn('Stats globales non disponibles');
+        return;
+    }
+    
     const teamStats = matchData.globalStats.team;
     const opponentStats = matchData.globalStats.opponent;
     
@@ -330,6 +336,10 @@ function updateGlobalStats() {
  * Mise à jour des statistiques des joueurs
  */
 function updatePlayersStats() {
+    if (!matchData || !playersStats) {
+        console.warn('Stats joueurs non disponibles');
+        return;
+    }
     const container = document.getElementById('playersStatsContainer');
     container.innerHTML = '';
     
@@ -441,6 +451,10 @@ function getStatusText(status) {
  * Mise à jour de l'analyse par mi-temps
  */
 function updateHalftimeAnalysis() {
+    if (!matchData || !matchData.halftimeStats) {
+        console.warn('Stats mi-temps non disponibles');
+        return;
+    }
     const firstHalf = matchData.halftimeStats.firstHalf;
     const secondHalf = matchData.halftimeStats.secondHalf;
     
@@ -540,6 +554,10 @@ function createTimelineItem(event) {
  * Mise à jour des analyses avancées
  */
 function updateAdvancedAnalysis() {
+    if (!matchData || !matchData.efficiency) {
+        console.warn('Analyses avancées non disponibles');
+        return;
+    }
     const efficiency = matchData.efficiency;
     
     document.getElementById('shotEfficiency').textContent = efficiency.shotEfficiency.toFixed(1) + '%';
@@ -619,6 +637,10 @@ function getEventTypeLabel(type) {
  * Mise à jour des meilleurs performeurs
  */
 function updateTopPerformers() {
+    if (!matchData || !matchData.topPerformers) {
+        console.warn('Top performers non disponibles');
+        return;
+    }
     const performers = matchData.topPerformers;
     
     updateTopPerformer('topScorer', performers.topScorer, 'but(s)');
