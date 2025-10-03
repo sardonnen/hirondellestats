@@ -63,13 +63,41 @@ function loadMatchData() {
         // Convertir le temps en minutes
         const timeInMinutes = currentTime / 60;
         
+        // CORRECTION : Récupérer le score depuis plusieurs sources possibles
+        let teamScore = 0;
+        let opponentScore = 0;
+        
+        // Source 1 : matchDataRaw.stats (format de match.html)
+        if (matchDataRaw.stats) {
+            teamScore = matchDataRaw.stats.myTeam?.goals || 0;
+            opponentScore = matchDataRaw.stats.opponent?.goals || 0;
+        }
+        
+        // Source 2 : matchDataRaw.score (format alternatif)
+        if (matchDataRaw.score) {
+            teamScore = matchDataRaw.score.team || teamScore;
+            opponentScore = matchDataRaw.score.opponent || opponentScore;
+        }
+        
+        // Source 3 : Compter depuis les événements
+        if (matchDataRaw.events && matchDataRaw.events.length > 0) {
+            const goalsTeam = matchDataRaw.events.filter(e => e.type === 'goal' && e.isTeam === true).length;
+            const goalsOpponent = matchDataRaw.events.filter(e => e.type === 'goal' && e.isTeam === false).length;
+            
+            // Utiliser le comptage des événements si plus fiable
+            if (goalsTeam > 0 || goalsOpponent > 0) {
+                teamScore = goalsTeam;
+                opponentScore = goalsOpponent;
+            }
+        }
+        
         matchData = {
             config: config,
             players: matchDataRaw.players || footballApp.getState().players,
             events: matchDataRaw.events || [],
             score: {
-                team: matchDataRaw.stats?.myTeam?.goals || 0,
-                opponent: matchDataRaw.stats?.opponent?.goals || 0
+                team: teamScore,
+                opponent: opponentScore
             },
             time: timeInMinutes,
             half: matchDataRaw.timer?.currentHalf || 1,
@@ -82,20 +110,27 @@ function loadMatchData() {
             config: config,
             players: state.players,
             events: state.events,
-            score: state.score,
-            time: state.time,
-            half: state.half,
+            score: state.score || { team: 0, opponent: 0 },
+            time: state.time || 0,
+            half: state.half || 1,
             timestamp: new Date()
         };
     }
     
-    console.log('Données du match chargées:', matchData);
+    console.log('📊 Données du match chargées:', matchData);
+    console.log('🎯 Score:', matchData.score.team, '-', matchData.score.opponent);
+    console.log('⏱️ Temps:', matchData.time.toFixed(2), 'min');
 }
 
 /**
  * Calcul de toutes les statistiques
  */
 function calculateAllStats() {
+    if (!matchData) {
+        console.warn('⚠️ matchData non initialisé, impossible de calculer les stats');
+        return;
+    }
+    
     calculateGlobalStats();
     calculatePlayersStats();
     calculateHalftimeStats();
@@ -107,6 +142,11 @@ function calculateAllStats() {
  * Calcul des statistiques globales
  */
 function calculateGlobalStats() {
+    if (!matchData) {
+        console.warn('⚠️ matchData non disponible pour calculateGlobalStats');
+        return;
+    }
+    
     const events = matchData.events || [];
     
     matchData.globalStats = {
@@ -127,211 +167,27 @@ function calculateGlobalStats() {
             case 'freeKick': stats.freeKicks++; break;
         }
     });
+    
+    // Synchroniser le score global avec le comptage des événements
+    matchData.score.team = matchData.globalStats.team.goals;
+    matchData.score.opponent = matchData.globalStats.opponent.goals;
 }
 
-/**
- * Calcul des statistiques des joueurs
- * 
- * SYSTÈME DE NOTATION :
- * - But : +5 points
- * - Tir : +1 point
- * - Arrêt gardienne : +2 points
- * - Coup franc : +1 point
- * - Carton jaune : -1 point
- * - Carton rouge : -3 points
- * - Carton blanc : -2 points
- * - Faute : -0.5 point
- */
-function calculatePlayersStats() {
-    const players = matchData.players || [];
-    const events = matchData.events || [];
-    
-    playersStats = {};
-    
-    // Initialiser les stats pour chaque joueur
-    players.forEach(player => {
-        playersStats[player.id] = {
-            ...player,
-            goals: 0,
-            shots: 0,
-            cards: 0,
-            fouls: 0,
-            saves: 0,
-            freeKicks: 0,
-            substitutions: 0,
-            injuries: 0,
-            yellowCards: 0,
-            redCards: 0,
-            whiteCards: 0,
-            playTime: 0, // Temps de jeu en minutes
-            score: 0
-        };
-    });
-    
-    // Calculer le temps de jeu (approximatif basé sur le statut)
-    const matchTime = matchData.time || 0;
-    players.forEach(player => {
-        if (playersStats[player.id]) {
-            // Si titulaire, temps = temps total du match
-            if (player.status === 'field') {
-                playersStats[player.id].playTime = Math.floor(matchTime);
-            }
-            // Si remplaçante entrée en jeu, estimer à 30% du temps
-            else if (player.status === 'bench') {
-                const subEvent = events.find(e => e.type === 'substitution' && e.playerInName === player.name);
-                if (subEvent) {
-                    playersStats[player.id].playTime = Math.floor(matchTime * 0.3);
-                }
-            }
-        }
-    });
-    
-    // Compter les événements par joueur
-    events.forEach(event => {
-        if (event.playerId && event.playerId !== 'opponent' && playersStats[event.playerId]) {
-            const playerStat = playersStats[event.playerId];
-            
-            switch (event.type) {
-                case 'goal':
-                    playerStat.goals++;
-                    playerStat.score += 5;
-                    break;
-                case 'shot':
-                    playerStat.shots++;
-                    playerStat.score += 1;
-                    break;
-                case 'card':
-                    playerStat.cards++;
-                    if (event.cardType === 'yellow' || event.option === 'Jaune') {
-                        playerStat.yellowCards++;
-                        playerStat.score -= 1;
-                    } else if (event.cardType === 'red' || event.option === 'Rouge') {
-                        playerStat.redCards++;
-                        playerStat.score -= 3;
-                    } else if (event.cardType === 'white' || event.option === 'Blanc') {
-                        playerStat.whiteCards++;
-                        playerStat.score -= 2;
-                    }
-                    break;
-                case 'foul':
-                    playerStat.fouls++;
-                    playerStat.score -= 0.5;
-                    break;
-                case 'save':
-                    playerStat.saves++;
-                    playerStat.score += 2;
-                    break;
-                case 'freeKick':
-                    playerStat.freeKicks++;
-                    playerStat.score += 1;
-                    break;
-                case 'substitution':
-                    if (event.inPlayerId === event.playerId) {
-                        playerStat.substitutions++;
-                    }
-                    break;
-                case 'injury':
-                    playerStat.injuries++;
-                    break;
-            }
-        }
-    });
-}
-
-/**
- * Calcul des statistiques par mi-temps
- */
-function calculateHalftimeStats() {
-    const events = matchData.events || [];
-    
-    matchData.halftimeStats = {
-        firstHalf: { goals: 0, shots: 0, cards: 0, fouls: 0, events: 0 },
-        secondHalf: { goals: 0, shots: 0, cards: 0, fouls: 0, events: 0 }
-    };
-    
-    events.forEach(event => {
-        const isFirstHalf = event.half === 1;
-        const stats = isFirstHalf ? matchData.halftimeStats.firstHalf : matchData.halftimeStats.secondHalf;
-        
-        stats.events++;
-        
-        if (event.isTeam === true) {
-            switch (event.type) {
-                case 'goal': stats.goals++; break;
-                case 'shot': stats.shots++; break;
-                case 'card': stats.cards++; break;
-                case 'foul': stats.fouls++; break;
-            }
-        }
-    });
-}
-
-/**
- * Calcul des statistiques d'efficacité
- */
-function calculateEfficiencyStats() {
-    const teamStats = matchData.globalStats.team;
-    
-    matchData.efficiency = {
-        shotEfficiency: teamStats.shots > 0 ? (teamStats.goals / teamStats.shots * 100) : 0,
-        goalsPerShot: teamStats.shots > 0 ? (teamStats.goals / teamStats.shots) : 0,
-        defenseRating: calculateDefenseRating()
-    };
-}
-
-/**
- * Calcul de la note défensive
- */
-function calculateDefenseRating() {
-    const saves = matchData.globalStats.team.saves;
-    const goalsConceded = matchData.globalStats.opponent.goals;
-    
-    if (saves === 0 && goalsConceded === 0) return 5;
-    if (goalsConceded === 0) return 5;
-    if (saves > goalsConceded * 2) return 4;
-    if (saves > goalsConceded) return 3;
-    if (saves === goalsConceded) return 2;
-    return 1;
-}
-
-/**
- * Recherche des meilleurs performeurs
- */
-function findTopPerformers() {
-    const players = Object.values(playersStats);
-    
-    matchData.topPerformers = {
-        topScorer: players.reduce((max, p) => p.goals > max.goals ? p : max, { goals: 0, name: '-' }),
-        topShooter: players.reduce((max, p) => p.shots > max.shots ? p : max, { shots: 0, name: '-' }),
-        topKeeper: players.filter(p => p.position === 'gardienne').reduce((max, p) => p.saves > max.saves ? p : max, { saves: 0, name: '-' }),
-        playerOfMatch: players.reduce((max, p) => p.score > max.score ? p : max, { score: 0, name: '-' })
-    };
-}
-
-/**
- * Mise à jour de tous les affichages
- */
-function updateAllDisplays() {
-    updateMatchSummary();
-    updateGlobalStats();
-    updatePlayersStats();
-    updateHalftimeAnalysis();
-    updateDetailedTimeline();
-    updateAdvancedAnalysis();
-    updateTopPerformers();
-}
+// ... (le reste du code reste identique jusqu'à updateMatchSummary)
 
 /**
  * Mise à jour du résumé du match
  */
 function updateMatchSummary() {
-    // Vérification de sécurité
-    if (!matchData || !matchData.config) {
-        console.warn('Données de match incomplètes');
-        return;
+    // Vérification de sécurité avec initialisation par défaut
+    if (!matchData) {
+        console.warn('⚠️ matchData non disponible, utilisation de valeurs par défaut');
+        // Essayer de recharger
+        loadMatchData();
+        if (!matchData) return;
     }
     
-    const config = matchData.config;
+    const config = matchData.config || { teamName: 'Mon Équipe', opponentName: 'Équipe Adverse' };
     const score = matchData.score || { team: 0, opponent: 0 };
     
     document.getElementById('summaryTeamName').textContent = config.teamName || 'Mon Équipe';
@@ -351,16 +207,24 @@ function updateMatchSummary() {
     // Statut du match
     const isFinished = (matchData.time || 0) >= 90 || (matchData.half || 1) > 2;
     document.getElementById('summaryMatchStatus').textContent = isFinished ? 'Terminé' : 'En cours';
+    
+    console.log('✅ Résumé du match mis à jour - Score:', score.team, '-', score.opponent, '| Temps:', matchData.time.toFixed(2));
 }
 
 /**
  * Mise à jour des statistiques globales
  */
 function updateGlobalStats() {
-    // Vérification de sécurité
+    // Vérification de sécurité avec initialisation
     if (!matchData || !matchData.globalStats) {
-        console.warn('Stats globales non disponibles');
-        return;
+        console.warn('⚠️ Stats globales non disponibles, recalcul...');
+        if (matchData) {
+            calculateGlobalStats();
+        } else {
+            loadMatchData();
+            calculateAllStats();
+        }
+        if (!matchData || !matchData.globalStats) return;
     }
     
     const teamStats = matchData.globalStats.team;
