@@ -35,10 +35,18 @@ function initializeStatsPage() {
  * Chargement des données du match
  */
 function loadMatchData() {
-    const savedMatch = localStorage.getItem('footballStats_currentMatch');
+    // Lire depuis 'currentMatch' (utilisé par match.html) en priorité
+    let savedMatch = localStorage.getItem('currentMatch');
+    
+    // Fallback sur 'footballStats_currentMatch' si besoin
+    if (!savedMatch) {
+        savedMatch = localStorage.getItem('footballStats_currentMatch');
+    }
+    
     const config = getMatchConfig();
     
     console.log('🔍 DEBUG - savedMatch existe:', !!savedMatch);
+    console.log('🔍 Source des données:', localStorage.getItem('currentMatch') ? 'currentMatch' : 'footballStats_currentMatch');
     
     if (savedMatch) {
         const matchDataRaw = JSON.parse(savedMatch);
