@@ -1102,16 +1102,74 @@ function getEventText(event) {
                       playersStats[event.playerId]?.name || 'Joueur';
     
     switch (event.type) {
-        case 'goal': return `But de ${playerName}`;
-        case 'shot': return `Tir de ${playerName}`;
+        case 'goal': 
+            let goalText = `But de ${playerName}`;
+            if (event.option) {
+                goalText += ` (${event.option})`;
+            }
+            return goalText;
+            
+        case 'assist':
+            return `Passe décisive de ${playerName}`;
+            
+        case 'shot':
+            let shotText = `Tir de ${playerName}`;
+            if (event.option) {
+                shotText += ` (${event.option})`;
+            }
+            return shotText;
+            
         case 'card': 
             const cardName = event.cardType === 'yellow' ? 'jaune' : 
                            event.cardType === 'red' ? 'rouge' : 'blanc';
-            return `Carton ${cardName} pour ${playerName}`;
-        case 'foul': return `Faute de ${playerName}`;
-        case 'save': return `Arrêt de ${playerName}`;
-        case 'freeKick': return `Coup de pied arrêté - ${playerName}`;
-        default: return event.type || 'Événement';
+            const optionCard = event.option === 'Jaune' ? 'jaune' :
+                             event.option === 'Rouge' ? 'rouge' :
+                             event.option === 'Blanc' ? 'blanc' : cardName;
+            return `Carton ${optionCard} pour ${playerName}`;
+            
+        case 'foul':
+            let foulText = `Faute de ${playerName}`;
+            if (event.option) {
+                foulText += ` (${event.option})`;
+            }
+            return foulText;
+            
+        case 'save':
+            let saveText = `Arrêt de ${playerName}`;
+            if (event.option) {
+                saveText += ` (${event.option})`;
+            }
+            return saveText;
+            
+        case 'freeKick':
+            return `Coup franc tiré par ${playerName}`;
+            
+        case 'corner':
+            return `Corner tiré par ${playerName}`;
+            
+        case 'offside':
+            return `Hors-jeu de ${playerName}`;
+            
+        case 'substitution':
+            if (event.playerOutName && event.playerInName) {
+                return `Changement : ${event.playerInName} remplace ${event.playerOutName}`;
+            } else if (event.isTeam) {
+                return 'Changement dans notre équipe';
+            } else {
+                return 'Changement adverse';
+            }
+            
+        case 'halfTime':
+            return event.description || 'Mi-temps';
+            
+        case 'injury':
+            return `Blessure de ${playerName}`;
+            
+        case 'timeout':
+            return 'Temps mort';
+            
+        default: 
+            return event.type || 'Événement';
     }
 }
 
