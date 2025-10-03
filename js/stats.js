@@ -35,23 +35,44 @@ function initializeStatsPage() {
  * Chargement des données du match
  */
 function loadMatchData() {
-    // Charger directement depuis le localStorage (données du match en cours)
     const savedMatch = localStorage.getItem('footballStats_currentMatch');
     const config = getMatchConfig();
     
     if (savedMatch) {
         const matchDataRaw = JSON.parse(savedMatch);
         
+        // Calculer le temps actuel du match
+        let currentTime = 0;
+        if (matchDataRaw.timer) {
+            if (matchDataRaw.timer.isRunning && matchDataRaw.timer.startTime) {
+                // Timer en cours : calculer le temps écoulé depuis le démarrage
+                const startTime = new Date(matchDataRaw.timer.startTime).getTime();
+                const now = Date.now();
+                currentTime = (now - startTime) / 1000; // en secondes
+            } else {
+                // Timer en pause : utiliser pausedTime
+                currentTime = matchDataRaw.timer.pausedTime || 0;
+            }
+            
+            // Ajouter 45 minutes si on est en 2ème mi-temps
+            if (matchDataRaw.timer.currentHalf === 2 && currentTime < 45 * 60) {
+                currentTime += 45 * 60;
+            }
+        }
+        
+        // Convertir le temps en minutes
+        const timeInMinutes = currentTime / 60;
+        
         matchData = {
             config: config,
             players: matchDataRaw.players || footballApp.getState().players,
             events: matchDataRaw.events || [],
-            score: matchDataRaw.stats ? {
-                team: matchDataRaw.stats.myTeam.goals || 0,
-                opponent: matchDataRaw.stats.opponent.goals || 0
-            } : { team: 0, opponent: 0 },
-            time: matchDataRaw.timer ? matchDataRaw.timer.pausedTime || 0 : 0,
-            half: matchDataRaw.timer ? matchDataRaw.timer.currentHalf || 1 : 1,
+            score: {
+                team: matchDataRaw.stats?.myTeam?.goals || 0,
+                opponent: matchDataRaw.stats?.opponent?.goals || 0
+            },
+            time: timeInMinutes,
+            half: matchDataRaw.timer?.currentHalf || 1,
             timestamp: new Date()
         };
     } else {
