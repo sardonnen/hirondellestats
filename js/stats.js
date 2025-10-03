@@ -38,42 +38,77 @@ function loadMatchData() {
     const savedMatch = localStorage.getItem('footballStats_currentMatch');
     const config = getMatchConfig();
     
+    console.log('🔍 DEBUG - savedMatch existe:', !!savedMatch);
+    
     if (savedMatch) {
         const matchDataRaw = JSON.parse(savedMatch);
         
+        // DEBUG COMPLET du timer
+        console.log('🔍 Structure complète matchDataRaw:', matchDataRaw);
+        console.log('🔍 Timer existe:', !!matchDataRaw.timer);
+        console.log('🔍 Contenu timer:', matchDataRaw.timer);
+        
         // Calculer le temps actuel du match
         let currentTime = 0;
+        
         if (matchDataRaw.timer) {
+            console.log('✅ Timer trouvé');
+            console.log('  - isRunning:', matchDataRaw.timer.isRunning);
+            console.log('  - startTime:', matchDataRaw.timer.startTime);
+            console.log('  - pausedTime:', matchDataRaw.timer.pausedTime);
+            console.log('  - currentHalf:', matchDataRaw.timer.currentHalf);
+            
+            // CAS 1 : Timer en cours d'exécution
             if (matchDataRaw.timer.isRunning && matchDataRaw.timer.startTime) {
-                // Timer en cours : calculer le temps écoulé depuis le démarrage
                 const startTime = new Date(matchDataRaw.timer.startTime).getTime();
                 const now = Date.now();
-                currentTime = (now - startTime) / 1000; // en secondes
-            } else {
-                // Timer en pause : utiliser pausedTime
-                currentTime = matchDataRaw.timer.pausedTime || 0;
+                const elapsed = (now - startTime) / 1000; // en secondes
+                
+                console.log('⏱️ CAS 1: Timer actif');
+                console.log('  - startTime (ms):', startTime);
+                console.log('  - now (ms):', now);
+                console.log('  - elapsed (s):', elapsed.toFixed(2));
+                currentTime = elapsed;
+            } 
+            // CAS 2 : Timer en pause - utiliser pausedTime
+            else if (matchDataRaw.timer.pausedTime !== undefined && matchDataRaw.timer.pausedTime !== null) {
+                currentTime = matchDataRaw.timer.pausedTime;
+                console.log('⏸️ CAS 2: Timer en pause - pausedTime:', currentTime.toFixed(2), 's');
+            }
+            // CAS 3 : Timer existe mais n'a pas encore démarré
+            else {
+                currentTime = 0;
+                console.log('⏹️ CAS 3: Timer non démarré');
             }
             
-            // Ajouter 45 minutes si on est en 2ème mi-temps
-            if (matchDataRaw.timer.currentHalf === 2 && currentTime < 45 * 60) {
-                currentTime += 45 * 60;
+            // Ajouter 45 minutes (2700s) si on est en 2ème mi-temps
+            if (matchDataRaw.timer.currentHalf === 2) {
+                // Ne pas ajouter si le temps est déjà > 45min
+                if (currentTime < 45 * 60) {
+                    console.log('➕ Ajout de 45 min pour 2ème mi-temps');
+                    currentTime += 45 * 60;
+                }
             }
+        } else {
+            console.warn('❌ Pas de données timer trouvées dans matchDataRaw');
         }
         
         // Convertir le temps en minutes
         const timeInMinutes = currentTime / 60;
         
-        // CORRECTION : Récupérer le score depuis plusieurs sources possibles
+        console.log('📊 Temps final calculé:', timeInMinutes.toFixed(2), 'min (', currentTime.toFixed(2), 's)');
+        
+        // Récupérer le score depuis plusieurs sources possibles
         let teamScore = 0;
         let opponentScore = 0;
         
-        // Source 1 : matchDataRaw.stats (format de match.html)
+        // Source 1 : matchDataRaw.stats
         if (matchDataRaw.stats) {
             teamScore = matchDataRaw.stats.myTeam?.goals || 0;
             opponentScore = matchDataRaw.stats.opponent?.goals || 0;
         }
         
-        // Source 2 : matchDataRaw.score (format alternatif)
+        // Source 2 : matchDataRaw.score
         if (matchDataRaw.score) {
             teamScore = matchDataRaw.score.team || teamScore;
             opponentScore = matchDataRaw.score.opponent || opponentScore;
@@ -84,7 +119,6 @@ function loadMatchData() {
             const goalsTeam = matchDataRaw.events.filter(e => e.type === 'goal' && e.isTeam === true).length;
             const goalsOpponent = matchDataRaw.events.filter(e => e.type === 'goal' && e.isTeam === false).length;
             
-            // Utiliser le comptage des événements si plus fiable
             if (goalsTeam > 0 || goalsOpponent > 0) {
                 teamScore = goalsTeam;
                 opponentScore = goalsOpponent;
@@ -101,10 +135,11 @@ function loadMatchData() {
             },
             time: timeInMinutes,
             half: matchDataRaw.timer?.currentHalf || 1,
-            timestamp: new Date()
+            timestamp: new Date(),
+            _timerDebug: matchDataRaw.timer
         };
     } else {
-        // Fallback si pas de match en cours
+        console.warn('⚠️ Aucune donnée de match sauvegardée trouvée');
         const state = footballApp.getState();
         matchData = {
             config: config,
@@ -120,6 +155,7 @@ function loadMatchData() {
     console.log('📊 Données du match chargées:', matchData);
     console.log('🎯 Score:', matchData.score.team, '-', matchData.score.opponent);
     console.log('⏱️ Temps:', matchData.time.toFixed(2), 'min');
+    console.log('🏁 Mi-temps:', matchData.half);
 }
 
 /**
