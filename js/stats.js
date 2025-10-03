@@ -256,22 +256,134 @@ function calculatePlayersStats() {
         };
     });
     
-    // Calculer le temps de jeu (approximatif basé sur le statut)
-    const matchTime = matchData.time || 0;
+    // CALCUL DU TEMPS DE JEU EFFECTIF BASÉ SUR LES CHANGEMENTS
+    const matchTime = matchData.time || 0; // en minutes
+    const matchTimeSeconds = matchTime * 60; // en secondes pour plus de précision
+    
+    // Fonction pour convertir le temps du match (format MM:SS ou MM+X:SS) en secondes
+    function parseMatchTime(timeStr) {
+        if (!timeStr) return 0;
+        
+        // Format: "45+2:30" ou "15:30"
+        const plusMatch = timeStr.match(/(\d+)\+(\d+):(\d+)/);
+        if (plusMatch) {
+            const baseMinutes = parseInt(plusMatch[1]);
+            const extraMinutes = parseInt(plusMatch[2]);
+            const seconds = parseInt(plusMatch[3]);
+            return (baseMinutes + extraMinutes) * 60 + seconds;
+        }
+        
+        // Format: "15:30"
+        const normalMatch = timeStr.match(/(\d+):(\d+)/);
+        if (normalMatch) {
+            const minutes = parseInt(normalMatch[1]);
+            const seconds = parseInt(normalMatch[2]);
+            return minutes * 60 + seconds;
+        }
+        
+        return 0;
+    }
+    
+    // Pour chaque joueur, calculer son temps de jeu
     players.forEach(player => {
-        if (playersStats[player.id]) {
-            // Si titulaire, temps = temps total du match
-            if (player.status === 'field') {
-                playersStats[player.id].playTime = Math.floor(matchTime);
-            }
-            // Si remplaçante entrée en jeu, estimer à 30% du temps
-            else if (player.status === 'bench') {
-                const subEvent = events.find(e => e.type === 'substitution' && e.playerInName === player.name);
-                if (subEvent) {
-                    playersStats[player.id].playTime = Math.floor(matchTime * 0.3);
+        if (!playersStats[player.id]) return;
+        
+        let totalPlayTime = 0; // en secondes
+        
+        // CAS 1: Joueuse actuellement sur le terrain
+        if (player.status === 'field') {
+            // Chercher si elle est sortie à un moment
+            const subOutEvent = events.find(e => 
+                e.type === 'substitution' && 
+                e.playerOutName === player.name
+            );
+            
+            if (subOutEvent) {
+                // Elle a été remplacée - temps = du début jusqu'à la sortie
+                const subTime = parseMatchTime(subOutEvent.time);
+                totalPlayTime = subTime;
+                console.log(`⏱️ ${player.name}: sortie à ${subOutEvent.time} = ${(totalPlayTime/60).toFixed(1)} min`);
+            } else {
+                // Chercher si elle est entrée en cours de match
+                const subInEvent = events.find(e => 
+                    e.type === 'substitution' && 
+                    e.playerInName === player.name
+                );
+                
+                if (subInEvent) {
+                    // Elle est entrée - temps = de l'entrée jusqu'à maintenant
+                    const subTime = parseMatchTime(subInEvent.time);
+                    totalPlayTime = matchTimeSeconds - subTime;
+                    console.log(`⏱️ ${player.name}: entrée à ${subInEvent.time}, joue depuis ${(totalPlayTime/60).toFixed(1)} min`);
+                } else {
+                    // Titulaire qui n'est jamais sortie
+                    totalPlayTime = matchTimeSeconds;
+                    console.log(`⏱️ ${player.name}: titulaire, joue ${(totalPlayTime/60).toFixed(1)} min`);
                 }
             }
         }
+        // CAS 2: Joueuse actuellement sur le banc
+        else if (player.status === 'bench') {
+            // Chercher si elle est entrée puis sortie
+            const subInEvent = events.find(e => 
+                e.type === 'substitution' && 
+                e.playerInName === player.name
+            );
+            
+            if (subInEvent) {
+                const entryTime = parseMatchTime(subInEvent.time);
+                
+                // Chercher si elle est ressortie après
+                const subOutEvent = events.find(e => 
+                    e.type === 'substitution' && 
+                    e.playerOutName === player.name &&
+                    parseMatchTime(e.time) > entryTime
+                );
+                
+                if (subOutEvent) {
+                    // Entrée puis sortie - temps = sortie - entrée
+                    const exitTime = parseMatchTime(subOutEvent.time);
+                    totalPlayTime = exitTime - entryTime;
+                    console.log(`⏱️ ${player.name}: entrée à ${subInEvent.time}, sortie à ${subOutEvent.time} = ${(totalPlayTime/60).toFixed(1)} min`);
+                } else {
+                    // Entrée mais toujours en jeu (statut incorrect?)
+                    totalPlayTime = matchTimeSeconds - entryTime;
+                    console.log(`⚠️ ${player.name}: statut 'bench' mais devrait être 'field', temps = ${(totalPlayTime/60).toFixed(1)} min`);
+                }
+            }
+            // Sinon elle n'a pas joué (restée sur le banc)
+        }
+        // CAS 3: Joueuse sortie (carton rouge, blessure, etc.)
+        else if (player.status === 'out') {
+            // Chercher quand elle est sortie
+            const redCardEvent = events.find(e => 
+                e.type === 'card' && 
+                e.option === 'Rouge' &&
+                e.playerId === player.id
+            );
+            
+            if (redCardEvent) {
+                const exitTime = parseMatchTime(redCardEvent.time);
+                
+                // Vérifier si elle était titulaire ou remplaçante
+                const subInEvent = events.find(e => 
+                    e.type === 'substitution' && 
+                    e.playerInName === player.name
+                );
+                
+                if (subInEvent && parseMatchTime(subInEvent.time) < exitTime) {
+                    // Elle est entrée puis a pris un carton rouge
+                    totalPlayTime = exitTime - parseMatchTime(subInEvent.time);
+                } else {
+                    // Titulaire qui a pris un carton rouge
+                    totalPlayTime = exitTime;
+                }
+                console.log(`🟥 ${player.name}: carton rouge à ${redCardEvent.time} = ${(totalPlayTime/60).toFixed(1)} min`);
+            }
+        }
+        
+        // Convertir en minutes et arrondir
+        playersStats[player.id].playTime = Math.round(totalPlayTime / 60);
     });
     
     // Compter les événements par joueur
@@ -314,8 +426,11 @@ function calculatePlayersStats() {
                     playerStat.score += 1;
                     break;
                 case 'substitution':
-                    if (event.inPlayerId === event.playerId) {
-                        playerStat.substitutions++;
+                    if (event.playerInName) {
+                        const playerIn = players.find(p => p.name === event.playerInName);
+                        if (playerIn && playersStats[playerIn.id]) {
+                            playersStats[playerIn.id].substitutions++;
+                        }
                     }
                     break;
                 case 'injury':
@@ -324,6 +439,12 @@ function calculatePlayersStats() {
             }
         }
     });
+    
+    console.log('📊 Temps de jeu calculés:', 
+        Object.values(playersStats)
+            .filter(p => p.playTime > 0)
+            .map(p => `${p.name}: ${p.playTime} min`)
+    );
 }
 
 /**
