@@ -495,6 +495,12 @@ function updateHalfStats(containerId, stats) {
  * Mise à jour de la timeline détaillée
  */
 function updateDetailedTimeline() {
+    // Vérification de sécurité
+    if (!matchData || !matchData.events) {
+        console.warn('Timeline non disponible');
+        return;
+    }
+    
     const container = document.getElementById('detailedTimeline');
     const events = matchData.events || [];
     
@@ -578,6 +584,12 @@ function updateAdvancedAnalysis() {
  * Mise à jour du graphique des événements
  */
 function updateEventsChart() {
+    // Vérification de sécurité
+    if (!matchData || !matchData.events) {
+        console.warn('Graphique événements non disponible');
+        return;
+    }
+        
     const container = document.getElementById('eventsChart');
     const events = matchData.events || [];
     
