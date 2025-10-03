@@ -203,6 +203,14 @@
         function loadCurrentComposition() {
             const players = footballApp.getState().players;
             selectedPlayers = players.filter(p => p.status === 'field').map(p => p.id);
+            
+            // AJOUT : Initialiser toutes les joueuses non-field comme 'bench'
+            players.forEach(player => {
+                if (player.status !== 'field' && player.status !== 'sanctioned' && player.status !== 'out') {
+                    footballApp.updatePlayerStatus(player.id, 'bench');
+                }
+            });
+            
             console.log('Composition chargée:', selectedPlayers);
         }
 
@@ -456,7 +464,12 @@
         function updateBenchList() {
             const container = document.getElementById('benchList');
             const players = footballApp.getState().players;
-            const benchPlayers = players.filter(p => p.status === 'bench' && !selectedPlayers.includes(p.id));
+            
+            // Afficher toutes les joueuses qui ne sont pas sur le terrain
+            const benchPlayers = players.filter(p => 
+                p.status === 'bench' || 
+                (p.status !== 'field' && p.status !== 'sanctioned' && p.status !== 'out')
+            );
             
             if (benchPlayers.length === 0) {
                 container.innerHTML = '<p>Aucune joueuse sur le banc</p>';
