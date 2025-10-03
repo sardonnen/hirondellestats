@@ -1347,9 +1347,48 @@
         }
 
         function selectNewActionType(actionType, e) {
-            console.log('🎬 selectNewActionType appelée');
+            console.log('🎬 selectNewActionType appelée:', actionType);
             console.log('📌 currentEditEventId AVANT copie:', currentEditEventId);
             
+            // CAS SPÉCIAL : SUBSTITUTION
+            if (actionType === 'substitution') {
+                // Pour les substitutions, on doit supprimer l'ancien événement et en créer un nouveau
+                if (!currentEditEventId) return;
+                
+                if (!confirm('Pour modifier un changement, l\'ancien sera supprimé et vous pourrez en créer un nouveau. Continuer ?')) {
+                    return;
+                }
+                
+                // Supprimer l'ancien événement
+                if (typeof footballApp !== 'undefined') {
+                    const appState = footballApp.getState();
+                    appState.events = appState.events.filter(e => e.id != currentEditEventId);
+                    footballApp.saveState();
+                }
+                
+                if (typeof window.matchEvents !== 'undefined') {
+                    window.matchEvents = window.matchEvents.filter(e => e.id != currentEditEventId);
+                }
+                
+                // Fermer la modale d'édition
+                closeEditActionTypeModal();
+                
+                // Mettre à jour la timeline
+                updateTimelineDisplay();
+                
+                if (typeof autoSave === 'function') {
+                    autoSave();
+                }
+                
+                // Ouvrir la modale de substitution
+                showSubstitutionModal();
+                
+                showNotification('Ancien changement supprimé. Créez le nouveau changement.', 'info');
+                
+                return;
+            }
+            
+            // CAS NORMAL : AUTRES ACTIONS
             // Activer le mode édition AVANT de fermer la modale
             window.isEditingMode = true;
             window.editingEventId = currentEditEventId;
@@ -1361,50 +1400,6 @@
             
             // Ouvrir la modale complète
             showUnifiedActionModal(actionType);
-        }
-
-        function replaceAction() {
-            if (!currentEditEventId || !newSelectedActionType) return;
-            
-            if (!confirm('Voulez-vous vraiment remplacer cette action ?')) return;
-            
-            const eventIndex = matchEvents.findIndex(e => e.id == currentEditActionId);
-            if (eventIndex === -1) return;
-            
-            const oldEvent = matchEvents[eventIndex];
-            
-            const newEvent = {
-                ...oldEvent,
-                type: newSelectedActionType,
-                customDescription: null
-            };
-            
-            if (newSelectedActionType !== oldEvent.type) {
-                delete newEvent.option;
-                delete newEvent.cardType;
-                delete newEvent.saveType;
-                delete newEvent.assistPlayerId;
-                delete newEvent.playerOutName;
-                delete newEvent.playerInName;
-            }
-            
-            matchEvents[eventIndex] = newEvent;
-            
-            if (typeof footballApp !== 'undefined') {
-                const appState = footballApp.getState();
-                const appEventIndex = appState.events.findIndex(e => e.id == currentEditActionId);
-                if (appEventIndex !== -1) {
-                    appState.events[appEventIndex] = newEvent;
-                    footballApp.saveState();
-                }
-            }
-            
-            updateTimeline();
-            autoSave();
-            
-            closeEditActionTypeModal();
-            
-            alert('✅ Action remplacée avec succès !');
         }
 
         function deleteActionFromModal() {
