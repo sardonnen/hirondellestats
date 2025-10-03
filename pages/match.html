@@ -1353,19 +1353,28 @@
             // CAS SPÉCIAL : SUBSTITUTION
             if (actionType === 'substitution') {
                 // Pour les substitutions, on doit supprimer l'ancien événement et en créer un nouveau
-                if (!currentEditEventId) return;
-                
-                if (!confirm('Pour modifier un changement, l\'ancien sera supprimé et vous pourrez en créer un nouveau. Continuer ?')) {
+                if (!currentEditEventId) {
+                    console.error('Pas d\'ID d\'événement à modifier');
                     return;
                 }
                 
-                // Supprimer l'ancien événement
+                if (!confirm('Pour modifier un changement, l\'ancien sera supprimé et vous pourrez en créer un nouveau. Continuer ?')) {
+                    console.log('Modification annulée par l\'utilisateur');
+                    return;
+                }
+                
+                console.log('✅ Confirmation reçue, suppression de l\'événement:', currentEditEventId);
+                
+                // Supprimer l'ancien événement de footballApp
                 if (typeof footballApp !== 'undefined') {
                     const appState = footballApp.getState();
+                    const oldLength = appState.events.length;
                     appState.events = appState.events.filter(e => e.id != currentEditEventId);
+                    console.log(`Événements avant: ${oldLength}, après: ${appState.events.length}`);
                     footballApp.saveState();
                 }
                 
+                // Supprimer aussi de matchEvents local
                 if (typeof window.matchEvents !== 'undefined') {
                     window.matchEvents = window.matchEvents.filter(e => e.id != currentEditEventId);
                 }
@@ -1376,12 +1385,16 @@
                 // Mettre à jour la timeline
                 updateTimelineDisplay();
                 
+                // Sauvegarder
                 if (typeof autoSave === 'function') {
                     autoSave();
                 }
                 
-                // Ouvrir la modale de substitution
-                showSubstitutionModal();
+                // IMPORTANT : Délai pour laisser le temps à la modale de se fermer
+                setTimeout(() => {
+                    console.log('🔄 Ouverture de la modale de substitution');
+                    showSubstitutionModal();
+                }, 300);
                 
                 showNotification('Ancien changement supprimé. Créez le nouveau changement.', 'info');
                 
@@ -1398,8 +1411,10 @@
             // Fermer la modale de sélection
             closeEditActionTypeModal();
             
-            // Ouvrir la modale complète
-            showUnifiedActionModal(actionType);
+            // Délai aussi pour les autres actions
+            setTimeout(() => {
+                showUnifiedActionModal(actionType);
+            }, 300);
         }
 
         function deleteActionFromModal() {
