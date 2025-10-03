@@ -492,9 +492,6 @@ function createPlayerStatsCard(player) {
                     <div class="player-time">⏱️ ${player.playTime || 0} min</div>
                 </div>
             </div>
-            <div class="player-score ${player.score > 0 ? 'positive' : player.score < 0 ? 'negative' : 'neutral'}">
-                ${player.score.toFixed(1)}
-            </div>
         </div>
         
         <div class="player-stats-content">
@@ -529,6 +526,13 @@ function createPlayerStatsCard(player) {
                 <span class="stat-icon">⚽</span>
                 <span class="stat-label">Coups Francs</span>
                 <span class="stat-value">${player.freeKicks}</span>
+            </div>
+            <div class="player-score-row">
+                <span class="stat-icon">⭐</span>
+                <span class="stat-label">Note</span>
+                <span class="stat-value ${player.score > 0 ? 'positive' : player.score < 0 ? 'negative' : 'neutral'}">
+                    ${player.score.toFixed(1)}
+                </span>
             </div>
         </div>
     `;
