@@ -173,7 +173,197 @@ function calculateGlobalStats() {
     matchData.score.opponent = matchData.globalStats.opponent.goals;
 }
 
-// ... (le reste du code reste identique jusqu'à updateMatchSummary)
+/**
+ * Calcul des statistiques des joueurs
+ * 
+ * SYSTÈME DE NOTATION :
+ * - But : +5 points
+ * - Tir : +1 point
+ * - Arrêt gardienne : +2 points
+ * - Coup franc : +1 point
+ * - Carton jaune : -1 point
+ * - Carton rouge : -3 points
+ * - Carton blanc : -2 points
+ * - Faute : -0.5 point
+ */
+function calculatePlayersStats() {
+    const players = matchData.players || [];
+    const events = matchData.events || [];
+    
+    playersStats = {};
+    
+    // Initialiser les stats pour chaque joueur
+    players.forEach(player => {
+        playersStats[player.id] = {
+            ...player,
+            goals: 0,
+            shots: 0,
+            cards: 0,
+            fouls: 0,
+            saves: 0,
+            freeKicks: 0,
+            substitutions: 0,
+            injuries: 0,
+            yellowCards: 0,
+            redCards: 0,
+            whiteCards: 0,
+            playTime: 0, // Temps de jeu en minutes
+            score: 0
+        };
+    });
+    
+    // Calculer le temps de jeu (approximatif basé sur le statut)
+    const matchTime = matchData.time || 0;
+    players.forEach(player => {
+        if (playersStats[player.id]) {
+            // Si titulaire, temps = temps total du match
+            if (player.status === 'field') {
+                playersStats[player.id].playTime = Math.floor(matchTime);
+            }
+            // Si remplaçante entrée en jeu, estimer à 30% du temps
+            else if (player.status === 'bench') {
+                const subEvent = events.find(e => e.type === 'substitution' && e.playerInName === player.name);
+                if (subEvent) {
+                    playersStats[player.id].playTime = Math.floor(matchTime * 0.3);
+                }
+            }
+        }
+    });
+    
+    // Compter les événements par joueur
+    events.forEach(event => {
+        if (event.playerId && event.playerId !== 'opponent' && playersStats[event.playerId]) {
+            const playerStat = playersStats[event.playerId];
+            
+            switch (event.type) {
+                case 'goal':
+                    playerStat.goals++;
+                    playerStat.score += 5;
+                    break;
+                case 'shot':
+                    playerStat.shots++;
+                    playerStat.score += 1;
+                    break;
+                case 'card':
+                    playerStat.cards++;
+                    if (event.cardType === 'yellow' || event.option === 'Jaune') {
+                        playerStat.yellowCards++;
+                        playerStat.score -= 1;
+                    } else if (event.cardType === 'red' || event.option === 'Rouge') {
+                        playerStat.redCards++;
+                        playerStat.score -= 3;
+                    } else if (event.cardType === 'white' || event.option === 'Blanc') {
+                        playerStat.whiteCards++;
+                        playerStat.score -= 2;
+                    }
+                    break;
+                case 'foul':
+                    playerStat.fouls++;
+                    playerStat.score -= 0.5;
+                    break;
+                case 'save':
+                    playerStat.saves++;
+                    playerStat.score += 2;
+                    break;
+                case 'freeKick':
+                    playerStat.freeKicks++;
+                    playerStat.score += 1;
+                    break;
+                case 'substitution':
+                    if (event.inPlayerId === event.playerId) {
+                        playerStat.substitutions++;
+                    }
+                    break;
+                case 'injury':
+                    playerStat.injuries++;
+                    break;
+            }
+        }
+    });
+}
+
+/**
+ * Calcul des statistiques par mi-temps
+ */
+function calculateHalftimeStats() {
+    const events = matchData.events || [];
+    
+    matchData.halftimeStats = {
+        firstHalf: { goals: 0, shots: 0, cards: 0, fouls: 0, events: 0 },
+        secondHalf: { goals: 0, shots: 0, cards: 0, fouls: 0, events: 0 }
+    };
+    
+    events.forEach(event => {
+        const isFirstHalf = event.half === 1;
+        const stats = isFirstHalf ? matchData.halftimeStats.firstHalf : matchData.halftimeStats.secondHalf;
+        
+        stats.events++;
+        
+        if (event.isTeam === true) {
+            switch (event.type) {
+                case 'goal': stats.goals++; break;
+                case 'shot': stats.shots++; break;
+                case 'card': stats.cards++; break;
+                case 'foul': stats.fouls++; break;
+            }
+        }
+    });
+}
+
+/**
+ * Calcul des statistiques d'efficacité
+ */
+function calculateEfficiencyStats() {
+    const teamStats = matchData.globalStats.team;
+    
+    matchData.efficiency = {
+        shotEfficiency: teamStats.shots > 0 ? (teamStats.goals / teamStats.shots * 100) : 0,
+        goalsPerShot: teamStats.shots > 0 ? (teamStats.goals / teamStats.shots) : 0,
+        defenseRating: calculateDefenseRating()
+    };
+}
+
+/**
+ * Calcul de la note défensive
+ */
+function calculateDefenseRating() {
+    const saves = matchData.globalStats.team.saves;
+    const goalsConceded = matchData.globalStats.opponent.goals;
+    
+    if (saves === 0 && goalsConceded === 0) return 5;
+    if (goalsConceded === 0) return 5;
+    if (saves > goalsConceded * 2) return 4;
+    if (saves > goalsConceded) return 3;
+    if (saves === goalsConceded) return 2;
+    return 1;
+}
+
+/**
+ * Recherche des meilleurs performeurs
+ */
+function findTopPerformers() {
+    const players = Object.values(playersStats);
+    
+    matchData.topPerformers = {
+        topScorer: players.reduce((max, p) => p.goals > max.goals ? p : max, { goals: 0, name: '-' }),
+        topShooter: players.reduce((max, p) => p.shots > max.shots ? p : max, { shots: 0, name: '-' }),
+        topKeeper: players.filter(p => p.position === 'gardienne').reduce((max, p) => p.saves > max.saves ? p : max, { saves: 0, name: '-' }),
+        playerOfMatch: players.reduce((max, p) => p.score > max.score ? p : max, { score: 0, name: '-' })
+    };
+}
+
+/**
+ * Mise à jour de tous les affichages
+ */
+function updateAllDisplays() {
+    updateMatchSummary();
+    updateGlobalStats();
+    updatePlayersStats();
+    updateHalftimeAnalysis();
+    updateDetailedTimeline();
+    updateAdvancedAnalysis();
+    updateTopPerformers();
+}
 
 /**
  * Mise à jour du résumé du match
@@ -182,7 +372,6 @@ function updateMatchSummary() {
     // Vérification de sécurité avec initialisation par défaut
     if (!matchData) {
         console.warn('⚠️ matchData non disponible, utilisation de valeurs par défaut');
-        // Essayer de recharger
         loadMatchData();
         if (!matchData) return;
     }
@@ -352,7 +541,7 @@ function createPlayerStatsCard(player) {
  */
 function getStatusText(status) {
     const statusTexts = {
-        'field': '🟏️ Titulaire',
+        'field': '🟢 Titulaire',
         'bench': '🪑 Remplaçante',
         'sanctioned': '⚠️ Sanctionnée'
     };
