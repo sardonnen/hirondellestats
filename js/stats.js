@@ -35,18 +35,38 @@ function initializeStatsPage() {
  * Chargement des données du match
  */
 function loadMatchData() {
-    const state = footballApp.getState();
+    // Charger directement depuis le localStorage (données du match en cours)
+    const savedMatch = localStorage.getItem('footballStats_currentMatch');
     const config = getMatchConfig();
     
-    matchData = {
-        config: config,
-        players: state.players,
-        events: state.events,
-        score: state.score,
-        time: state.time,
-        half: state.half,
-        timestamp: new Date()
-    };
+    if (savedMatch) {
+        const matchDataRaw = JSON.parse(savedMatch);
+        
+        matchData = {
+            config: config,
+            players: matchDataRaw.players || footballApp.getState().players,
+            events: matchDataRaw.events || [],
+            score: matchDataRaw.stats ? {
+                team: matchDataRaw.stats.myTeam.goals || 0,
+                opponent: matchDataRaw.stats.opponent.goals || 0
+            } : { team: 0, opponent: 0 },
+            time: matchDataRaw.timer ? matchDataRaw.timer.pausedTime || 0 : 0,
+            half: matchDataRaw.timer ? matchDataRaw.timer.currentHalf || 1 : 1,
+            timestamp: new Date()
+        };
+    } else {
+        // Fallback si pas de match en cours
+        const state = footballApp.getState();
+        matchData = {
+            config: config,
+            players: state.players,
+            events: state.events,
+            score: state.score,
+            time: state.time,
+            half: state.half,
+            timestamp: new Date()
+        };
+    }
     
     console.log('Données du match chargées:', matchData);
 }
