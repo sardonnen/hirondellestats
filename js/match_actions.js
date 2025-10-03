@@ -558,6 +558,22 @@ function showSubstitutionModal() {
     playerOutId = null;
     playerInId = null;
     
+    // Charger les données existantes si en mode édition
+    if (window.isEditingSubstitution && window.editingSubstitutionId) {
+        const event = footballApp.getState().events.find(e => e.id == window.editingSubstitutionId);
+        if (event && event.type === 'substitution') {
+            // Pré-remplir avec les données existantes
+            if (event.isTeam) {
+                substitutionTeam = 'myTeam';
+                setTimeout(() => {
+                    selectSubstitutionTeam('myTeam');
+                }, 100);
+            } else {
+                substitutionTeam = 'opponent';
+            }
+        }
+    }
+    
     document.getElementById('subMyTeamBtn').style.opacity = '1';
     document.getElementById('subOpponentBtn').style.opacity = '1';
     document.getElementById('myTeamSubSection').style.display = 'none';
@@ -683,6 +699,101 @@ function checkSubstitutionReadiness() {
  * Sauvegarder le changement
  */
 function saveSubstitution() {
+    // MODE ÉDITION
+    if (window.isEditingSubstitution && window.editingSubstitutionId) {
+        const state = footballApp.getState();
+        const eventIndex = state.events.findIndex(e => e.id == window.editingSubstitutionId);
+        
+        if (eventIndex === -1) {
+            alert('Événement introuvable !');
+            return;
+        }
+        
+        const oldEvent = state.events[eventIndex];
+        
+        // Créer l'événement modifié
+        const newEvent = {
+            ...oldEvent,
+            type: 'substitution',
+            isTeam: substitutionTeam === 'myTeam'
+        };
+        
+        if (substitutionTeam === 'opponent') {
+            newEvent.playerName = 'Changement adverse';
+            delete newEvent.playerOutName;
+            delete newEvent.playerInName;
+        } else if (substitutionTeam === 'myTeam' && playerOutId && playerInId) {
+            const players = state.players;
+            const playerOut = players.find(p => p.id === playerOutId);
+            const playerIn = players.find(p => p.id === playerInId);
+            
+            if (playerOut && playerIn) {
+                // Gérer le changement de status des joueurs
+                const isGoalkeeperChange = playerOut.position === 'gardienne' || playerIn.position === 'gardienne';
+                
+                if (isGoalkeeperChange) {
+                    if (playerOut.position === 'gardienne') {
+                        const playerOutIndex = players.findIndex(p => p.id === playerOutId);
+                        const playerInIndex = players.findIndex(p => p.id === playerInId);
+                        
+                        players[playerOutIndex].status = 'bench';
+                        players[playerOutIndex].position = players[playerOutIndex].originalPosition || players[playerOutIndex].position;
+                        
+                        players[playerInIndex].status = 'field';
+                        players[playerInIndex].originalPosition = players[playerInIndex].position;
+                        players[playerInIndex].position = 'gardienne';
+                    } else {
+                        const playerInIndex = players.findIndex(p => p.id === playerInId);
+                        const playerOutIndex = players.findIndex(p => p.id === playerOutId);
+                        
+                        players[playerInIndex].status = 'field';
+                        players[playerInIndex].originalPosition = players[playerInIndex].position;
+                        players[playerInIndex].position = 'gardienne';
+                        
+                        players[playerOutIndex].status = 'bench';
+                    }
+                } else {
+                    const playerOutIndex = players.findIndex(p => p.id === playerOutId);
+                    const playerInIndex = players.findIndex(p => p.id === playerInId);
+                    
+                    players[playerOutIndex].status = 'bench';
+                    players[playerInIndex].status = 'field';
+                }
+                
+                newEvent.playerOutName = playerOut.name;
+                newEvent.playerInName = playerIn.name;
+            }
+        }
+        
+        // Remplacer l'événement
+        state.events[eventIndex] = newEvent;
+        footballApp.saveState();
+        
+        // Synchroniser avec matchEvents local
+        if (typeof window.matchEvents !== 'undefined') {
+            const localIndex = window.matchEvents.findIndex(e => e.id == window.editingSubstitutionId);
+            if (localIndex !== -1) {
+                window.matchEvents[localIndex] = newEvent;
+            }
+        }
+        
+        updateTimelineDisplay();
+        
+        if (typeof autoSave === 'function') {
+            autoSave();
+        }
+        
+        closeSubstitutionModal();
+        
+        // Reset du mode édition
+        window.isEditingSubstitution = false;
+        window.editingSubstitutionId = null;
+        
+        showNotification('Changement modifié !', 'success');
+        return;
+    }
+    
+    // MODE CRÉATION (code existant inchangé)
     if (substitutionTeam === 'opponent') {
         const eventData = {
             type: 'substitution',
@@ -747,7 +858,6 @@ function saveSubstitution() {
         footballApp.addEvent('substitution', eventData);
     }
     
-    // Mettre à jour la timeline
     updateTimelineDisplay();
     
     if (typeof footballApp.updateLive === 'function') {
@@ -766,6 +876,10 @@ function closeSubstitutionModal() {
     substitutionTeam = null;
     playerOutId = null;
     playerInId = null;
+    
+    // Reset du mode édition
+    window.isEditingSubstitution = false;
+    window.editingSubstitutionId = null;
 }
 
 // ============================================
