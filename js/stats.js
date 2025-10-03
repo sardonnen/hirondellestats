@@ -9,6 +9,13 @@ let playersStats = {};
 // Initialisation de la page
 document.addEventListener('DOMContentLoaded', function() {
     initializeStatsPage();
+    
+    // Rafraîchissement automatique toutes les 3 secondes
+    setInterval(function() {
+        loadMatchData();
+        calculateAllStats();
+        updateAllDisplays();
+    }, 3000);
 });
 
 /**
@@ -589,7 +596,7 @@ function updateEventsChart() {
         console.warn('Graphique événements non disponible');
         return;
     }
-        
+
     const container = document.getElementById('eventsChart');
     const events = matchData.events || [];
     
