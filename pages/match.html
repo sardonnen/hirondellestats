@@ -9,34 +9,38 @@
     <style>
         /* Styles spécifiques pour la page match */
         
-        /* Styles pour le header du match */
+        /* Styles pour le header du match - ERGONOMIE AMÉLIORÉE */
         .match-header {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .match-result {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(0,0,0,0.3);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 15px;
         }
         
         .team-info {
             display: flex;
-            flex-direction: column;
             align-items: center;
             gap: 10px;
         }
         
         .team-name {
-            font-size: 1.2em;
+            font-size: 0.9em;
             font-weight: bold;
             color: white;
         }
         
         .team-score {
-            font-size: 3em;
+            font-size: 2em;
             font-weight: bold;
-            color: #3498db;
+            color: #2ecc71;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
@@ -44,32 +48,33 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 5px;
         }
         
         .match-time {
-            font-size: 2.5em;
+            font-size: 1.5em;
             font-weight: bold;
             color: #f39c12;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
         .match-half {
-            font-size: 1.1em;
+            font-size: 0.85em;
             color: #ecf0f1;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         
         .timer-controls {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
             justify-content: center;
+            margin-top: 10px;
         }
         
         .timer-controls .btn {
-            padding: 8px 16px;
-            font-size: 14px;
+            padding: 6px 12px;
+            font-size: 0.85em;
         }
         
         .action-buttons {
@@ -350,17 +355,18 @@
         }
         
         .event-left, .event-right {
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 6px;
+            font-size: 0.85em;
+            line-height: 1.3;
+            text-align: left;
         }
         
         .event-left {
-            text-align: right;
             background: rgba(39, 174, 96, 0.3);
         }
         
         .event-right {
-            text-align: left;
             background: rgba(231, 76, 60, 0.3);
         }
         
@@ -481,24 +487,27 @@
             <!-- Tableau de bord du match -->
             <div class="team-card">
                 <div class="match-header">
-                    <div class="team-info">
-                        <div class="team-name" id="teamName">Mon Équipe</div>
-                        <div class="team-score" id="teamScore">0</div>
-                    </div>
-                    
-                    <div class="match-info">
-                        <div class="match-time" id="matchTime">00:00</div>
-                        <div class="match-half" id="matchHalf">1ère Mi-temps</div>
-                        <div class="timer-controls">
-                            <button class="btn btn-success" id="playBtn" onclick="toggleTimer()">▶️ Démarrer</button>
-                            <button class="btn btn-warning" onclick="resetTimer()">🔄 Reset</button>
-                            <button class="btn btn-primary" onclick="showHalfTimeConfirm()">⏭ Mi-temps</button>
+                    <div class="match-result">
+                        <div class="team-info">
+                            <div class="team-name" id="teamName">Mon Équipe</div>
+                            <div class="team-score" id="teamScore">0</div>
+                        </div>
+                        
+                        <div class="match-info">
+                            <div class="match-time" id="matchTime">00:00</div>
+                            <div class="match-half" id="matchHalf">1ère Mi-temps</div>
+                        </div>
+                        
+                        <div class="team-info">
+                            <div class="team-name" id="opponentName">Équipe Adverse</div>
+                            <div class="team-score" id="opponentScore">0</div>
                         </div>
                     </div>
                     
-                    <div class="team-info">
-                        <div class="team-name" id="opponentName">Équipe Adverse</div>
-                        <div class="team-score" id="opponentScore">0</div>
+                    <div class="timer-controls">
+                        <button class="btn btn-success" id="playBtn" onclick="toggleTimer()">▶️ Démarrer</button>
+                        <button class="btn btn-warning" onclick="resetTimer()">🔄 Reset</button>
+                        <button class="btn btn-primary" onclick="showHalfTimeConfirm()">⏭ Mi-temps</button>
                     </div>
                 </div>
             </div>
