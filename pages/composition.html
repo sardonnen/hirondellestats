@@ -15,6 +15,14 @@
             margin: 20px 0;
         }
         
+        /* Titres de rubrique plus petits */
+        .team-card h2 {
+            font-size: 1.3em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
         /* Catégories de joueuses par position */
         .players-by-position {
             display: flex;
@@ -358,7 +366,7 @@
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="defendersSelected">0</div>
-                        <div class="stat-label">Défenseuses</div>
+                        <div class="stat-label">Défenseures</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="midfieldersSelected">0</div>
@@ -404,6 +412,9 @@
                 <div style="text-align: center; margin-bottom: 20px;">
                     <button class="btn" id="togglePositioningBtn" onclick="togglePositioningMode()">
                         🎯 Mode Positionnement Manuel
+                    </button>
+                    <button class="btn btn-success" id="validatePositioningBtn" onclick="validatePositioning()" style="display: none;">
+                        ✅ Valider le Positionnement
                     </button>
                     <p id="positioningModeText" style="margin-top: 10px; color: #f39c12; display: none;">
                         Cliquez sur une position vide ou sur une joueuse pour la (re)positionner
@@ -519,6 +530,7 @@
         // Variables locales
         let selectedPlayers = [];
         let positioningMode = false;
+        let positioningValidated = false; // État de validation du positionnement
         let playerPositions = {};
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -558,19 +570,61 @@
         function togglePositioningMode() {
             positioningMode = !positioningMode;
             const btn = document.getElementById('togglePositioningBtn');
+            const validateBtn = document.getElementById('validatePositioningBtn');
             const text = document.getElementById('positioningModeText');
             
             if (positioningMode) {
                 btn.className = 'btn btn-success';
                 btn.innerHTML = '✅ Mode Positionnement Actif';
+                validateBtn.style.display = 'inline-block';
                 text.style.display = 'block';
+                positioningValidated = false; // Réinitialiser la validation
             } else {
                 btn.className = 'btn';
                 btn.innerHTML = '🎯 Mode Positionnement Manuel';
+                validateBtn.style.display = 'none';
                 text.style.display = 'none';
             }
             
             updateFormationDisplay();
+        }
+
+        function validatePositioning() {
+            if (!positioningMode) return;
+            
+            // Vérifier que toutes les joueuses sélectionnées sont positionnées
+            const players = footballApp.getState().players;
+            const selected = selectedPlayers.map(id => players.find(p => p.id === id)).filter(Boolean);
+            const positionedCount = selected.filter(p => playerPositions[p.id]).length;
+            
+            if (positionedCount < selected.length) {
+                const missing = selected.length - positionedCount;
+                if (!confirm(`${missing} joueuse(s) ne sont pas encore positionnée(s). Valider quand même ?`)) {
+                    return;
+                }
+            }
+            
+            positioningValidated = true;
+            positioningMode = false;
+            
+            const btn = document.getElementById('togglePositioningBtn');
+            const validateBtn = document.getElementById('validatePositioningBtn');
+            const text = document.getElementById('positioningModeText');
+            
+            btn.className = 'btn btn-warning';
+            btn.innerHTML = '📸 Positionnement Validé';
+            btn.onclick = () => {
+                if (confirm('Voulez-vous modifier le positionnement ?')) {
+                    positioningValidated = false;
+                    togglePositioningMode();
+                }
+            };
+            
+            validateBtn.style.display = 'none';
+            text.style.display = 'none';
+            
+            updateFormationDisplay();
+            showNotification('Positionnement validé ! Image figée.', 'success');
         }
 
         function updatePlayersSelectionDisplay() {
@@ -586,7 +640,7 @@
 
             const positionsConfig = [
                 { key: 'gardienne', label: 'Gardiennes', icon: '🥅' },
-                { key: 'défenseuse', label: 'Défenseuses', icon: '🛡️' },
+                { key: 'défenseure', label: 'Défenseures', icon: '🛡️' },
                 { key: 'milieu', label: 'Milieux', icon: '⚙️' },
                 { key: 'attaquante', label: 'Attaquantes', icon: '⚽' }
             ];
@@ -695,7 +749,7 @@
             
             document.getElementById('selectedCount').textContent = selected.length;
             document.getElementById('goalkeepersSelected').textContent = selected.filter(p => p.position === 'gardienne').length;
-            document.getElementById('defendersSelected').textContent = selected.filter(p => p.position === 'défenseuse').length;
+            document.getElementById('defendersSelected').textContent = selected.filter(p => p.position === 'défenseure').length;
             document.getElementById('midfieldersSelected').textContent = selected.filter(p => p.position === 'milieu').length;
             document.getElementById('attackersSelected').textContent = selected.filter(p => p.position === 'attaquante').length;
             
@@ -730,19 +784,19 @@
             
             const positions = {
                 gardienne: selected.filter(p => p.position === 'gardienne'),
-                défenseuse: selected.filter(p => p.position === 'défenseuse'),
+                défenseure: selected.filter(p => p.position === 'défenseure'),
                 milieu: selected.filter(p => p.position === 'milieu'),
                 attaquante: selected.filter(p => p.position === 'attaquante')
             };
 
-            if (positioningMode) {
+            if (positioningMode || positioningValidated) {
                 updatePositionDisplayManual('gk', positions.gardienne, 1);
-                updatePositionDisplayManual('def', positions.défenseuse, 5);
+                updatePositionDisplayManual('def', positions.défenseure, 5);
                 updatePositionDisplayManual('mid', positions.milieu, 5);
                 updatePositionDisplayManual('att', positions.attaquante, 3);
             } else {
                 updatePositionDisplay('gk', positions.gardienne);
-                updatePositionDisplay('def', positions.défenseuse);
+                updatePositionDisplay('def', positions.défenseure);
                 updatePositionDisplay('mid', positions.milieu);
                 updatePositionDisplay('att', positions.attaquante);
             }
@@ -783,6 +837,11 @@
                 const slotId = `${position}-${i}`;
                 const assignedPlayer = players.find(p => playerPositions[p.id] === slotId);
                 
+                // Si le positionnement est validé et l'emplacement est vide, on ne l'affiche pas
+                if (positioningValidated && !assignedPlayer) {
+                    continue;
+                }
+                
                 const slotDiv = document.createElement('div');
                 slotDiv.className = 'position-slot' + (assignedPlayer ? ' filled' : ' empty');
                 slotDiv.id = slotId;
@@ -792,7 +851,9 @@
                         <div class="player-name">${assignedPlayer.name}</div>
                         ${assignedPlayer.number ? `<div class="player-number">${assignedPlayer.number}</div>` : ''}
                     `;
-                    slotDiv.onclick = () => reassignPlayerSlot(slotId, position, assignedPlayer.id);
+                    if (positioningMode) {
+                        slotDiv.onclick = () => reassignPlayerSlot(slotId, position, assignedPlayer.id);
+                    }
                 } else {
                     slotDiv.innerHTML = '<div class="empty-slot">+</div>';
                     slotDiv.onclick = () => assignPlayerToSlot(slotId, position);
@@ -807,7 +868,7 @@
             
             const players = footballApp.getState().players;
             const positionKey = positionType === 'gk' ? 'gardienne' : 
-                               positionType === 'def' ? 'défenseuse' :
+                               positionType === 'def' ? 'défenseure' :
                                positionType === 'mid' ? 'milieu' : 'attaquante';
             
             const availablePlayers = selectedPlayers
@@ -873,7 +934,7 @@
             
             const positionsConfig = [
                 { key: 'gardienne', label: 'Gardiennes', icon: '🥅' },
-                { key: 'défenseuse', label: 'Défenseuses', icon: '🛡️' },
+                { key: 'défenseure', label: 'Défenseures', icon: '🛡️' },
                 { key: 'milieu', label: 'Milieux', icon: '⚙️' },
                 { key: 'attaquante', label: 'Attaquantes', icon: '⚽' }
             ];
@@ -986,9 +1047,9 @@
                 selected.push(goalkeepers[0]);
 
                 const fieldPlayers = availablePlayers.filter(p => p.position !== 'gardienne');
-                const distribution = { défenseuse: 4, milieu: 3, attaquante: 3 };
+                const distribution = { défenseure: 4, milieu: 3, attaquante: 3 };
                 
-                ['défenseuse', 'milieu', 'attaquante'].forEach(position => {
+                ['défenseure', 'milieu', 'attaquante'].forEach(position => {
                     const positionPlayers = fieldPlayers.filter(p => p.position === position);
                     const needed = distribution[position];
                     
@@ -1027,11 +1088,11 @@
             const availablePlayers = players.filter(p => p.status !== 'sanctioned');
             
             const formations = {
-                '4-4-2': { défenseuse: 4, milieu: 4, attaquante: 2 },
-                '4-3-3': { défenseuse: 4, milieu: 3, attaquante: 3 },
-                '4-2-3-1': { défenseuse: 4, milieu: 5, attaquante: 1 },
-                '3-5-2': { défenseuse: 3, milieu: 5, attaquante: 2 },
-                '5-3-2': { défenseuse: 5, milieu: 3, attaquante: 2 }
+                '4-4-2': { défenseure: 4, milieu: 4, attaquante: 2 },
+                '4-3-3': { défenseure: 4, milieu: 3, attaquante: 3 },
+                '4-2-3-1': { défenseure: 4, milieu: 5, attaquante: 1 },
+                '3-5-2': { défenseure: 3, milieu: 5, attaquante: 2 },
+                '5-3-2': { défenseure: 5, milieu: 3, attaquante: 2 }
             };
 
             const config = formations[formation];
@@ -1047,7 +1108,7 @@
             let message = `Formation ${formation}:\n`;
             
             const positionLabels = {
-                'défenseuse': 'Défenseuses',
+                'défenseure': 'Défenseures',
                 'milieu': 'Milieux',
                 'attaquante': 'Attaquantes'
             };
@@ -1121,19 +1182,19 @@
             
             const positions = {
                 gardienne: selected.filter(p => p.position === 'gardienne'),
-                défenseuse: selected.filter(p => p.position === 'défenseuse'),
+                défenseure: selected.filter(p => p.position === 'défenseure'),
                 milieu: selected.filter(p => p.position === 'milieu'),
                 attaquante: selected.filter(p => p.position === 'attaquante')
             };
 
-            const formation = `${positions.défenseuse.length}-${positions.milieu.length}-${positions.attaquante.length}`;
+            const formation = `${positions.défenseure.length}-${positions.milieu.length}-${positions.attaquante.length}`;
 
             container.innerHTML = `
                 <div class="formation-summary">
                     <h4>Formation: ${formation}</h4>
                     <div class="position-summary">
                         <div><strong>🥅 Gardienne:</strong> ${positions.gardienne.map(p => p.name).join(', ')}</div>
-                        <div><strong>🛡️ Défense (${positions.défenseuse.length}):</strong> ${positions.défenseuse.map(p => p.name).join(', ')}</div>
+                        <div><strong>🛡️ Défense (${positions.défenseure.length}):</strong> ${positions.défenseure.map(p => p.name).join(', ')}</div>
                         <div><strong>⚙️ Milieux (${positions.milieu.length}):</strong> ${positions.milieu.map(p => p.name).join(', ')}</div>
                         <div><strong>⚽ Attaque (${positions.attaquante.length}):</strong> ${positions.attaquante.map(p => p.name).join(', ')}</div>
                     </div>
