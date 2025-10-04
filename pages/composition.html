@@ -59,7 +59,7 @@
         
         .position-category-players {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
         }
         
@@ -308,6 +308,10 @@
                 grid-template-columns: repeat(2, 1fr);
             }
             
+            .position-category-players {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
             .field {
                 min-height: 300px;
                 padding: 15px;
@@ -326,10 +330,6 @@
 
             .formations-grid {
                 grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .position-category-players {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             }
         }
     </style>
@@ -534,12 +534,33 @@
         let playerPositions = {};
 
         document.addEventListener('DOMContentLoaded', function() {
+            migratePlayerPositions(); // Corriger les anciennes positions
             loadCurrentComposition();
             loadPlayerPositions();
             updatePlayersSelectionDisplay();
             updateCompositionStats();
             updateFormationDisplay();
         });
+
+        /**
+         * Migration des positions "défenseuse" vers "défenseure"
+         */
+        function migratePlayerPositions() {
+            const players = footballApp.getState().players;
+            let hasChanges = false;
+            
+            players.forEach(player => {
+                if (player.position === 'défenseuse') {
+                    player.position = 'défenseure';
+                    hasChanges = true;
+                }
+            });
+            
+            if (hasChanges) {
+                footballApp.saveState();
+                console.log('Migration des positions effectuée : défenseuse → défenseure');
+            }
+        }
 
         function loadCurrentComposition() {
             const players = footballApp.getState().players;
