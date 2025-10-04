@@ -15,54 +15,59 @@
         .connection-indicator {
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-            padding: 15px;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
             background: rgba(255,255,255,0.1);
             border-radius: 8px;
         }
 
         .status-icon {
-            font-size: 1.5em;
+            font-size: 1.2em;
         }
 
         .status-text {
             font-weight: bold;
             flex: 1;
             color: #ecf0f1;
+            font-size: 0.9em;
         }
 
         .last-update {
-            font-size: 14px;
+            font-size: 0.75em;
             opacity: 0.8;
             color: #bdc3c7;
         }
 
+        /* Match header - MÊME STYLE QUE MATCH.HTML */
         .live-match-header {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .match-result {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(0,0,0,0.3);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+            gap: 15px;
         }
 
         .live-team-info {
             display: flex;
-            flex-direction: column;
             align-items: center;
             gap: 10px;
         }
 
         .live-team-name {
-            font-size: 1.3em;
+            font-size: 0.9em;
             font-weight: bold;
             color: white;
         }
 
         .live-team-score {
-            font-size: 3.5em;
+            font-size: 2em;
             font-weight: bold;
             color: #2ecc71;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
@@ -72,47 +77,51 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 5px;
         }
 
         .live-match-time {
-            font-size: 2.8em;
+            font-size: 1.5em;
             font-weight: bold;
             color: #f39c12;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .live-match-half {
-            font-size: 1.1em;
+            font-size: 0.85em;
             color: #ecf0f1;
+            white-space: nowrap;
+            text-align: center;
         }
 
         .live-match-status {
-            font-size: 14px;
-            padding: 4px 12px;
+            font-size: 0.75em;
+            padding: 3px 8px;
             background: rgba(39, 174, 96, 0.3);
             border-radius: 15px;
             border: 1px solid #27ae60;
+            margin-top: 5px;
         }
 
-        /* Timeline style comme match.html */
+        /* Timeline - MÊME STYLE QUE MATCH.HTML */
         .timeline-container {
             background: rgba(0,0,0,0.2);
             border-radius: 12px;
             padding: 5px;
-            margin: 20px 0;
+            margin: 15px 0;
         }
 
         .timeline-header {
             display: grid;
             grid-template-columns: 1fr auto 1fr;
-            gap: 20px;
+            gap: 15px;
             padding: 5px;
             background: rgba(255,255,255,0.1);
             border-radius: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-weight: bold;
             text-align: center;
+            font-size: 0.85em;
         }
 
         .timeline-event {
@@ -129,41 +138,43 @@
         }
 
         .event-left, .event-right {
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 6px;
+            font-size: 0.75em;
+            line-height: 1.3;
+            text-align: left;
         }
 
         .event-left {
-            text-align: right;
             background: rgba(39, 174, 96, 0.3);
         }
 
         .event-right {
-            text-align: left;
             background: rgba(231, 76, 60, 0.3);
         }
 
         .event-time {
             background: rgba(255,255,255,0.2);
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 6px;
             font-weight: bold;
             text-align: center;
-            min-width: 60px;
+            min-width: 50px;
+            font-size: 0.85em;
         }
 
-        /* Stats rapides */
+        /* Stats rapides - GRID 3x2 COMPACT */
         .global-stats-compact {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin: 20px 0;
+            gap: 10px;
+            margin: 15px 0;
         }
 
         .compact-stat-card {
             background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 15px;
+            border-radius: 8px;
+            padding: 10px;
             text-align: center;
             border: 1px solid rgba(255,255,255,0.2);
             transition: all 0.3s ease;
@@ -171,68 +182,88 @@
 
         .compact-stat-card:hover {
             background: rgba(255,255,255,0.15);
-            transform: translateY(-3px);
+            transform: translateY(-2px);
         }
 
         .compact-stat-icon {
-            font-size: 2em;
-            margin-bottom: 8px;
+            font-size: 1.3em;
+            margin-bottom: 5px;
         }
 
         .compact-stat-values {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
-            margin: 8px 0;
+            gap: 8px;
+            margin: 5px 0;
         }
 
         .compact-team-value {
-            font-size: 1.8em;
+            font-size: 1.5em;
             font-weight: bold;
             color: #2ecc71;
         }
 
         .compact-separator {
-            font-size: 1.2em;
+            font-size: 1em;
             color: #bdc3c7;
         }
 
         .compact-opponent-value {
-            font-size: 1.8em;
+            font-size: 1.5em;
             font-weight: bold;
             color: #e74c3c;
         }
 
         .compact-stat-label {
-            font-size: 0.9em;
+            font-size: 0.75em;
             color: #ecf0f1;
             opacity: 0.9;
         }
 
+        /* Réduction des marges globales */
+        .team-card {
+            margin-bottom: 15px;
+            padding: 12px;
+        }
+
+        .team-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .header {
+            padding: 15px 0;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 0.85em;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
-            .live-match-header {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .live-team-score {
-                font-size: 2.5em;
-            }
-
-            .live-match-time {
-                font-size: 2em;
-            }
-
             .global-stats-compact {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
 
         @media (max-width: 480px) {
-            .global-stats-compact {
-                grid-template-columns: 1fr;
+            .match-result {
+                font-size: 0.9em;
+            }
+
+            .live-team-score {
+                font-size: 1.8em;
+            }
+
+            .live-match-time {
+                font-size: 1.3em;
             }
         }
     </style>
@@ -259,20 +290,22 @@
             <!-- Tableau de bord du match -->
             <div class="team-card">
                 <div class="live-match-header">
-                    <div class="live-team-info">
-                        <div class="live-team-name" id="liveTeamName">Mon Équipe</div>
-                        <div class="live-team-score" id="liveTeamScore">0</div>
-                    </div>
-                    
-                    <div class="live-match-info">
-                        <div class="live-match-time" id="liveMatchTime">00:00</div>
-                        <div class="live-match-half" id="liveMatchHalf">1ère Mi-temps</div>
-                        <div class="live-match-status" id="liveMatchStatus">En cours</div>
-                    </div>
-                    
-                    <div class="live-team-info">
-                        <div class="live-team-name" id="liveOpponentName">Équipe Adverse</div>
-                        <div class="live-team-score" id="liveOpponentScore">0</div>
+                    <div class="match-result">
+                        <div class="live-team-info">
+                            <div class="live-team-name" id="liveTeamName">Mon Équipe</div>
+                            <div class="live-team-score" id="liveTeamScore">0</div>
+                        </div>
+                        
+                        <div class="live-match-info">
+                            <div class="live-match-time" id="liveMatchTime">00:00</div>
+                            <div class="live-match-half" id="liveMatchHalf">1ère Mi-temps</div>
+                            <div class="live-match-status" id="liveMatchStatus">En cours</div>
+                        </div>
+                        
+                        <div class="live-team-info">
+                            <div class="live-team-name" id="liveOpponentName">Équipe Adverse</div>
+                            <div class="live-team-score" id="liveOpponentScore">0</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -294,7 +327,7 @@
                 </div>
             </div>
 
-            <!-- Résumé Rapide -->
+            <!-- Résumé Rapide - GRID 3x2 -->
             <div class="team-card">
                 <h3>📊 Résumé Rapide</h3>
                 <div class="global-stats-compact">
@@ -318,16 +351,6 @@
                         <div class="compact-stat-label">Tirs cadrés</div>
                     </div>
                     
-                    <div class="compact-stat-card shots-off-target">
-                        <div class="compact-stat-icon">↗️</div>
-                        <div class="compact-stat-values">
-                            <span class="compact-team-value" id="compactTeamShotsOffTarget">0</span>
-                            <span class="compact-separator">-</span>
-                            <span class="compact-opponent-value" id="compactOpponentShotsOffTarget">0</span>
-                        </div>
-                        <div class="compact-stat-label">Tirs non cadrés</div>
-                    </div>
-                    
                     <div class="compact-stat-card cards">
                         <div class="compact-stat-icon">🟨</div>
                         <div class="compact-stat-values">
@@ -336,6 +359,16 @@
                             <span class="compact-opponent-value" id="compactOpponentCards">0</span>
                         </div>
                         <div class="compact-stat-label">Cartons</div>
+                    </div>
+                    
+                    <div class="compact-stat-card shots-off-target">
+                        <div class="compact-stat-icon">↗️</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamShotsOffTarget">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentShotsOffTarget">0</span>
+                        </div>
+                        <div class="compact-stat-label">Tirs non cadrés</div>
                     </div>
                     
                     <div class="compact-stat-card fouls">
@@ -466,9 +499,7 @@
         function displayMatchData(data) {
             try {
                 console.log('📊 displayMatchData appelée avec:', data);
-                console.log('📊 matchInfo:', data.matchInfo);
-                console.log('📊 events:', data.events);
-                console.log('📊 stats:', data.stats);
+                
                 // Informations générales
                 const matchInfo = data.matchInfo || {};
                 const teamName = matchInfo.teamName || 'Mon Équipe';
