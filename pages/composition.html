@@ -7,12 +7,16 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
     <style>
-        /* Grid 5x1 pour les stats */
-        .stats-grid-composition {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
+        /* Grid 5x1 pour les stats - PRIORITAIRE */
+        .team-card .stats-grid-composition {
+            display: grid !important;
+            grid-template-columns: repeat(5, 1fr) !important;
             gap: 15px;
             margin: 20px 0;
+        }
+        
+        .team-card .stats-grid-composition .stat-card {
+            min-width: 0;
         }
         
         /* Titres de rubrique plus petits */
