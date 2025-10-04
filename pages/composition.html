@@ -408,39 +408,6 @@
                 </div>
             </div>
 
-            <!-- Sélection des remplaçantes -->
-            <div class="team-card" id="substituteSelectionCard" style="display: none;">
-                <h2>🪑 Sélection des Remplaçantes</h2>
-                <p>Cliquez sur les joueuses disponibles pour les ajouter au banc de touche :</p>
-                
-                <div id="substituteSelectionGrid" class="players-by-position">
-                    <!-- Les joueuses disponibles apparaîtront ici -->
-                </div>
-                
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-secondary" onclick="clearSubstitutes()">🔄 Vider le Banc</button>
-                    <button class="btn btn-success" onclick="validateSubstitutes()">✅ Valider les Remplaçantes</button>
-                </div>
-            </div>
-
-            <!-- Sélection des joueuses -->
-            <div class="team-card" id="starterSelectionCard">
-                <h2 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">👥 Sélection des Joueuses</h2>
-                <p>Cliquez sur les joueuses pour les ajouter/retirer de la composition de départ :</p>
-                
-                <div id="playersSelectionGrid" class="players-by-position">
-                    <!-- Les joueuses apparaîtront ici par catégorie -->
-                </div>
-                
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-secondary" onclick="clearSelection()">🔄 Tout Désélectionner</button>
-                    <button class="btn btn-warning" onclick="autoSelectComposition()">🎲 Sélection Auto</button>
-                    <button class="btn btn-primary" id="validateBtn" onclick="validateComposition()" disabled>
-                        ✅ Valider la Composition
-                    </button>
-                </div>
-            </div>
-
             <!-- Aperçu de la composition -->
             <div class="team-card">
                 <h2>🟩 Aperçu de la Composition</h2>
@@ -507,8 +474,23 @@
                 <div class="bench-list">
                     <h3>🪑 Banc de Touche</h3>
                     <div id="benchList" class="players-list">
-                        <p>Aucune joueuse sur le banc</p>
+                        <p>Aucune remplaçante sélectionnée</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Sélection des remplaçantes (APRÈS l'aperçu) -->
+            <div class="team-card" id="substituteSelectionCard" style="display: none;">
+                <h2>🪑 Sélection des Remplaçantes</h2>
+                <p>Cliquez sur les joueuses disponibles pour les ajouter au banc de touche :</p>
+                
+                <div id="substituteSelectionGrid" class="players-by-position">
+                    <!-- Les joueuses disponibles apparaîtront ici -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="clearSubstitutes()">🔄 Vider le Banc</button>
+                    <button class="btn btn-success" onclick="validateSubstitutes()">✅ Valider les Remplaçantes</button>
                 </div>
             </div>
 
@@ -1233,9 +1215,15 @@
             footballApp.saveState();
             displayValidationSummary(selected);
             
-            // Afficher la section de sélection des remplaçantes
-            document.getElementById('substituteSelectionCard').style.display = 'block';
+            // Afficher la section de sélection des remplaçantes ET scroller vers elle
+            const substituteCard = document.getElementById('substituteSelectionCard');
+            substituteCard.style.display = 'block';
             updateSubstituteSelectionDisplay();
+            
+            // Scroller vers la section remplaçantes
+            setTimeout(() => {
+                substituteCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
             
             document.getElementById('validationModal').style.display = 'block';
         }
