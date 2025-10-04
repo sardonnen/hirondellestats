@@ -408,8 +408,23 @@
                 </div>
             </div>
 
+            <!-- Sélection des remplaçantes -->
+            <div class="team-card" id="substituteSelectionCard" style="display: none;">
+                <h2>🪑 Sélection des Remplaçantes</h2>
+                <p>Cliquez sur les joueuses disponibles pour les ajouter au banc de touche :</p>
+                
+                <div id="substituteSelectionGrid" class="players-by-position">
+                    <!-- Les joueuses disponibles apparaîtront ici -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="clearSubstitutes()">🔄 Vider le Banc</button>
+                    <button class="btn btn-success" onclick="validateSubstitutes()">✅ Valider les Remplaçantes</button>
+                </div>
+            </div>
+
             <!-- Sélection des joueuses -->
-            <div class="team-card">
+            <div class="team-card" id="starterSelectionCard">
                 <h2 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">👥 Sélection des Joueuses</h2>
                 <p>Cliquez sur les joueuses pour les ajouter/retirer de la composition de départ :</p>
                 
@@ -1217,7 +1232,152 @@
 
             footballApp.saveState();
             displayValidationSummary(selected);
+            
+            // Afficher la section de sélection des remplaçantes
+            document.getElementById('substituteSelectionCard').style.display = 'block';
+            updateSubstituteSelectionDisplay();
+            
             document.getElementById('validationModal').style.display = 'block';
+        }
+
+        /**
+         * Affichage de la sélection des remplaçantes
+         */
+        function updateSubstituteSelectionDisplay() {
+            const container = document.getElementById('substituteSelectionGrid');
+            const players = footballApp.getState().players;
+            
+            // Joueuses disponibles (ni titulaires, ni remplaçantes, ni sanctionnées)
+            const availablePlayers = players.filter(p => 
+                !selectedPlayers.includes(p.id) && 
+                p.status !== 'sanctioned' && 
+                p.status !== 'out'
+            );
+
+            if (availablePlayers.length === 0) {
+                container.innerHTML = '<p class="text-center">Toutes les joueuses sont déjà sélectionnées ou sanctionnées.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            const positionsConfig = [
+                { key: 'gardienne', label: 'Gardiennes', icon: '🥅' },
+                { key: 'défenseure', label: 'Défenseures', icon: '🛡️' },
+                { key: 'milieu', label: 'Milieux', icon: '⚙️' },
+                { key: 'attaquante', label: 'Attaquantes', icon: '⚽' }
+            ];
+            
+            positionsConfig.forEach(posConfig => {
+                const positionPlayers = availablePlayers.filter(p => p.position === posConfig.key);
+                
+                if (positionPlayers.length > 0) {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'position-category';
+                    
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'position-category-header';
+                    headerDiv.innerHTML = `
+                        <span class="position-category-icon">${posConfig.icon}</span>
+                        <h3 class="position-category-title">${posConfig.label} (${positionPlayers.length})</h3>
+                    `;
+                    categoryDiv.appendChild(headerDiv);
+                    
+                    const playersDiv = document.createElement('div');
+                    playersDiv.className = 'position-category-players';
+                    
+                    positionPlayers.forEach(player => {
+                        const playerCard = createSubstituteSelectableCard(player);
+                        playersDiv.appendChild(playerCard);
+                    });
+                    
+                    categoryDiv.appendChild(playersDiv);
+                    container.appendChild(categoryDiv);
+                }
+            });
+        }
+
+        /**
+         * Création d'une carte joueuse pour les remplaçantes
+         */
+        function createSubstituteSelectableCard(player) {
+            const isSelected = selectedSubstitutes.includes(player.id);
+            
+            const card = document.createElement('div');
+            card.className = `player-btn ${player.position === 'gardienne' ? 'goalkeeper' : ''} ${isSelected ? 'selected' : ''}`;
+            card.onclick = () => toggleSubstituteSelection(player.id);
+
+            card.innerHTML = `
+                <div style="font-size: 1.5em;">${footballApp.getPositionIcon(player.position)}</div>
+                <div style="font-weight: bold; margin: 5px 0;">${player.name}</div>
+                ${player.number ? `<div style="font-size: 12px; color: #f39c12;">N° ${player.number}</div>` : ''}
+                <div style="font-size: 11px; margin: 5px 0;">
+                    ${isSelected ? '✅ Remplaçante' : '⭕ Disponible'}
+                </div>
+                <div style="font-size: 10px; opacity: 0.8;">
+                    ⚽ ${player.stats.goals} | 🎯 ${player.stats.shots}
+                </div>
+            `;
+
+            return card;
+        }
+
+        /**
+         * Basculer la sélection d'une remplaçante
+         */
+        function toggleSubstituteSelection(playerId) {
+            const player = footballApp.getState().players.find(p => p.id === playerId);
+            
+            if (!player || player.status === 'sanctioned') {
+                return;
+            }
+
+            const isSelected = selectedSubstitutes.includes(playerId);
+            
+            if (isSelected) {
+                selectedSubstitutes = selectedSubstitutes.filter(id => id !== playerId);
+                footballApp.updatePlayerStatus(playerId, 'available');
+            } else {
+                selectedSubstitutes.push(playerId);
+                footballApp.updatePlayerStatus(playerId, 'bench');
+            }
+
+            updateSubstituteSelectionDisplay();
+            updateBenchList();
+            footballApp.saveState();
+        }
+
+        /**
+         * Vider le banc
+         */
+        function clearSubstitutes() {
+            if (selectedSubstitutes.length === 0) {
+                showNotification('Aucune remplaçante à retirer', 'info');
+                return;
+            }
+
+            if (confirm('Retirer toutes les remplaçantes du banc ?')) {
+                selectedSubstitutes.forEach(playerId => {
+                    footballApp.updatePlayerStatus(playerId, 'available');
+                });
+                
+                selectedSubstitutes = [];
+                
+                updateSubstituteSelectionDisplay();
+                updateBenchList();
+                footballApp.saveState();
+                
+                showNotification('Banc vidé');
+            }
+        }
+
+        /**
+         * Valider les remplaçantes
+         */
+        function validateSubstitutes() {
+            footballApp.saveState();
+            showNotification(`${selectedSubstitutes.length} remplaçante(s) validée(s) !`, 'success');
+            updateBenchList();
         }
 
         function displayValidationSummary(selected) {
