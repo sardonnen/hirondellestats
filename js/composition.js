@@ -954,4 +954,62 @@ function showNotification(message, type = 'info') {
     }
 }
 
+/**
+ * Aller au match directement (depuis la modal)
+ */
+function goToMatchDirectly() {
+    closeValidationModal();
+    goToMatch();
+}
+
+/**
+ * Modification de la fonction validateComposition pour scroll automatique
+ */
+function validateComposition() {
+    const players = footballApp.getState().players;
+    const selected = selectedPlayers.map(id => players.find(p => p.id === id)).filter(Boolean);
+    const goalkeepers = selected.filter(p => p.position === 'gardienne').length;
+    
+    if (selected.length !== 11) {
+        showNotification(`Il faut exactement 11 joueuses (${selected.length} sélectionnées)`, 'error');
+        return;
+    }
+
+    if (goalkeepers !== 1) {
+        showNotification('Il faut exactement 1 gardienne', 'error');
+        return;
+    }
+
+    footballApp.saveState();
+    displayValidationSummary(selected);
+    
+    // Afficher la modal
+    document.getElementById('validationModal').style.display = 'block';
+    
+    // Afficher la section des remplaçantes
+    const substituteCard = document.getElementById('substituteSelectionCard');
+    substituteCard.style.display = 'block';
+    updateSubstituteSelectionDisplay();
+    
+    // Scroll smooth vers la section des remplaçantes après fermeture de la modal
+    setTimeout(() => {
+        substituteCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 500);
+}
+
+/**
+ * Modification de closeValidationModal pour scroll vers remplaçantes
+ */
+function closeValidationModal() {
+    document.getElementById('validationModal').style.display = 'none';
+    
+    // Scroll vers la section des remplaçantes
+    const substituteCard = document.getElementById('substituteSelectionCard');
+    if (substituteCard.style.display === 'block') {
+        setTimeout(() => {
+            substituteCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+}
+
 console.log('✅ Module composition.js chargé');

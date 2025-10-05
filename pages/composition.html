@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
     <style>
-        /* Liste compacte pour les stats */
+        /* [Tous les styles CSS identiques - je les garde tels quels] */
         .stats-compact-list {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
@@ -37,7 +37,6 @@
             color: rgba(255, 255, 255, 0.9);
         }
         
-        /* Titres de rubrique plus petits */
         .team-card h2 {
             font-size: 1.3em;
             white-space: nowrap;
@@ -45,7 +44,6 @@
             text-overflow: ellipsis;
         }
         
-        /* Catégories de joueuses par position */
         .players-by-position {
             display: flex;
             flex-direction: column;
@@ -180,7 +178,6 @@
             font-size: 12px;
         }
 
-        /* Positionnement manuel */
         .position-slot {
             background: rgba(255,255,255,0.9);
             color: #2c3e50;
@@ -374,9 +371,9 @@
 
         <main class="main-content">
             
-            <!-- Statut de la composition -->
+            <!-- ÉTAPE 1 : Statut de la composition -->
             <div class="team-card">
-                <h2 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🎯 Statut de la Composition</h2>
+                <h2>🎯 Statut de la Composition</h2>
                 <div class="stats-compact-list">
                     <div class="stat-line">
                         <span class="stat-value" id="selectedCount">0</span>
@@ -408,24 +405,9 @@
                 </div>
             </div>
 
-            <!-- Sélection des remplaçantes -->
-            <div class="team-card" id="substituteSelectionCard" style="display: none;">
-                <h2>🪑 Sélection des Remplaçantes</h2>
-                <p>Cliquez sur les joueuses disponibles pour les ajouter au banc de touche :</p>
-                
-                <div id="substituteSelectionGrid" class="players-by-position">
-                    <!-- Les joueuses disponibles apparaîtront ici -->
-                </div>
-                
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-secondary" onclick="clearSubstitutes()">🔄 Vider le Banc</button>
-                    <button class="btn btn-success" onclick="validateSubstitutes()">✅ Valider les Remplaçantes</button>
-                </div>
-            </div>
-
-            <!-- Sélection des joueuses -->
+            <!-- ÉTAPE 2 : Sélection des joueuses titulaires -->
             <div class="team-card" id="starterSelectionCard">
-                <h2 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">👥 Sélection des Joueuses</h2>
+                <h2>👥 Sélection des 11 Titulaires</h2>
                 <p>Cliquez sur les joueuses pour les ajouter/retirer de la composition de départ :</p>
                 
                 <div id="playersSelectionGrid" class="players-by-position">
@@ -441,7 +423,7 @@
                 </div>
             </div>
 
-            <!-- Aperçu de la composition -->
+            <!-- ÉTAPE 3 : Aperçu de la composition -->
             <div class="team-card">
                 <h2>🟩 Aperçu de la Composition</h2>
                 
@@ -512,6 +494,25 @@
                 </div>
             </div>
 
+            <!-- ÉTAPE 4 : Sélection des remplaçantes (affichée après validation) -->
+            <div class="team-card" id="substituteSelectionCard" style="display: none;">
+                <h2>🪑 Étape Suivante : Sélection des Remplaçantes</h2>
+                <p style="background: rgba(39, 174, 96, 0.2); padding: 15px; border-radius: 8px; border-left: 4px solid #27ae60; margin-bottom: 20px;">
+                    ✅ Votre composition de 11 titulaires est validée ! Vous pouvez maintenant sélectionner vos remplaçantes pour le banc de touche.
+                </p>
+                <p>Cliquez sur les joueuses disponibles pour les ajouter au banc :</p>
+                
+                <div id="substituteSelectionGrid" class="players-by-position">
+                    <!-- Les joueuses disponibles apparaîtront ici -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="clearSubstitutes()">🔄 Vider le Banc</button>
+                    <button class="btn btn-success" onclick="validateSubstitutes()">✅ Valider les Remplaçantes</button>
+                    <button class="btn btn-primary" onclick="goToMatch()">⚽ Aller au Match</button>
+                </div>
+            </div>
+
             <!-- Formations prédéfinies -->
             <div class="team-card">
                 <h2>⚙️ Formations Prédéfinies</h2>
@@ -543,20 +544,23 @@
         </main>
     </div>
 
-    <!-- Modal Validation -->
+    <!-- Modal Validation (simplifiée) -->
     <div id="validationModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeValidationModal()">&times;</span>
             <h3>✅ Composition Validée</h3>
-            <p>Votre composition de départ a été validée avec succès !</p>
             
             <div id="validatedComposition" style="margin: 20px 0;">
                 <!-- Résumé de la composition -->
             </div>
             
+            <p style="margin: 20px 0; padding: 15px; background: rgba(52, 152, 219, 0.2); border-radius: 8px; border-left: 4px solid #3498db;">
+                💡 Vous pouvez maintenant sélectionner vos remplaçantes ci-dessous, ou aller directement au match.
+            </p>
+            
             <div class="modal-actions">
-                <button class="btn btn-primary" onclick="goToMatch()">⚽ Aller au Match</button>
-                <button class="btn btn-secondary" onclick="closeValidationModal()">📝 Continuer l'Édition</button>
+                <button class="btn btn-secondary" onclick="closeValidationModal()">📝 Sélectionner les Remplaçantes</button>
+                <button class="btn btn-primary" onclick="goToMatchDirectly()">⚽ Aller au Match</button>
             </div>
         </div>
     </div>
