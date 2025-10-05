@@ -10,18 +10,20 @@ football-stats/
 │   └── style.css           # Styles globaux
 ├── js/
 │   ├── app.js              # État global et logique principale
-│   ├── storage.js          # Gestion stockage (local + JSONBin)
-│   ├── setup.js            # Configuration et diagnostics
-│   ├── match.js            # Chronomètre et gestion du match
-│   ├── match_actions.js    # Actions de jeu (buts, cartons, etc.)
 │   ├── composition.js      # Gestion composition d'équipe
+│   ├── init.js             # 
+│   ├── match_actions.js    # Actions de jeu (buts, cartons, etc.)
+│   ├── match.js            # Chronomètre et gestion du match
+│   ├── setup.js            # Configuration et diagnostics
 │   └── stats.js            # Calculs statistiques
+│   ├── storage.js          # Gestion stockage (local + JSONBin)
+│   └── utils.js            # Calculs statistiques
 └── pages/
-├── team.html           # Gestion des joueuses
 ├── composition.html    # Composition 11 titulaires
-├── match.html          # Interface de match
 ├── live.html           # Affichage live pour spectateurs
+├── match.html          # Interface de match
 └── stats.html          # Statistiques détaillées
+├── team.html           # Gestion des joueuses
 
 ## Fonctionnalités
 
