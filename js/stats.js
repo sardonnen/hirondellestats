@@ -333,31 +333,6 @@ function calculatePlayersStats() {
         }
     });    
 
-/**
- * Calculer la synthèse des types de tirs
- */
-function calculateShotsSummary() {
-    const summary = {
-        total: 0,
-        cadre: 0,
-        nonCadre: 0,
-        contre: 0,
-        poteau: 0,
-        arrete: 0
-    };
-    
-    Object.values(playersStats).forEach(player => {
-        summary.total += player.shots;
-        summary.cadre += player.shotDetails.cadre;
-        summary.nonCadre += player.shotDetails.nonCadre;
-        summary.contre += player.shotDetails.contre;
-        summary.poteau += player.shotDetails.poteau;
-        summary.arrete += player.shotDetails.arrete;
-    });
-    
-    return summary;
-}    
-
 // CALCUL DU TEMPS DE JEU EFFECTIF BASÉ SUR LES CHANGEMENTS
 const matchTime = matchData.time || 0; // en minutes
 const matchTimeSeconds = matchTime * 60; // en secondes pour plus de précision
@@ -575,6 +550,31 @@ function updateMatchSummary() {
     document.getElementById('summaryMatchStatus').textContent = isFinished ? 'Terminé' : 'En cours';
     
     console.log('✅ Résumé du match mis à jour - Score:', score.team, '-', score.opponent, '| Temps:', matchData.time.toFixed(2));
+}
+
+/**
+ * Calculer la synthèse des types de tirs
+ */
+function calculateShotsSummary() {
+    const summary = {
+        total: 0,
+        cadre: 0,
+        nonCadre: 0,
+        contre: 0,
+        poteau: 0,
+        arrete: 0
+    };
+    
+    Object.values(playersStats).forEach(player => {
+        summary.total += player.shots;
+        summary.cadre += player.shotDetails.cadre;
+        summary.nonCadre += player.shotDetails.nonCadre;
+        summary.contre += player.shotDetails.contre;
+        summary.poteau += player.shotDetails.poteau;
+        summary.arrete += player.shotDetails.arrete;
+    });
+    
+    return summary;
 }
 
 /**
