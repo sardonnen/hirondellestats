@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
     <style>
-        /* [Tous les styles CSS identiques - je les garde tels quels] */
+        /* [Tous les styles CSS précédents] */
         .stats-compact-list {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
@@ -322,6 +322,42 @@
             border-radius: 5px;
         }
 
+        /* Zone des remplaçantes dans l'aperçu visuel */
+        .bench-visual {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .bench-visual-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: white;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .bench-visual-players {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .bench-visual-player {
+            background: rgba(255,255,255,0.7);
+            color: #2c3e50;
+            padding: 6px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            min-width: 50px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
         @media (max-width: 768px) {
             .stats-grid-composition {
                 grid-template-columns: repeat(2, 1fr);
@@ -350,6 +386,12 @@
             .formations-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .bench-visual-player {
+                font-size: 10px;
+                padding: 5px 8px;
+                min-width: 45px;
+            }
         }
     </style>
 </head>
@@ -357,7 +399,7 @@
     <div class="container">
         <header class="header">
             <h1>📋 Composition de Départ</h1>
-            <p>Sélectionnez vos 11 titulaires pour le match</p>
+            <p>Sélectionnez vos 11 titulaires et vos remplaçantes</p>
         </header>
 
         <nav class="nav-tabs">
@@ -423,7 +465,22 @@
                 </div>
             </div>
 
-            <!-- ÉTAPE 3 : Aperçu de la composition -->
+            <!-- ÉTAPE 3 : Sélection des remplaçantes (TOUJOURS VISIBLE) -->
+            <div class="team-card" id="substituteSelectionCard">
+                <h2>🪑 Sélection des Remplaçantes</h2>
+                <p>Cliquez sur les joueuses disponibles pour les ajouter au banc de touche :</p>
+                
+                <div id="substituteSelectionGrid" class="players-by-position">
+                    <!-- Les joueuses disponibles apparaîtront ici -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="clearSubstitutes()">🔄 Vider le Banc</button>
+                    <button class="btn btn-success" onclick="validateSubstitutes()">✅ Valider les Remplaçantes</button>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 4 : Aperçu de la composition -->
             <div class="team-card">
                 <h2>🟩 Aperçu de la Composition</h2>
                 
@@ -475,6 +532,14 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Zone des remplaçantes dans l'aperçu -->
+                    <div class="bench-visual">
+                        <div class="bench-visual-header">🪑 Banc de Touche</div>
+                        <div class="bench-visual-players" id="benchVisualPlayers">
+                            <div style="color: rgba(255,255,255,0.6); font-style: italic; font-size: 12px;">Aucune remplaçante</div>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Liste des titulaires -->
@@ -485,31 +550,12 @@
                     </div>
                 </div>
                 
-                <!-- Banc de touche -->
+                <!-- Banc de touche (liste détaillée) -->
                 <div class="bench-list">
-                    <h3>🪑 Banc de Touche</h3>
+                    <h3>🪑 Banc de Touche (Détails)</h3>
                     <div id="benchList" class="players-list">
                         <p>Aucune joueuse sur le banc</p>
                     </div>
-                </div>
-            </div>
-
-            <!-- ÉTAPE 4 : Sélection des remplaçantes (affichée après validation) -->
-            <div class="team-card" id="substituteSelectionCard" style="display: none;">
-                <h2>🪑 Étape Suivante : Sélection des Remplaçantes</h2>
-                <p style="background: rgba(39, 174, 96, 0.2); padding: 15px; border-radius: 8px; border-left: 4px solid #27ae60; margin-bottom: 20px;">
-                    ✅ Votre composition de 11 titulaires est validée ! Vous pouvez maintenant sélectionner vos remplaçantes pour le banc de touche.
-                </p>
-                <p>Cliquez sur les joueuses disponibles pour les ajouter au banc :</p>
-                
-                <div id="substituteSelectionGrid" class="players-by-position">
-                    <!-- Les joueuses disponibles apparaîtront ici -->
-                </div>
-                
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-secondary" onclick="clearSubstitutes()">🔄 Vider le Banc</button>
-                    <button class="btn btn-success" onclick="validateSubstitutes()">✅ Valider les Remplaçantes</button>
-                    <button class="btn btn-primary" onclick="goToMatch()">⚽ Aller au Match</button>
                 </div>
             </div>
 
@@ -544,7 +590,7 @@
         </main>
     </div>
 
-    <!-- Modal Validation (simplifiée) -->
+    <!-- Modal Validation -->
     <div id="validationModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeValidationModal()">&times;</span>
@@ -555,12 +601,12 @@
             </div>
             
             <p style="margin: 20px 0; padding: 15px; background: rgba(52, 152, 219, 0.2); border-radius: 8px; border-left: 4px solid #3498db;">
-                💡 Vous pouvez maintenant sélectionner vos remplaçantes ci-dessous, ou aller directement au match.
+                💡 Vous pouvez maintenant aller au match ou continuer à éditer votre composition.
             </p>
             
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="closeValidationModal()">📝 Sélectionner les Remplaçantes</button>
-                <button class="btn btn-primary" onclick="goToMatchDirectly()">⚽ Aller au Match</button>
+                <button class="btn btn-primary" onclick="goToMatch()">⚽ Aller au Match</button>
+                <button class="btn btn-secondary" onclick="closeValidationModal()">📝 Continuer l'Édition</button>
             </div>
         </div>
     </div>
