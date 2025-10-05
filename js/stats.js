@@ -285,23 +285,31 @@ function calculatePlayersStats() {
                 playerStat.shots++;
                 playerStat.score += 1;
                 
-                // AJOUT - Détail des tirs
+                // AJOUT - Détail des tirs (ORDRE IMPORTANT!)
                 if (event.option) {
                     const option = event.option.toLowerCase();
-                    if (option.includes('cadré')) {
-                        playerStat.shotDetails.cadre++;
-                    } else if (option.includes('non cadré')) {
+                    
+                    // DEBUG - voir ce qui est stocké
+                    console.log('Option tir détectée:', event.option);
+                    
+                    // IMPORTANT: Vérifier "non cadré" AVANT "cadré"
+                    if (option.includes('non cadré') || option.includes('non cadrée')) {
                         playerStat.shotDetails.nonCadre++;
-                    } else if (option.includes('contré')) {
+                    } else if (option.includes('cadré') || option.includes('cadrée')) {
+                        playerStat.shotDetails.cadre++;
+                    } else if (option.includes('contré') || option.includes('contrée')) {
                         playerStat.shotDetails.contre++;
                     } else if (option.includes('poteau')) {
                         playerStat.shotDetails.poteau++;
-                    } else if (option.includes('arrêté')) {
+                    } else if (option.includes('arrêté') || option.includes('arrêtée')) {
                         playerStat.shotDetails.arrete++;
+                    } else {
+                        // Cas non géré - debug
+                        console.warn('Type de tir non reconnu:', event.option);
                     }
                 }
-                break;
-                
+                break;   
+                             
             case 'card':
                 playerStat.cards++;
                 if (event.option === 'Jaune' || event.cardType === 'yellow') {
@@ -612,10 +620,10 @@ function updateGlobalStats() {
     // Synthèse des tirs
     const shotsSummary = calculateShotsSummary();
     
-    // Créer ou mettre à jour la section synthèse des tirs
     let shotsSummarySection = document.getElementById('shotsSummarySection');
+    
+    // Créer la section UNE SEULE FOIS
     if (!shotsSummarySection) {
-        // Trouver la carte des stats globales
         const globalStatsCards = document.querySelectorAll('.team-card');
         const globalStatsCard = Array.from(globalStatsCards).find(card => 
             card.querySelector('#globalTeamGoals')
@@ -626,40 +634,55 @@ function updateGlobalStats() {
             shotsSummarySection.id = 'shotsSummarySection';
             shotsSummarySection.className = 'team-card';
             shotsSummarySection.style.marginTop = '20px';
+            
+            const efficiency = shotsSummary.total > 0 
+                ? ((shotsSummary.cadre / shotsSummary.total) * 100).toFixed(1) 
+                : 0;
+            
+            // Créer la structure HTML une seule fois avec des IDs pour les valeurs
+            shotsSummarySection.innerHTML = `
+                <h3>🎯 Analyse des Tirs (<span id="shotsTotal">0</span> total - <span id="shotsEfficiency">0</span>% cadrés)</h3>
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                    <div class="stat-card" style="background: rgba(39, 174, 96, 0.2);">
+                        <div class="stat-value" style="color: #27ae60;" id="shotsCadre">0</div>
+                        <div class="stat-label">✓ Cadrés</div>
+                    </div>
+                    <div class="stat-card" style="background: rgba(231, 76, 60, 0.2);">
+                        <div class="stat-value" style="color: #e74c3c;" id="shotsNonCadre">0</div>
+                        <div class="stat-label">✗ Non cadrés</div>
+                    </div>
+                    <div class="stat-card" style="background: rgba(243, 156, 18, 0.2);">
+                        <div class="stat-value" style="color: #f39c12;" id="shotsContre">0</div>
+                        <div class="stat-label">🚫 Contrés</div>
+                    </div>
+                    <div class="stat-card" style="background: rgba(52, 152, 219, 0.2);">
+                        <div class="stat-value" style="color: #3498db;" id="shotsPoteau">0</div>
+                        <div class="stat-label">📍 Poteaux</div>
+                    </div>
+                    <div class="stat-card" style="background: rgba(230, 126, 34, 0.2);">
+                        <div class="stat-value" style="color: #e67e22;" id="shotsArrete">0</div>
+                        <div class="stat-label">🧤 Arrêtés</div>
+                    </div>
+                </div>
+            `;
+            
             globalStatsCard.parentNode.insertBefore(shotsSummarySection, globalStatsCard.nextSibling);
         }
     }
     
+    // Mettre à jour UNIQUEMENT les valeurs (pas de innerHTML)
     if (shotsSummarySection) {
         const efficiency = shotsSummary.total > 0 
             ? ((shotsSummary.cadre / shotsSummary.total) * 100).toFixed(1) 
             : 0;
         
-        shotsSummarySection.innerHTML = `
-            <h3>🎯 Analyse des Tirs (${shotsSummary.total} total - ${efficiency}% cadrés)</h3>
-            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
-                <div class="stat-card" style="background: rgba(39, 174, 96, 0.2);">
-                    <div class="stat-value" style="color: #27ae60;">${shotsSummary.cadre}</div>
-                    <div class="stat-label">✓ Cadrés</div>
-                </div>
-                <div class="stat-card" style="background: rgba(231, 76, 60, 0.2);">
-                    <div class="stat-value" style="color: #e74c3c;">${shotsSummary.nonCadre}</div>
-                    <div class="stat-label">✗ Non cadrés</div>
-                </div>
-                <div class="stat-card" style="background: rgba(243, 156, 18, 0.2);">
-                    <div class="stat-value" style="color: #f39c12;">${shotsSummary.contre}</div>
-                    <div class="stat-label">🚫 Contrés</div>
-                </div>
-                <div class="stat-card" style="background: rgba(52, 152, 219, 0.2);">
-                    <div class="stat-value" style="color: #3498db;">${shotsSummary.poteau}</div>
-                    <div class="stat-label">📍 Poteaux</div>
-                </div>
-                <div class="stat-card" style="background: rgba(230, 126, 34, 0.2);">
-                    <div class="stat-value" style="color: #e67e22;">${shotsSummary.arrete}</div>
-                    <div class="stat-label">🧤 Arrêtés</div>
-                </div>
-            </div>
-        `;
+        updateElementText('shotsTotal', shotsSummary.total);
+        updateElementText('shotsEfficiency', efficiency);
+        updateElementText('shotsCadre', shotsSummary.cadre);
+        updateElementText('shotsNonCadre', shotsSummary.nonCadre);
+        updateElementText('shotsContre', shotsSummary.contre);
+        updateElementText('shotsPoteau', shotsSummary.poteau);
+        updateElementText('shotsArrete', shotsSummary.arrete);
     }
 }
 
