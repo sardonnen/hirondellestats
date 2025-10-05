@@ -268,19 +268,6 @@ function getPlayersByStatus(status) {
     return appState.players.filter(p => p.status === status);
 }
 
-/**
- * Obtenir l'icône de position
- */
-function getPositionIcon(position) {
-    const icons = {
-        'gardienne': '🥅',
-        'défenseuse': '🛡️',
-        'milieu': '⚙️',
-        'attaquante': '⚽'
-    };
-    return icons[position] || '👤';
-}
-
 // ===== GESTION DES ÉVÉNEMENTS DE MATCH =====
 
 /**

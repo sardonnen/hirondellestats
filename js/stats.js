@@ -987,24 +987,6 @@ function printStats() {
     window.print();
 }
 
-// Fonctions utilitaires
-function getEventIcon(event) {
-    const icons = {
-        'goal': '⚽',
-        'shot': '🎯',
-        'card': event.cardType === 'yellow' ? '🟨' : event.cardType === 'red' ? '🟥' : '⬜',
-        'foul': '⚠️',
-        'save': '🧤',
-        'freeKick': '⚽',
-        'substitution': '🔄',
-        'halfTime': '⏱️',
-        'timeout': '⏰',
-        'injury': '🏥',
-        'offside': '🚩'
-    };
-    return icons[event.type] || '📝';
-}
-
 function getEventText(event) {
     if (event.description) return event.description;
     
@@ -1081,16 +1063,6 @@ function getEventText(event) {
         default: 
             return event.type || 'Événement';
     }
-}
-
-function getPositionIcon(position) {
-    const icons = {
-        'gardienne': '🥅',
-        'défenseuse': '🛡️',
-        'milieu': '⚙️',
-        'attaquante': '⚽'
-    };
-    return icons[position] || '👤';
 }
 
 // Fonction spécialisée pour cette page

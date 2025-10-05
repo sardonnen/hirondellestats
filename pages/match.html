@@ -749,9 +749,12 @@
     </div>
 
     <!-- Scripts -->
+    <script src="../js/utils.js"></script>
     <script src="../js/storage.js"></script>
     <script src="../js/app.js"></script>
+    <script src="../js/match.js"></script>
     <script src="../js/match_actions.js"></script>
+    <script src="../js/init.js"></script>
     <script>
         // Variables locales
         let matchTimer = {
@@ -784,14 +787,6 @@
         }
 
         setInterval(syncMatchEventsWithApp, 1000);
-
-        function waitForFootballApp(callback) {
-            if (typeof footballApp !== 'undefined') {
-                callback();
-            } else {
-                setTimeout(() => waitForFootballApp(callback), 100);
-            }
-        }
 
         document.addEventListener('DOMContentLoaded', function() {
             initializeMatchPage();
@@ -1453,30 +1448,6 @@
             }
         }
         
-        function getPlayerName(playerId) {
-            if (typeof playerId === 'string') {
-                if (playerId.startsWith('opponent_') || playerId === 'opponent_player') {
-                    return 'Joueur Adverse';
-                }
-                if (playerId === 'my_goalkeeper') {
-                    const players = getMyTeamPlayers();
-                    const goalkeeper = players.find(p => 
-                        p.status === 'field' && 
-                        p.position && 
-                        p.position.toLowerCase().includes('garden')
-                    );
-                    return goalkeeper ? goalkeeper.name : 'Mon Gardien';
-                }
-                if (playerId === 'opponent_goalkeeper') {
-                    return 'Gardien Adverse';
-                }
-            }
-            
-            const players = getMyTeamPlayers();
-            const player = players.find(p => p.id === playerId);
-            return player ? player.name : 'Joueur';
-        }
-        
         function updateMatchStats(eventData) {
             const team = eventData.team === 'my-team' ? 'myTeam' : 'opponent';
             
@@ -1523,27 +1494,7 @@
             document.getElementById('compactTeamSaves').textContent = matchStats.myTeam.saves;
             document.getElementById('compactOpponentSaves').textContent = matchStats.opponent.saves;
         }
-
-        function getMyTeamPlayers() {
-            if (typeof footballApp !== 'undefined' && footballApp.getState) {
-                const appState = footballApp.getState();
-                if (appState.players && appState.players.length > 0) {
-                    return appState.players;
-                }
-            }
-            
-            const players = JSON.parse(localStorage.getItem('footballStats_players') || '[]');
-            return players.map(player => ({
-                ...player,
-                status: player.status || 'bench',
-                id: player.id || `player_${Date.now()}_${Math.random()}`
-            }));
-        }
-        
-        function getMatchConfig() {
-            return JSON.parse(localStorage.getItem('footballStats_matchConfig') || '{"teamName": "Mon Équipe", "opponentName": "Équipe Adverse"}');
-        }
-        
+       
         function startPeriodicSave() {
             setInterval(autoSave, 30000);
             setInterval(() => {

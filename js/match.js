@@ -574,23 +574,6 @@ function updateScoreDisplay() {
 // ===== UTILITAIRES =====
 
 /**
- * Obtenir le nom d'un joueur
- */
-function getPlayerName(playerId) {
-    if (playerId === 'opponent') {
-        return 'Équipe Adverse';
-    }
-    
-    if (typeof footballApp !== 'undefined') {
-        const state = footballApp.getState();
-        const player = state.players.find(p => p.id === playerId);
-        return player ? player.name : 'Joueur Inconnu';
-    }
-    
-    return 'Joueur';
-}
-
-/**
  * Mise à jour de l'affichage des événements
  */
 function updateEventsDisplay() {

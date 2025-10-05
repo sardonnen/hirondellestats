@@ -9,53 +9,6 @@ const JSONBIN_CONFIG = {
     }
 };
 
-// ===== GESTION DU STOCKAGE LOCAL =====
-
-/**
- * Sauvegarde des données dans le localStorage
- */
-function saveData(key, data) {
-    try {
-        const serializedData = JSON.stringify(data);
-        localStorage.setItem(`footballStats_${key}`, serializedData);
-        console.log(`Données sauvegardées: ${key}`);
-        return true;
-    } catch (error) {
-        console.error('Erreur lors de la sauvegarde:', error);
-        return false;
-    }
-}
-
-/**
- * Chargement des données depuis le localStorage
- */
-function loadData(key) {
-    try {
-        const serializedData = localStorage.getItem(`footballStats_${key}`);
-        if (serializedData === null) {
-            return null;
-        }
-        return JSON.parse(serializedData);
-    } catch (error) {
-        console.error('Erreur lors du chargement:', error);
-        return null;
-    }
-}
-
-/**
- * Suppression d'une clé spécifique
- */
-function removeData(key) {
-    try {
-        localStorage.removeItem(`footballStats_${key}`);
-        console.log(`Données supprimées: ${key}`);
-        return true;
-    } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
-        return false;
-    }
-}
-
 /**
  * Effacement de toutes les données de l'application
  */
