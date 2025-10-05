@@ -241,7 +241,15 @@ function calculatePlayersStats() {
         playersStats[player.id] = {
             ...player,
             goals: 0,
+            assists: 0,
             shots: 0,
+            shotDetails: { 
+                cadre: 0,
+                nonCadre: 0,
+                contre: 0,
+                poteau: 0,
+                arrete: 0
+            },
             cards: 0,
             fouls: 0,
             saves: 0,
@@ -256,6 +264,100 @@ function calculatePlayersStats() {
         };
     });
     
+    // Compter les événements
+    events.forEach(event => {
+        if (!event.playerId || !playersStats[event.playerId]) return;
+        
+        const playerStat = playersStats[event.playerId];
+        
+        switch (event.type) {
+            case 'goal':
+                playerStat.goals++;
+                playerStat.score += 5;
+                break;
+                
+            case 'assist': // AJOUT
+                playerStat.assists++;
+                playerStat.score += 3;
+                break;
+                
+            case 'shot':
+                playerStat.shots++;
+                playerStat.score += 1;
+                
+                // AJOUT - Détail des tirs
+                if (event.option) {
+                    const option = event.option.toLowerCase();
+                    if (option.includes('cadré')) {
+                        playerStat.shotDetails.cadre++;
+                    } else if (option.includes('non cadré')) {
+                        playerStat.shotDetails.nonCadre++;
+                    } else if (option.includes('contré')) {
+                        playerStat.shotDetails.contre++;
+                    } else if (option.includes('poteau')) {
+                        playerStat.shotDetails.poteau++;
+                    } else if (option.includes('arrêté')) {
+                        playerStat.shotDetails.arrete++;
+                    }
+                }
+                break;
+                
+            case 'card':
+                playerStat.cards++;
+                if (event.option === 'Jaune' || event.cardType === 'yellow') {
+                    playerStat.yellowCards++;
+                    playerStat.score -= 1;
+                } else if (event.option === 'Rouge' || event.cardType === 'red') {
+                    playerStat.redCards++;
+                    playerStat.score -= 3;
+                } else if (event.option === 'Blanc' || event.cardType === 'white') {
+                    playerStat.whiteCards++;
+                    playerStat.score -= 2;
+                }
+                break;
+                
+            case 'foul':
+                playerStat.fouls++;
+                playerStat.score -= 0.5;
+                break;
+                
+            case 'save':
+                playerStat.saves++;
+                playerStat.score += 2;
+                break;
+                
+            case 'freeKick':
+                playerStat.freeKicks++;
+                playerStat.score += 1;
+                break;
+        }
+    });    
+
+/**
+ * Calculer la synthèse des types de tirs
+ */
+function calculateShotsSummary() {
+    const summary = {
+        total: 0,
+        cadre: 0,
+        nonCadre: 0,
+        contre: 0,
+        poteau: 0,
+        arrete: 0
+    };
+    
+    Object.values(playersStats).forEach(player => {
+        summary.total += player.shots;
+        summary.cadre += player.shotDetails.cadre;
+        summary.nonCadre += player.shotDetails.nonCadre;
+        summary.contre += player.shotDetails.contre;
+        summary.poteau += player.shotDetails.poteau;
+        summary.arrete += player.shotDetails.arrete;
+    });
+    
+    return summary;
+}    
+
 // CALCUL DU TEMPS DE JEU EFFECTIF BASÉ SUR LES CHANGEMENTS
 const matchTime = matchData.time || 0; // en minutes
 const matchTimeSeconds = matchTime * 60; // en secondes pour plus de précision
@@ -506,6 +608,59 @@ function updateGlobalStats() {
     document.getElementById('globalOpponentSaves').textContent = opponentStats.saves;
     document.getElementById('globalTeamFreeKicks').textContent = teamStats.freeKicks;
     document.getElementById('globalOpponentFreeKicks').textContent = opponentStats.freeKicks;
+
+    // Synthèse des tirs
+    const shotsSummary = calculateShotsSummary();
+    
+    // Créer ou mettre à jour la section synthèse des tirs
+    let shotsSummarySection = document.getElementById('shotsSummarySection');
+    if (!shotsSummarySection) {
+        // Trouver la carte des stats globales
+        const globalStatsCards = document.querySelectorAll('.team-card');
+        const globalStatsCard = Array.from(globalStatsCards).find(card => 
+            card.querySelector('#globalTeamGoals')
+        );
+        
+        if (globalStatsCard) {
+            shotsSummarySection = document.createElement('div');
+            shotsSummarySection.id = 'shotsSummarySection';
+            shotsSummarySection.className = 'team-card';
+            shotsSummarySection.style.marginTop = '20px';
+            globalStatsCard.parentNode.insertBefore(shotsSummarySection, globalStatsCard.nextSibling);
+        }
+    }
+    
+    if (shotsSummarySection) {
+        const efficiency = shotsSummary.total > 0 
+            ? ((shotsSummary.cadre / shotsSummary.total) * 100).toFixed(1) 
+            : 0;
+        
+        shotsSummarySection.innerHTML = `
+            <h3>🎯 Analyse des Tirs (${shotsSummary.total} total - ${efficiency}% cadrés)</h3>
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                <div class="stat-card" style="background: rgba(39, 174, 96, 0.2);">
+                    <div class="stat-value" style="color: #27ae60;">${shotsSummary.cadre}</div>
+                    <div class="stat-label">✓ Cadrés</div>
+                </div>
+                <div class="stat-card" style="background: rgba(231, 76, 60, 0.2);">
+                    <div class="stat-value" style="color: #e74c3c;">${shotsSummary.nonCadre}</div>
+                    <div class="stat-label">✗ Non cadrés</div>
+                </div>
+                <div class="stat-card" style="background: rgba(243, 156, 18, 0.2);">
+                    <div class="stat-value" style="color: #f39c12;">${shotsSummary.contre}</div>
+                    <div class="stat-label">🚫 Contrés</div>
+                </div>
+                <div class="stat-card" style="background: rgba(52, 152, 219, 0.2);">
+                    <div class="stat-value" style="color: #3498db;">${shotsSummary.poteau}</div>
+                    <div class="stat-label">📍 Poteaux</div>
+                </div>
+                <div class="stat-card" style="background: rgba(230, 126, 34, 0.2);">
+                    <div class="stat-value" style="color: #e67e22;">${shotsSummary.arrete}</div>
+                    <div class="stat-label">🧤 Arrêtés</div>
+                </div>
+            </div>
+        `;
+    }
 }
 
 /**
@@ -556,6 +711,11 @@ function createPlayerStatsCard(player) {
     const card = document.createElement('div');
     card.className = `player-stats-card ${player.position === 'gardienne' ? 'goalkeeper' : ''} ${player.status}`;
     
+    // Calcul de l'efficacité des tirs
+    const shotEfficiency = player.shots > 0 
+        ? ((player.shotDetails.cadre / player.shots) * 100).toFixed(0) 
+        : 0;
+    
     card.innerHTML = `
         <div class="player-stats-header">
             <div class="player-info">
@@ -575,11 +735,31 @@ function createPlayerStatsCard(player) {
                 <span class="stat-label">Buts</span>
                 <span class="stat-value">${player.goals}</span>
             </div>
+            
+            ${player.assists > 0 ? `
+            <div class="stat-row">
+                <span class="stat-icon">➡️</span>
+                <span class="stat-label">Passes décisives</span>
+                <span class="stat-value">${player.assists}</span>
+            </div>
+            ` : ''}
+            
             <div class="stat-row">
                 <span class="stat-icon">🎯</span>
-                <span class="stat-label">Tirs</span>
+                <span class="stat-label">Tirs (${shotEfficiency}% cadrés)</span>
                 <span class="stat-value">${player.shots}</span>
             </div>
+            
+            ${player.shots > 0 ? `
+            <div class="stat-detail-row" style="padding-left: 30px; font-size: 0.85em; opacity: 0.9;">
+                ${player.shotDetails.cadre > 0 ? `<div>✓ Cadrés: ${player.shotDetails.cadre}</div>` : ''}
+                ${player.shotDetails.nonCadre > 0 ? `<div>✗ Non cadrés: ${player.shotDetails.nonCadre}</div>` : ''}
+                ${player.shotDetails.contre > 0 ? `<div>🚫 Contrés: ${player.shotDetails.contre}</div>` : ''}
+                ${player.shotDetails.poteau > 0 ? `<div>📍 Poteaux: ${player.shotDetails.poteau}</div>` : ''}
+                ${player.shotDetails.arrete > 0 ? `<div>🧤 Arrêtés: ${player.shotDetails.arrete}</div>` : ''}
+            </div>
+            ` : ''}
+            
             ${player.position === 'gardienne' ? `
                 <div class="stat-row">
                     <span class="stat-icon">🧤</span>
@@ -587,21 +767,33 @@ function createPlayerStatsCard(player) {
                     <span class="stat-value">${player.saves}</span>
                 </div>
             ` : ''}
+            
             <div class="stat-row">
                 <span class="stat-icon">🟨</span>
                 <span class="stat-label">Cartons</span>
                 <span class="stat-value">${player.cards}</span>
             </div>
+            
+            ${(player.yellowCards > 0 || player.redCards > 0 || player.whiteCards > 0) ? `
+            <div class="stat-detail-row" style="padding-left: 30px; font-size: 0.85em; opacity: 0.9;">
+                ${player.yellowCards > 0 ? `<div>🟨 Jaunes: ${player.yellowCards}</div>` : ''}
+                ${player.redCards > 0 ? `<div>🟥 Rouges: ${player.redCards}</div>` : ''}
+                ${player.whiteCards > 0 ? `<div>⬜ Blancs: ${player.whiteCards}</div>` : ''}
+            </div>
+            ` : ''}
+            
             <div class="stat-row">
                 <span class="stat-icon">⚠️</span>
                 <span class="stat-label">Fautes</span>
                 <span class="stat-value">${player.fouls}</span>
             </div>
+            
             <div class="stat-row">
                 <span class="stat-icon">⚽</span>
                 <span class="stat-label">Coups Francs</span>
                 <span class="stat-value">${player.freeKicks}</span>
             </div>
+            
             <div class="player-score-row">
                 <span class="stat-icon">⭐</span>
                 <span class="stat-label">Note</span>
