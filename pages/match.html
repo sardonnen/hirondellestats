@@ -9,7 +9,6 @@
     <style>
         /* Styles spécifiques pour la page match */
         
-        /* Styles pour le header du match - ERGONOMIE AMÉLIORÉE */
         .match-header {
             background: rgba(255,255,255,0.1);
             border-radius: 12px;
@@ -121,7 +120,6 @@
         .action-btn.offside { background: rgba(189, 195, 199, 0.2); border-color: #bdc3c7; }
         .action-btn.substitution { background: rgba(142, 68, 173, 0.2); border-color: #8e44ad; }
 
-        /* Style pour les boutons sélectionnés dans la modale d'édition */
         .action-btn.selected-for-replace {
             transform: scale(1.05);
             box-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
@@ -129,7 +127,6 @@
             border-width: 3px;
         }
        
-        /* NOUVEAU DESIGN POUR LES BOUTONS D'OPTIONS */
         .option-btn {
             padding: 12px 20px;
             border: 2px solid rgba(52, 152, 219, 0.5);
@@ -197,61 +194,12 @@
             box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
         }
         
-        .goalkeeper-choice-btn {
-            padding: 20px 30px;
-            border: 3px solid;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 18px;
-            font-weight: bold;
-            min-width: 120px;
-            text-align: center;
-            margin: 10px;
-        }
-        
-        .goalkeeper-choice-btn.my-gk {
-            background: rgba(230, 126, 34, 0.3);
-            border-color: #e67e22;
-            color: white;
-        }
-        
-        .goalkeeper-choice-btn.opponent-gk {
-            background: rgba(231, 76, 60, 0.3);
-            border-color: #e74c3c;
-            color: white;
-        }
-        
         .goalkeeper-choice-btn.selected {
             background: rgba(46, 204, 113, 0.3) !important;
             color: #2ecc71 !important;
             border-color: #27ae60 !important;
             transform: scale(1.05);
             box-shadow: 0 0 15px rgba(39, 174, 96, 0.5);
-        }
-        
-        .save-type-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 20px 0;
-        }
-        
-        .save-type-btn {
-            padding: 15px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 8px;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            font-size: 16px;
-        }
-        
-        .save-type-btn:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-2px);
         }
         
         .save-type-btn.selected {
@@ -261,81 +209,16 @@
             box-shadow: 0 0 15px rgba(39, 174, 96, 0.5);
         }
         
-        .global-stats-compact {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin: 20px 0;
-        }
-        
-        .compact-stat-card {
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.2);
-            transition: all 0.3s ease;
-        }
-        
-        .compact-stat-card:hover {
-            background: rgba(255,255,255,0.15);
-            transform: translateY(-3px);
-        }
-        
-        .compact-stat-icon {
-            font-size: 2em;
-            margin-bottom: 8px;
-        }
-        
-        .compact-stat-values {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin: 8px 0;
-        }
-        
-        /* CHANGEMENT DE COULEUR - VERT AU LIEU DE BLEU */
         .compact-team-value {
             font-size: 1.8em;
             font-weight: bold;
             color: #2ecc71;
         }
         
-        .compact-separator {
-            font-size: 1.2em;
-            color: #bdc3c7;
-        }
-        
         .compact-opponent-value {
             font-size: 1.8em;
             font-weight: bold;
             color: #e74c3c;
-        }
-        
-        .compact-stat-label {
-            font-size: 0.9em;
-            color: #ecf0f1;
-            opacity: 0.9;
-        }
-        
-        .timeline-container {
-            background: rgba(0,0,0,0.2);
-            border-radius: 12px;
-            padding: 5px;
-            margin: 20px 0;
-        }
-        
-        .timeline-header {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 20px;
-            padding: 5px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-weight: bold;
-            text-align: center;
         }
         
         .timeline-event {
@@ -350,121 +233,12 @@
         }
 
         .timeline-event:hover {
-           background: rgba(255,255,255,0.05);
-}
-        
-        .timeline-event:last-child {
-            border-bottom: none;
-        }
-        
-        .event-left, .event-right {
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 0.75em;
-            line-height: 1.3;
-            text-align: left;
-        }
-        
-        .event-left {
-            background: rgba(39, 174, 96, 0.3);
-        }
-        
-        .event-right {
-            background: rgba(231, 76, 60, 0.3);
-        }
-        
-        .event-time {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-weight: bold;
-            text-align: center;
-            min-width: 60px;
-        }
-        
-        /* BOUTONS MODIFIER/SUPPRIMER DANS LA TIMELINE */
-        .event-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            min-width: 80px;
-        }
-        
-        .event-action-btn {
-            padding: 4px 8px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 4px;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            cursor: pointer;
-            font-size: 0.8em;
-            transition: all 0.2s ease;
-        }
-        
-        .event-action-btn.edit:hover {
-            background: rgba(52, 152, 219, 0.3);
-            border-color: #3498db;
-            color: #3498db;
-        }
-        
-        .event-action-btn.delete:hover {
-            background: rgba(231, 76, 60, 0.3);
-            border-color: #e74c3c;
-            color: #e74c3c;
-        }
-        
-        .assist-selection {
-            margin: 15px 0;
-            padding: 15px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-        }
-        
-        .assist-selection h4 {
-            margin-bottom: 10px;
-            color: #f39c12;
-        }
-
-        .timeline-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .timeline-controls .btn {
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-
-        /* Timers carton blanc */
-        .white-card-timer {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 2px solid #fff;
-            min-width: 200px;
-        }
-
-        .white-card-timer .timer-name {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .white-card-timer .timer-countdown {
-            font-size: 1.5em;
-            color: #ffd700;
-        }
-
-        .white-card-timer.expired {
-            border-color: #4CAF50;
-            opacity: 0.6;
+            background: rgba(255,255,255,0.05);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Bouton Live fixe -->
         <div class="live-link">
             <button class="btn btn-primary" onclick="generateLiveLink()">📡 Lien Live</button>
         </div>
@@ -474,7 +248,6 @@
             <p>Suivez et enregistrez tous les événements du match</p>
         </header>
 
-        <!-- Navigation -->
         <nav class="nav-tabs">
             <a href="../index.html" class="nav-link">🏠 Accueil</a>
             <a href="team.html" class="nav-link">👥 Équipe</a>
@@ -484,10 +257,8 @@
             <a href="stats.html" class="nav-link">📊 Stats</a>
         </nav>
 
-        <!-- Contenu principal -->
         <main class="main-content">
             
-            <!-- Tableau de bord du match -->
             <div class="team-card">
                 <div class="match-header">
                     <div class="match-result">
@@ -515,46 +286,24 @@
                 </div>
             </div>
 
-            <!-- Actions de jeu - Grille 3x3 -->
             <div class="team-card">
                 <h3>⚽ Actions de Jeu</h3>
                 <div class="action-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                    <button class="action-btn goal" onclick="showUnifiedActionModal('goal')">
-                        ⚽ But
-                    </button>
-                    <button class="action-btn assist" onclick="showUnifiedActionModal('assist')">
-                        ➡️ Passe Décisive
-                    </button>
-                    <button class="action-btn shot" onclick="showUnifiedActionModal('shot')">
-                        🎯 Tir
-                    </button>
-                    <button class="action-btn save" onclick="showUnifiedActionModal('save')">
-                        🧤 Arrêt Gardien
-                    </button>
-                    <button class="action-btn foul" onclick="showUnifiedActionModal('foul')">
-                        ⚠️ Faute
-                    </button>
-                    <button class="action-btn card" onclick="showUnifiedActionModal('card')">
-                        🟨 Carton
-                    </button>
-                    <button class="action-btn corner" onclick="showUnifiedActionModal('corner')">
-                        🚩 Corner
-                    </button>
-                    <button class="action-btn offside" onclick="showUnifiedActionModal('offside')">
-                        🛑 Hors-jeu
-                    </button>
-                    <button class="action-btn substitution" onclick="showSubstitutionModal()">
-                        🔄 Changement
-                    </button>
+                    <button class="action-btn goal" onclick="showUnifiedActionModal('goal')">⚽ But</button>
+                    <button class="action-btn assist" onclick="showUnifiedActionModal('assist')">➡️ Passe Décisive</button>
+                    <button class="action-btn shot" onclick="showUnifiedActionModal('shot')">🎯 Tir</button>
+                    <button class="action-btn save" onclick="showUnifiedActionModal('save')">🧤 Arrêt Gardien</button>
+                    <button class="action-btn foul" onclick="showUnifiedActionModal('foul')">⚠️ Faute</button>
+                    <button class="action-btn card" onclick="showUnifiedActionModal('card')">🟨 Carton</button>
+                    <button class="action-btn corner" onclick="showUnifiedActionModal('corner')">🚩 Corner</button>
+                    <button class="action-btn offside" onclick="showUnifiedActionModal('offside')">🛑 Hors-jeu</button>
+                    <button class="action-btn substitution" onclick="showSubstitutionModal()">🔄 Changement</button>
                 </div>
             </div>
 
-            <!-- Zone timers carton blanc -->
             <div id="whiteCardTimersZone" class="white-card-timers" style="margin: 20px 0; display: none;">
                 <h4>⏱️ Cartons Blancs Actifs</h4>
-                <div id="whiteCardTimersList" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <!-- Les timers s'affichent ici -->
-                </div>
+                <div id="whiteCardTimersList" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
             </div>
 
             <!-- Modal Unified Action -->
@@ -563,26 +312,17 @@
                     <span class="close" onclick="closeUnifiedActionModal()">&times;</span>
                     <h3 id="unifiedActionTitle">Action</h3>
                     
-                    <!-- Options spécifiques -->
                     <div id="actionOptionsZone" style="display: none; margin-bottom: 20px;">
-                        <div id="actionOptionsButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px;">
-                            <!-- Les boutons d'options s'affichent ici -->
-                        </div>
+                        <div id="actionOptionsButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px;"></div>
                     </div>
                     
-                    <!-- Joueurs de l'équipe sur le terrain -->
                     <div id="teamPlayersZone" style="margin-bottom: 15px;">
                         <h4>Mon Équipe</h4>
-                        <div id="teamPlayerButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-                            <!-- Boutons joueurs -->
-                        </div>
+                        <div id="teamPlayerButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;"></div>
                     </div>
                     
-                    <!-- Bouton adversaire -->
                     <div style="margin-bottom: 15px;">
-                        <button id="opponentBtn" class="player-btn opponent-choice" onclick="selectOpponent()" style="width: 100%; padding: 15px; font-size: 1.1em;">
-                            🔴 Adversaire
-                        </button>
+                        <button id="opponentBtn" class="player-btn opponent-choice" onclick="selectOpponent()" style="width: 100%; padding: 15px; font-size: 1.1em;">🔴 Adversaire</button>
                     </div>
                     
                     <div class="modal-actions">
@@ -599,25 +339,19 @@
                     <h3>🔄 Changement de Joueuse</h3>
                     
                     <div style="margin-bottom: 20px;">
-                        <button id="subMyTeamBtn" class="btn" onclick="selectSubstitutionTeam('myTeam')" style="width: 48%; margin-right: 4%;">
-                            🟢 Mon Équipe
-                        </button>
-                        <button id="subOpponentBtn" class="btn" onclick="selectSubstitutionTeam('opponent')" style="width: 48%;">
-                            🔴 Adversaire
-                        </button>
+                        <button id="subMyTeamBtn" class="btn" onclick="selectSubstitutionTeam('myTeam')" style="width: 48%; margin-right: 4%;">🟢 Mon Équipe</button>
+                        <button id="subOpponentBtn" class="btn" onclick="selectSubstitutionTeam('opponent')" style="width: 48%;">🔴 Adversaire</button>
                     </div>
                     
                     <div id="myTeamSubSection" style="display: none;">
                         <div style="margin-bottom: 15px;">
                             <h4>Joueuse qui sort (sur le terrain)</h4>
-                            <div id="playerOutButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-                            </div>
+                            <div id="playerOutButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;"></div>
                         </div>
                         
                         <div style="margin-bottom: 15px;">
                             <h4>Joueuse qui entre (sur le banc)</h4>
-                            <div id="playerInButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-                            </div>
+                            <div id="playerInButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;"></div>
                         </div>
                     </div>
                     
@@ -652,7 +386,6 @@
                     </div>
                     
                     <div class="modal-actions">
-                        <button id="replaceActionBtn" class="btn btn-primary" disabled onclick="replaceAction()">🔄 Annuler et Remplacer</button>
                         <button class="btn btn-danger" onclick="deleteActionFromModal()">🗑️ Supprimer</button>
                         <button class="btn btn-secondary" onclick="closeEditActionTypeModal()">❌ Annuler</button>
                     </div>
@@ -673,9 +406,7 @@
                         <div>Équipe Adverse</div>
                     </div>
                     <div id="eventsTimeline" class="timeline-events">
-                        <div style="text-align: center; padding: 20px; color: #bbb;">
-                            Aucun événement enregistré
-                        </div>
+                        <div style="text-align: center; padding: 20px; color: #bbb;">Aucun événement enregistré</div>
                     </div>
                 </div>
             </div>
@@ -754,1055 +485,13 @@
     <script src="../js/app.js"></script>
     <script src="../js/match.js"></script>
     <script src="../js/match_actions.js"></script>
-    <script src="../js/init.js"></script>
     <script>
-        // Variables locales
-        let matchTimer = {
-            startTime: null,
-            pausedTime: 0,
-            isRunning: false,
-            currentHalf: 1,
-            interval: null
-        };
-        
-        let matchEvents = [];
-        let matchStats = {
-            myTeam: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 },
-            opponent: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 }
-        };
-
-        // Variable globale pour l'édition
-        let currentEditEventId = null;
-        let newSelectedActionType = null;
-        let isEditingMode = false;
-        let editingEventId = null;
-        let currentEditActionId = null;
-        let isEditMode = false;        
-
-        function syncMatchEventsWithApp() {
-            if (typeof footballApp !== 'undefined') {
-                const appEvents = footballApp.getState().events;
-                if (appEvents && appEvents.length > 0) {
-                    matchEvents = appEvents;
-                }
-            }
-        }
-
+        // Initialisation au chargement
         setInterval(syncMatchEventsWithApp, 1000);
 
         document.addEventListener('DOMContentLoaded', function() {
             initializeMatchPage();
         });
-
-        function updateHalfTimeButton() {
-            const halfTimeBtn = document.querySelector('button[onclick="showHalfTimeConfirm()"]');
-            if (halfTimeBtn) {
-                if (matchTimer.currentHalf === 1) {
-                    halfTimeBtn.innerHTML = '⏭ Mi-temps';
-                    halfTimeBtn.className = 'btn btn-primary';
-                } else if (matchTimer.currentHalf === 2) {
-                    halfTimeBtn.innerHTML = '🏁 Fin du match';
-                    halfTimeBtn.className = 'btn btn-danger';
-                }
-            }
-        }
-        
-        function initializeMatchPage() {
-            loadMatchConfig();
-            loadSavedMatchData();
-            updateMatchDisplay();
-            updateHalfTimeButton();
-            startPeriodicSave();
-        }
-
-        function resetMatchPageDisplay() {
-            document.getElementById('teamScore').textContent = '0';
-            document.getElementById('opponentScore').textContent = '0';
-            document.getElementById('matchTime').textContent = '00:00';
-            document.getElementById('matchHalf').textContent = '1ère Mi-temps';
-            document.getElementById('eventsTimeline').innerHTML = '<div style="text-align: center; padding: 20px; color: #bbb;">Aucun événement enregistré</div>';
-            
-            const statElements = ['compactTeamGoals', 'compactOpponentGoals', 
-                                  'compactTeamShotsOnTarget', 'compactOpponentShotsOnTarget',
-                                  'compactTeamShotsOffTarget', 'compactOpponentShotsOffTarget',
-                                  'compactTeamCards', 'compactOpponentCards', 
-                                  'compactTeamFouls', 'compactOpponentFouls',
-                                  'compactTeamSaves', 'compactOpponentSaves'];
-            statElements.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) element.textContent = '0';
-            });
-
-            matchEvents = [];
-            matchStats = {
-                myTeam: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 },
-                opponent: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 }
-            };
-        }
-
-        function newMatchFromMatchPage() {
-            if (confirm('🆕 Créer un nouveau match ?\n\n⚠️ Le match actuel sera perdu !')) {
-                waitForFootballApp(function() {
-                    if (typeof footballApp !== 'undefined' && footballApp.startNewMatch) {
-                        footballApp.startNewMatch();
-                    }
-                    
-                    resetMatchPageDisplay();
-                    
-                    if (matchTimer.interval) {
-                        clearInterval(matchTimer.interval);
-                    }
-                    matchTimer = {
-                        startTime: null,
-                        pausedTime: 0,
-                        isRunning: false,
-                        currentHalf: 1,
-                        interval: null
-                    };
-                    
-                    const playBtn = document.getElementById('playBtn');
-                    if (playBtn) {
-                        playBtn.innerHTML = '▶️ Démarrer';
-                        playBtn.className = 'btn btn-success';
-                        playBtn.disabled = false; // réactiver le bouton
-                    }
-                    
-                    // Réactiver le bouton reset
-                    const resetBtn = document.querySelector('button[onclick="resetTimer()"]');
-                    if (resetBtn) resetBtn.disabled = false;
-                    
-                    updateHalfTimeButton(); // reset du bouton Mi-temps
-                    
-                    localStorage.removeItem('matchBinId');
-                    
-                    alert('🆕 Nouveau match créé !');
-                });
-            }
-        }
-
-        function resetAllFromMatchPage() {
-            if (confirm('🔄 Reset complet ?\n\n⚠️ TOUTES les données seront perdues !')) {
-                waitForFootballApp(function() {
-                    if (typeof footballApp !== 'undefined' && footballApp.resetCompleteApp) {
-                        footballApp.resetCompleteApp();
-                    } else {
-                        localStorage.clear();
-                    }
-                    
-                    resetMatchPageDisplay();
-                    alert('🔄 Reset complet effectué !');
-                    
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                });
-            }
-        }
-
-        function loadMatchConfig() {
-            const config = getMatchConfig();
-            document.getElementById('teamName').textContent = config.teamName || 'Mon Équipe';
-            document.getElementById('opponentName').textContent = config.opponentName || 'Équipe Adverse';
-        }
-        
-        function loadSavedMatchData() {
-            try {
-                const savedData = localStorage.getItem('currentMatch');
-                if (savedData) {
-                    const data = JSON.parse(savedData);
-                    const timerData = data.timer || data;
-                    const eventsData = data.events || [];
-                    const statsData = data.stats || { 
-                        myTeam: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 }, 
-                        opponent: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 } 
-                    };
-                    
-                    if (timerData) {
-                        matchTimer = { ...matchTimer, ...timerData };
-                        
-                        // Si le match est terminé, désactiver le timer
-                        if (data.matchStatus === 'finished') {
-                            matchTimer.isRunning = false;
-                            document.getElementById('playBtn').disabled = true;
-                            document.getElementById('playBtn').innerHTML = '🏁 Match terminé';
-                            document.getElementById('playBtn').classList.add('btn-secondary');
-                            
-                            // Désactiver aussi le bouton reset
-                            const resetBtn = document.querySelector('button[onclick="resetTimer()"]');
-                            if (resetBtn) resetBtn.disabled = true;
-                            
-                            console.log('🏁 Match terminé chargé depuis la sauvegarde');
-                        } else if (matchTimer.isRunning && matchTimer.startTime) {
-                            const now = Date.now();
-                            let savedStartTime;
-                            if (typeof matchTimer.startTime === 'string') {
-                                savedStartTime = new Date(matchTimer.startTime).getTime();
-                            } else {
-                                savedStartTime = matchTimer.startTime;
-                            }
-                            
-                            const savedAt = timerData.savedAt ? new Date(timerData.savedAt).getTime() : now;
-                            const timeSinceSave = now - savedAt;
-                            const elapsedSinceStart = (savedAt - savedStartTime) / 1000;
-                            matchTimer.pausedTime = elapsedSinceStart + (timeSinceSave / 1000);
-                            matchTimer.startTime = now - (matchTimer.pausedTime * 1000);
-                            matchTimer.interval = setInterval(updateTimer, 1000);
-                            
-                            document.getElementById('playBtn').innerHTML = '⏸️ Pause';
-                            document.getElementById('playBtn').classList.remove('btn-success');
-                            document.getElementById('playBtn').classList.add('btn-warning');
-                        } else {
-                            document.getElementById('playBtn').innerHTML = '▶️ Reprendre';
-                            document.getElementById('playBtn').classList.remove('btn-warning');
-                            document.getElementById('playBtn').classList.add('btn-success');
-                        }
-                        
-                        updateTimerDisplay();
-                        document.getElementById('matchHalf').textContent = 
-                            matchTimer.currentHalf === 1 ? '1ère Mi-temps' : '2ème Mi-temps';
-                        
-                        // Mettre à jour le bouton Mi-temps/Fin du match
-                        updateHalfTimeButton(); // AJOUT
-                    }
-                    
-                    if (eventsData && eventsData.length > 0) {
-                        matchEvents = eventsData;
-                        updateTimeline();
-                    }
-                    
-                    if (statsData) {
-                        matchStats = statsData;
-                    }
-                    
-                    if (data.matchInfo) {
-                        document.getElementById('teamName').textContent = data.matchInfo.teamName;
-                        document.getElementById('opponentName').textContent = data.matchInfo.opponentName;
-                    }
-                }
-            } catch (error) {
-                console.error('Erreur lors du chargement des données:', error);
-            }
-        }
-
-        function toggleTimer() {
-            if (matchTimer.isRunning) {
-                stopTimer();
-            } else {
-                startTimer();
-            }
-        }
-        
-        function startTimer() {
-            if (matchTimer.isRunning) return;
-            
-            matchTimer.isRunning = true;
-            matchTimer.startTime = Date.now() - (matchTimer.pausedTime * 1000);
-            matchTimer.interval = setInterval(updateTimer, 1000);
-            
-            document.getElementById('playBtn').innerHTML = '⏸️ Pause';
-            document.getElementById('playBtn').classList.remove('btn-success');
-            document.getElementById('playBtn').classList.add('btn-warning');
-            
-            autoSave();
-        }
-        
-        function stopTimer() {
-            if (!matchTimer.isRunning) return;
-            
-            matchTimer.isRunning = false;
-            matchTimer.pausedTime = (Date.now() - matchTimer.startTime) / 1000;
-            clearInterval(matchTimer.interval);
-            
-            document.getElementById('playBtn').innerHTML = '▶️ Reprendre';
-            document.getElementById('playBtn').classList.remove('btn-warning');
-            document.getElementById('playBtn').classList.add('btn-success');
-            
-            autoSave();
-        }
-        
-        function resetTimer() {
-            stopTimer();
-            matchTimer.pausedTime = 0;
-            matchTimer.startTime = null;
-            updateTimerDisplay();
-            
-            document.getElementById('playBtn').innerHTML = '▶️ Démarrer';
-            document.getElementById('playBtn').classList.remove('btn-warning');
-            document.getElementById('playBtn').classList.add('btn-success');
-            
-            autoSave();
-        }
-        
-        function updateTimer() {
-            if (!matchTimer.isRunning || !matchTimer.startTime) return;
-            
-            const elapsedSeconds = (Date.now() - matchTimer.startTime) / 1000;
-            let totalSeconds = Math.floor(elapsedSeconds);
-            
-            if (matchTimer.currentHalf === 2) {
-                totalSeconds += 45 * 60;
-            }
-            
-            updateTimerDisplay(totalSeconds);
-            
-            if (totalSeconds % 60 === 0) {
-                autoSave();
-            }
-        }
-        
-        function updateTimerDisplay(totalSeconds = null) {
-            if (totalSeconds === null) {
-                totalSeconds = matchTimer.pausedTime;
-                if (matchTimer.currentHalf === 2) {
-                    totalSeconds += 45 * 60;
-                }
-            }
-            
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = Math.floor(totalSeconds % 60);
-            
-            let displayTime;
-            if (minutes >= 45 && matchTimer.currentHalf === 1) {
-                const overtimeMinutes = minutes - 45;
-                displayTime = `45+${overtimeMinutes}:${seconds.toString().padStart(2, '0')}`;
-            } else if (minutes >= 90 && matchTimer.currentHalf === 2) {
-                const overtimeMinutes = minutes - 90;
-                displayTime = `90+${overtimeMinutes}:${seconds.toString().padStart(2, '0')}`;
-            } else {
-                displayTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
-            
-            document.getElementById('matchTime').textContent = displayTime;
-        }
-        
-        function showHalfTimeConfirm() {
-            if (matchTimer.currentHalf === 2) {
-                if (confirm('Voulez-vous terminer le match ?')) {
-                    endMatch();
-                }
-            } else {
-                if (confirm('Voulez-vous passer à la seconde mi-temps ?')) {
-                    switchToSecondHalf();
-                }
-            }
-        }
-        
-        function switchToSecondHalf() {
-            stopTimer();
-            matchTimer.currentHalf = 2;
-            matchTimer.pausedTime = 0;
-            matchTimer.startTime = null;
-            
-            document.getElementById('matchHalf').textContent = '2ème Mi-temps';
-            updateTimerDisplay();
-            updateHalfTimeButton();
-            
-            addEvent('system', {
-                description: 'Début de la 2ème mi-temps',
-                team: null
-            });
-            
-            autoSave();
-        }
-        
-        function endMatch() {
-            stopTimer();
-            // Marquer le match comme terminé
-            const matchData = JSON.parse(localStorage.getItem('currentMatch') || '{}');
-            matchData.matchStatus = 'finished';
-            matchData.endTime = new Date().toISOString();
-            localStorage.setItem('currentMatch', JSON.stringify(matchData));
-            
-            addEvent('system', {
-                description: 'Fin du match',
-                team: null
-            });
-            
-            // Sauvegarder immédiatement
-            autoSave().then(() => {
-                console.log('🏁 Match terminé et sauvegardé');
-            });
-            
-            // Notification
-            alert('🏁 Match terminé !\n\n' +
-                '✅ Toutes les données ont été sauvegardées.\n' +
-                '📊 Consultez les statistiques dans l\'onglet Stats.\n' +
-                '📱 Le lien live reste actif pour consulter les résultats.');
-        }
-
-        function getCurrentMatchTime() {
-            let totalSeconds = matchTimer.pausedTime;
-            if (matchTimer.isRunning && matchTimer.startTime) {
-                totalSeconds = (Date.now() - matchTimer.startTime) / 1000;
-            }
-            
-            if (matchTimer.currentHalf === 2) {
-                totalSeconds += 45 * 60;
-            }
-            
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = Math.floor(totalSeconds % 60);
-            
-            if (minutes >= 45 && matchTimer.currentHalf === 1) {
-                const overtimeMinutes = minutes - 45;
-                return `45+${overtimeMinutes}:${seconds.toString().padStart(2, '0')}`;
-            } else if (minutes >= 90 && matchTimer.currentHalf === 2) {
-                const overtimeMinutes = minutes - 90;
-                return `90+${overtimeMinutes}:${seconds.toString().padStart(2, '0')}`;
-            } else {
-                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
-        }
-        
-        function addEvent(type, data) {
-            const event = {
-                id: Date.now(),
-                type: type,
-                ...data,
-                timestamp: new Date()
-            };
-            
-            matchEvents.unshift(event);
-
-            if (typeof footballApp !== 'undefined') {
-                const appState = footballApp.getState();
-                if (!appState.events.find(e => e.id === event.id)) {
-                    appState.events.unshift(event);
-                    footballApp.saveState();
-                }
-            }
-
-            updateTimeline();
-        }
-        
-        function updateTimeline() {
-            syncMatchEventsWithApp();
-            const container = document.getElementById('eventsTimeline');
-            
-            if (matchEvents.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #bbb;">Aucun événement enregistré</div>';
-                return;
-            }
-            
-            container.innerHTML = '';
-            
-            matchEvents.forEach(event => {
-                const eventDiv = document.createElement('div');
-                eventDiv.className = 'timeline-event';
-                eventDiv.onclick = () => openEditActionTypeModal(event.id);
-                
-                const leftDiv = document.createElement('div');
-                const timeDiv = document.createElement('div');
-                const rightDiv = document.createElement('div');
-                
-                leftDiv.className = 'event-left';
-                timeDiv.className = 'event-time';
-                rightDiv.className = 'event-right';
-                
-                timeDiv.textContent = event.time;
-                
-                if (event.isTeam) {
-                    leftDiv.innerHTML = window.getEventHTML ? window.getEventHTML(event) : getEventDescription(event);
-                    rightDiv.innerHTML = '&nbsp;';
-                } else {
-                    leftDiv.innerHTML = '&nbsp;';
-                    rightDiv.innerHTML = window.getEventHTML ? window.getEventHTML(event) : getEventDescription(event);
-                }
-                
-                eventDiv.appendChild(leftDiv);
-                eventDiv.appendChild(timeDiv);
-                eventDiv.appendChild(rightDiv);
-                
-                container.appendChild(eventDiv);
-            });
-            
-            updateQuickStatsFromEvents();
-        }
-        
-        //Calculer les stats depuis les événements
-        function updateQuickStatsFromEvents() {
-            // Réinitialiser les stats
-            matchStats = {
-                myTeam: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 },
-                opponent: { goals: 0, shotsOnTarget: 0, shotsOffTarget: 0, cards: 0, fouls: 0, saves: 0 }
-            };
-            
-            // Recalculer depuis les événements
-            matchEvents.forEach(event => {
-                const team = event.isTeam ? 'myTeam' : 'opponent';
-                
-                switch (event.type) {
-                    case 'goal':
-                        matchStats[team].goals++;
-                        break;
-                    case 'shot':
-                        // Compter séparément les tirs cadrés et non cadrés
-                        if (event.option === 'Cadré') {
-                            matchStats[team].shotsOnTarget++;
-                        } else if (event.option === 'Non cadré') {
-                            matchStats[team].shotsOffTarget++;
-                        }
-                        break;
-                    case 'card':
-                        matchStats[team].cards++;
-                        break;
-                    case 'foul':
-                        matchStats[team].fouls++;
-                        break;
-                    case 'save':
-                        matchStats[team].saves++;
-                        break;
-                }
-            });
-            
-            // Mettre à jour l'affichage
-            document.getElementById('compactTeamGoals').textContent = matchStats.myTeam.goals;
-            document.getElementById('compactOpponentGoals').textContent = matchStats.opponent.goals;
-            document.getElementById('compactTeamShotsOnTarget').textContent = matchStats.myTeam.shotsOnTarget;
-            document.getElementById('compactOpponentShotsOnTarget').textContent = matchStats.opponent.shotsOnTarget;
-            document.getElementById('compactTeamShotsOffTarget').textContent = matchStats.myTeam.shotsOffTarget;
-            document.getElementById('compactOpponentShotsOffTarget').textContent = matchStats.opponent.shotsOffTarget;
-            document.getElementById('compactTeamCards').textContent = matchStats.myTeam.cards;
-            document.getElementById('compactOpponentCards').textContent = matchStats.opponent.cards;
-            document.getElementById('compactTeamFouls').textContent = matchStats.myTeam.fouls;
-            document.getElementById('compactOpponentFouls').textContent = matchStats.opponent.fouls;
-            document.getElementById('compactTeamSaves').textContent = matchStats.myTeam.saves;
-            document.getElementById('compactOpponentSaves').textContent = matchStats.opponent.saves;
-            
-            // Mettre à jour les scores affichés
-            document.getElementById('teamScore').textContent = matchStats.myTeam.goals;
-            document.getElementById('opponentScore').textContent = matchStats.opponent.goals;
-        }
-
-        // Fermer la modale d'édition
-        function closeEditEventModal() {
-            document.getElementById('editEventModal').style.display = 'none';
-            currentEditEventId = null;
-        }
-
-        // Sauvegarder la modification
-        function saveEventEdit() {
-            if (!currentEditEventId) return;
-            
-            const newDescription = document.getElementById('editEventDescription').value.trim();
-            
-            if (!newDescription) {
-                alert('La description ne peut pas être vide !');
-                return;
-            }
-            
-            // Trouver et modifier l'événement dans matchEvents
-            const eventIndex = matchEvents.findIndex(e => e.id == currentEditEventId);
-            if (eventIndex !== -1) {
-                matchEvents[eventIndex].customDescription = newDescription;
-            }
-            
-            // Modifier aussi dans footballApp
-            if (typeof footballApp !== 'undefined') {
-                const appState = footballApp.getState();
-                const appEventIndex = appState.events.findIndex(e => e.id == currentEditEventId);
-                if (appEventIndex !== -1) {
-                    appState.events[appEventIndex].customDescription = newDescription;
-                    footballApp.saveState();
-                }
-            }
-            
-            // Mettre à jour l'affichage
-            updateTimeline();
-            autoSave();
-            
-            // Fermer la modale
-            closeEditEventModal();
-            
-            alert('✅ Événement modifié !');
-        }
-        
-        // FONCTIONS POUR LA MODALE DE MODIFICATION D'ACTION
-        function openEditActionTypeModal(eventId) {
-            const event = matchEvents.find(e => e.id == eventId);
-            if (!event) {
-                alert('Événement introuvable !');
-                return;
-            }
-            
-            currentEditEventId = eventId;
-            newSelectedActionType = null;
-            
-            const actionNames = {
-                'goal': '⚽ But',
-                'assist': '➡️ Passe Décisive',
-                'shot': '🎯 Tir',
-                'save': '🧤 Arrêt Gardien',
-                'foul': '⚠️ Faute',
-                'card': '🟨 Carton',
-                'corner': '🚩 Corner',
-                'offside': '🛑 Hors-jeu',
-                'substitution': '🔄 Changement'
-            };
-            
-            document.getElementById('currentActionType').textContent = actionNames[event.type] || event.type;
-            
-            const actionBtns = document.querySelectorAll('#editActionTypeModal .action-btn');
-            actionBtns.forEach(btn => btn.classList.remove('selected-for-replace'));
-            
-            document.getElementById('replaceActionBtn').disabled = true;
-            document.getElementById('editActionTypeModal').style.display = 'block';
-        }
-
-        function closeEditActionTypeModal() {
-            document.getElementById('editActionTypeModal').style.display = 'none';
-            currentEditEventId = null;
-            newSelectedActionType = null;
-        }
-
-        function selectNewActionType(actionType, e) {
-            console.log('🎬 selectNewActionType appelée:', actionType);
-            console.log('📌 currentEditEventId AVANT copie:', currentEditEventId);
-            
-            // CAS SPÉCIAL : SUBSTITUTION - Mode édition spécial
-            if (actionType === 'substitution') {
-                if (!currentEditEventId) return;
-                
-                // Activer le mode édition pour les substitutions
-                window.isEditingSubstitution = true;
-                window.editingSubstitutionId = currentEditEventId;
-                
-                // Fermer la modale d'édition
-                closeEditActionTypeModal();
-                
-                // Délai pour ouverture propre de la modale
-                setTimeout(() => {
-                    showSubstitutionModal();
-                }, 300);
-                
-                return;
-            }
-            
-            // CAS NORMAL : AUTRES ACTIONS
-            window.isEditingMode = true;
-            window.editingEventId = currentEditEventId;
-            
-            console.log('📌 window.editingEventId APRÈS copie:', window.editingEventId);
-            
-            closeEditActionTypeModal();
-            
-            setTimeout(() => {
-                showUnifiedActionModal(actionType);
-            }, 300);
-        }
-
-        /**
-         * Supprimer une action depuis le modal d'édition
-         */
-        function deleteActionFromModal() {
-            if (!currentEditActionId) {
-                console.error('❌ Aucune action à supprimer');
-                showNotification('Erreur: Aucune action sélectionnée', 'error');
-                return;
-            }
-            
-            if (!confirm('Êtes-vous sûr de vouloir supprimer cette action ?')) {
-                return;
-            }
-            
-            // Trouver l'événement
-            const eventIndex = matchEvents.findIndex(e => e.id === currentEditActionId);
-            
-            if (eventIndex === -1) {
-                console.error('❌ Action non trouvée');
-                showNotification('Erreur: Action non trouvée', 'error');
-                return;
-            }
-            
-            // Récupérer l'événement avant suppression
-            const deletedEvent = matchEvents[eventIndex];
-            
-            // Supprimer de matchEvents
-            matchEvents.splice(eventIndex, 1);
-            
-            // Mettre à jour footballApp si disponible
-            if (typeof footballApp !== 'undefined') {
-                const appState = footballApp.getState();
-                const appEventIndex = appState.events.findIndex(e => e.id === currentEditActionId);
-                if (appEventIndex !== -1) {
-                    appState.events.splice(appEventIndex, 1);
-                }
-            }
-            
-            // Recalculer les stats
-            recalculateStatsAfterDelete(deletedEvent);
-            
-            // Sauvegarder
-            autoSave();
-            
-            // Mettre à jour l'affichage
-            updateTimeline();
-            updateMatchDisplay();
-            
-            // Fermer le modal
-            closeEditActionModal();
-            
-            // Notification
-            showNotification('✅ Action supprimée avec succès', 'success');
-            console.log('🗑️ Action supprimée:', deletedEvent);
-        }
-
-        /**
-         * Recalculer les stats après suppression d'une action
-         */
-        function recalculateStatsAfterDelete(deletedEvent) {
-            const team = deletedEvent.isTeam ? 'myTeam' : 'opponent';
-            
-            switch (deletedEvent.type) {
-                case 'goal':
-                    if (matchStats[team].goals > 0) {
-                        matchStats[team].goals--;
-                    }
-                    break;
-                case 'shot':
-                    if (matchStats[team].shots > 0) {
-                        matchStats[team].shots--;
-                    }
-                    break;
-                case 'card':
-                    if (matchStats[team].cards > 0) {
-                        matchStats[team].cards--;
-                    }
-                    break;
-                case 'foul':
-                    if (matchStats[team].fouls > 0) {
-                        matchStats[team].fouls--;
-                    }
-                    break;
-                case 'save':
-                    if (matchStats[team].saves > 0) {
-                        matchStats[team].saves--;
-                    }
-                    break;
-                case 'freeKick':
-                    if (matchStats[team].freeKicks > 0) {
-                        matchStats[team].freeKicks--;
-                    }
-                    break;
-            }
-        }
-        
-        function getEventDescription(event) {
-            // Si une description personnalisée existe, l'utiliser
-            if (event.customDescription) {
-                return event.customDescription;
-            }
-            
-            const playerName = getPlayerName(event.playerId);
-            
-            switch (event.type) {
-                case 'goal':
-                    let goalText = `⚽ ${playerName}`;
-                    if (event.assistPlayerId) {
-                        const assistName = getPlayerName(event.assistPlayerId);
-                        goalText += `<br><small>➡️ Passe: ${assistName}</small>`;
-                    }
-                    return goalText;
-                case 'shot':
-                    return `🎯 Tir - ${playerName}`;
-                case 'card':
-                    const cardEmoji = event.cardType === 'yellow' ? '🟨' : event.cardType === 'red' ? '🟥' : '⚪';
-                    return `${cardEmoji} Carton - ${playerName}`;
-                case 'foul':
-                    return `⚠️ Faute - ${playerName}`;
-                case 'save':
-                    const saveTypeText = {
-                        'line': 'sur sa ligne',
-                        'out': 'en sortie',
-                        'penalty': 'penalty',
-                        'corner': 'corner'
-                    };
-                    return `🧤 Arrêt ${saveTypeText[event.saveType] || ''} - ${playerName}`;
-                case 'freekick':
-                    return `⚽ Coup Franc - ${playerName}`;
-                default:
-                    return event.description || `${event.type} - ${playerName}`;
-            }
-        }
-        
-        function updateMatchStats(eventData) {
-            const team = eventData.team === 'my-team' ? 'myTeam' : 'opponent';
-            
-            switch (eventData.type) {
-                case 'goal':
-                    matchStats[team].goals++;
-                    break;
-                case 'shot':
-                    if (eventData.option === 'Cadré') {
-                        matchStats[team].shotsOnTarget++;
-                    } else if (eventData.option === 'Non cadré') {
-                        matchStats[team].shotsOffTarget++;
-                    }
-                    break;
-                case 'card':
-                    matchStats[team].cards++;
-                    break;
-                case 'foul':
-                    matchStats[team].fouls++;
-                    break;
-                case 'save':
-                    matchStats[team].saves++;
-                    break;
-            }
-        }
-        
-        function updateMatchDisplay() {
-            document.getElementById('teamScore').textContent = matchStats.myTeam.goals;
-            document.getElementById('opponentScore').textContent = matchStats.opponent.goals;
-            updateQuickStats();
-        }
-        
-        function updateQuickStats() {
-            document.getElementById('compactTeamGoals').textContent = matchStats.myTeam.goals;
-            document.getElementById('compactOpponentGoals').textContent = matchStats.opponent.goals;
-            document.getElementById('compactTeamShotsOnTarget').textContent = matchStats.myTeam.shotsOnTarget || 0;
-            document.getElementById('compactOpponentShotsOnTarget').textContent = matchStats.opponent.shotsOnTarget || 0;
-            document.getElementById('compactTeamShotsOffTarget').textContent = matchStats.myTeam.shotsOffTarget || 0;
-            document.getElementById('compactOpponentShotsOffTarget').textContent = matchStats.opponent.shotsOffTarget || 0;
-            document.getElementById('compactTeamCards').textContent = matchStats.myTeam.cards;
-            document.getElementById('compactOpponentCards').textContent = matchStats.opponent.cards;
-            document.getElementById('compactTeamFouls').textContent = matchStats.myTeam.fouls;
-            document.getElementById('compactOpponentFouls').textContent = matchStats.opponent.fouls;
-            document.getElementById('compactTeamSaves').textContent = matchStats.myTeam.saves;
-            document.getElementById('compactOpponentSaves').textContent = matchStats.opponent.saves;
-        }
-       
-        function startPeriodicSave() {
-            setInterval(autoSave, 30000);
-            setInterval(() => {
-                if (matchTimer.isRunning) {
-                    autoSave();
-                }
-            }, 10000);
-        }
-        
-        async function autoSave() {
-            const config = getMatchConfig();
-            const players = getMyTeamPlayers();
-            
-            const completeMatchData = {
-                matchInfo: {
-                    teamName: config.teamName || 'Mon Équipe',
-                    opponentName: config.opponentName || 'Équipe Adverse',
-                    venue: config.venue || 'Terrain',
-                    date: new Date().toISOString().split('T')[0],
-                    startTime: config.startTime || '15:00'
-                },
-                timer: {
-                    ...matchTimer,
-                    startTime: matchTimer.startTime ? new Date(matchTimer.startTime).toISOString() : null,
-                    savedAt: new Date().toISOString(),
-                    currentTime: getCurrentMatchTime(),
-                    isRunning: matchTimer.isRunning,
-                    currentHalf: matchTimer.currentHalf,
-                    pausedTime: matchTimer.pausedTime
-                },
-                players: players.map(player => ({
-                    id: player.id,
-                    name: player.name,
-                    position: player.position,
-                    status: player.status || 'bench',
-                    number: player.number || null
-                })),
-                events: matchEvents.map(event => ({
-                    ...event,
-                    playerName: getPlayerName(event.playerId),
-                    formattedDescription: getEventDescription(event)
-                })),
-                stats: {
-                    ...matchStats,
-                    score: {
-                        myTeam: matchStats.myTeam.goals,
-                        opponent: matchStats.opponent.goals
-                    }
-                },
-                live: {
-                    lastUpdate: new Date().toISOString(),
-                    isActive: true,
-                    version: '1.0'
-                }
-            };
-            
-            // Sauvegarde locale
-            localStorage.setItem('currentMatch', JSON.stringify(completeMatchData));
-            
-            // Synchronisation automatique avec JsonBin si un bin existe
-            const binId = localStorage.getItem('matchBinId');
-            if (binId) {
-                await updateJsonBinSilently(binId, completeMatchData);
-            }
-        }
-
-        /**
-         * Mise à jour silencieuse de JsonBin (sans bloquer l'interface)
-         * Appelée automatiquement par autoSave() toutes les 10-30 secondes
-         */
-        async function updateJsonBinSilently(binId, data) {
-            try {
-                const API_KEY = '$2a$10$L3uaRDnltfCsdgv50dAJ0.aTJsslnmT2SPju9EPNd6HvXqW6u9KmS';
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': API_KEY
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                if (response.ok) {
-                    console.log('✅ JsonBin mis à jour automatiquement');
-                }
-            } catch (error) {
-                // Silencieux - on ne bloque pas si JsonBin est temporairement indisponible
-                console.log('⚠️ Sync JsonBin échouée (continuera d\'essayer)');
-            }
-        }
-        
-        window.addEventListener('beforeunload', function() {
-            if (matchTimer.interval) {
-                clearInterval(matchTimer.interval);
-            }
-            autoSave();
-        });
-        
-        window.addEventListener('pagehide', function() {
-            if (matchTimer.interval) {
-                clearInterval(matchTimer.interval);
-            }
-        });
-        
-        async function generateLiveLink() {
-            try {
-                // Sauvegarder d'abord les données actuelles
-                await autoSave();
-                
-                // Configuration JsonBin
-                const API_KEY = '$2a$10$L3uaRDnltfCsdgv50dAJ0.aTJsslnmT2SPju9EPNd6HvXqW6u9KmS';
-                const BASE_URL = 'https://api.jsonbin.io/v3/b';
-                
-                // Récupérer ou créer le bin ID
-                let binId = localStorage.getItem('matchBinId');
-                
-                // Préparer les données
-                const config = getMatchConfig();
-                const players = getMyTeamPlayers();
-                
-                const liveData = {
-                    matchInfo: {
-                        teamName: config.teamName || 'Mon Équipe',
-                        opponentName: config.opponentName || 'Équipe Adverse',
-                        venue: config.venue || 'Terrain',
-                        date: new Date().toISOString().split('T')[0],
-                        startTime: config.startTime || '15:00'
-                    },
-                    timer: {
-                        ...matchTimer,
-                        startTime: matchTimer.startTime ? new Date(matchTimer.startTime).toISOString() : null,
-                        savedAt: new Date().toISOString(),
-                        currentTime: getCurrentMatchTime(),
-                        isRunning: matchTimer.isRunning,
-                        currentHalf: matchTimer.currentHalf,
-                        pausedTime: matchTimer.pausedTime
-                    },
-                    players: players.map(player => ({
-                        id: player.id,
-                        name: player.name,
-                        position: player.position,
-                        status: player.status || 'bench',
-                        number: player.number || null
-                    })),
-                    events: matchEvents.map(event => ({
-                        ...event,
-                        playerName: getPlayerName(event.playerId),
-                        formattedDescription: getEventDescription(event)
-                    })),
-                    stats: {
-                        ...matchStats,
-                        score: {
-                            myTeam: matchStats.myTeam.goals,
-                            opponent: matchStats.opponent.goals
-                        }
-                    },
-                    live: {
-                        lastUpdate: new Date().toISOString(),
-                        isActive: true,
-                        version: '1.0'
-                    }
-                };
-                
-                if (binId) {
-                    // Mettre à jour le bin existant
-                    const response = await fetch(`${BASE_URL}/${binId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Master-Key': API_KEY
-                        },
-                        body: JSON.stringify(liveData)
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Erreur mise à jour JsonBin');
-                    }
-                    
-                    console.log('✅ Bin mis à jour:', binId);
-                } else {
-                    // Créer un nouveau bin
-                    const response = await fetch(BASE_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Master-Key': API_KEY,
-                            'X-Bin-Private': 'false'
-                        },
-                        body: JSON.stringify(liveData)
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Erreur création JsonBin');
-                    }
-                    
-                    const result = await response.json();
-                    binId = result.metadata.id;
-                    localStorage.setItem('matchBinId', binId);
-                    
-                    console.log('✅ Nouveau bin créé:', binId);
-                }
-                
-                // Générer le lien live
-                const baseUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
-                const liveUrl = `${baseUrl}live.html?bin=${binId}`;
-                
-                // Copier dans le presse-papiers
-                try {
-                    await navigator.clipboard.writeText(liveUrl);
-                    alert(`📱 Lien Live copié !\n\nPartagez ce lien pour suivre le match en direct:\n\n${liveUrl}`);
-                } catch (err) {
-                    // Fallback si clipboard API non disponible
-                    prompt('📱 Copiez ce lien Live:', liveUrl);
-                }
-                
-            } catch (error) {
-                console.error('Erreur génération lien live:', error);
-                alert('❌ Erreur lors de la génération du lien live.\nVérifiez votre connexion internet.');
-            }
-        }
-
-        function updateTimelineDisplay() {
-            updateTimeline();
-        }
-
-        window.matchPageFunctions = {
-            getCurrentTime: getCurrentMatchTime,
-            updateTimeline: updateTimelineDisplay,
-            getPlayers: getMyTeamPlayers,
-            autoSave: autoSave
-        };
     </script>
 </body>
 </html>
