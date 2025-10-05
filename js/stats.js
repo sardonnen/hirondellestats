@@ -355,6 +355,7 @@ console.log('📊 Temps de jeu calculés:',
         .filter(p => p.playTime > 0)
         .map(p => `${p.name}: ${p.playTime} min`)
 );
+}
 
 /**
  * Calcul des statistiques par mi-temps
