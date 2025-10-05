@@ -353,17 +353,25 @@ function openEditActionTypeModal(eventId) {
         'substitution': '🔄 Changement'
     };
     
-    document.getElementById('currentActionType').textContent = actionNames[event.type] || event.type;
+    const currentActionTypeEl = document.getElementById('currentActionType');
+    if (currentActionTypeEl) {
+        currentActionTypeEl.textContent = actionNames[event.type] || event.type;
+    }
     
     const actionBtns = document.querySelectorAll('#editActionTypeModal .action-btn');
     actionBtns.forEach(btn => btn.classList.remove('selected-for-replace'));
     
-    document.getElementById('replaceActionBtn').disabled = true;
-    document.getElementById('editActionTypeModal').style.display = 'block';
+    const modal = document.getElementById('editActionTypeModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
 }
 
 function closeEditActionTypeModal() {
-    document.getElementById('editActionTypeModal').style.display = 'none';
+    const modal = document.getElementById('editActionTypeModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
     currentEditEventId = null;
     newSelectedActionType = null;
 }
