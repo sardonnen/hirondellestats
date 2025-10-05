@@ -776,6 +776,8 @@
         let newSelectedActionType = null;
         let isEditingMode = false;
         let editingEventId = null;
+        let currentEditActionId = null;
+        let isEditMode = false;        
 
         function syncMatchEventsWithApp() {
             if (typeof footballApp !== 'undefined') {
@@ -1389,27 +1391,102 @@
             }, 300);
         }
 
+        /**
+         * Supprimer une action depuis le modal d'édition
+         */
         function deleteActionFromModal() {
-            if (!currentEditActionId) return;
-            
-            if (!confirm('Voulez-vous vraiment supprimer cette action ?')) return;
-            
-            matchEvents = matchEvents.filter(e => e.id != currentEditActionId);
-            
-            if (typeof footballApp !== 'undefined') {
-                const appState = footballApp.getState();
-                appState.events = appState.events.filter(e => e.id != currentEditActionId);
-                footballApp.saveState();
+            if (!currentEditActionId) {
+                console.error('❌ Aucune action à supprimer');
+                showNotification('Erreur: Aucune action sélectionnée', 'error');
+                return;
             }
             
-            updateTimeline();
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cette action ?')) {
+                return;
+            }
+            
+            // Trouver l'événement
+            const eventIndex = matchEvents.findIndex(e => e.id === currentEditActionId);
+            
+            if (eventIndex === -1) {
+                console.error('❌ Action non trouvée');
+                showNotification('Erreur: Action non trouvée', 'error');
+                return;
+            }
+            
+            // Récupérer l'événement avant suppression
+            const deletedEvent = matchEvents[eventIndex];
+            
+            // Supprimer de matchEvents
+            matchEvents.splice(eventIndex, 1);
+            
+            // Mettre à jour footballApp si disponible
+            if (typeof footballApp !== 'undefined') {
+                const appState = footballApp.getState();
+                const appEventIndex = appState.events.findIndex(e => e.id === currentEditActionId);
+                if (appEventIndex !== -1) {
+                    appState.events.splice(appEventIndex, 1);
+                }
+            }
+            
+            // Recalculer les stats
+            recalculateStatsAfterDelete(deletedEvent);
+            
+            // Sauvegarder
             autoSave();
             
-            closeEditActionTypeModal();
+            // Mettre à jour l'affichage
+            updateTimeline();
+            updateMatchDisplay();
             
-            alert('✅ Action supprimée !');
+            // Fermer le modal
+            closeEditActionModal();
+            
+            // Notification
+            showNotification('✅ Action supprimée avec succès', 'success');
+            console.log('🗑️ Action supprimée:', deletedEvent);
         }
 
+        /**
+         * Recalculer les stats après suppression d'une action
+         */
+        function recalculateStatsAfterDelete(deletedEvent) {
+            const team = deletedEvent.isTeam ? 'myTeam' : 'opponent';
+            
+            switch (deletedEvent.type) {
+                case 'goal':
+                    if (matchStats[team].goals > 0) {
+                        matchStats[team].goals--;
+                    }
+                    break;
+                case 'shot':
+                    if (matchStats[team].shots > 0) {
+                        matchStats[team].shots--;
+                    }
+                    break;
+                case 'card':
+                    if (matchStats[team].cards > 0) {
+                        matchStats[team].cards--;
+                    }
+                    break;
+                case 'foul':
+                    if (matchStats[team].fouls > 0) {
+                        matchStats[team].fouls--;
+                    }
+                    break;
+                case 'save':
+                    if (matchStats[team].saves > 0) {
+                        matchStats[team].saves--;
+                    }
+                    break;
+                case 'freeKick':
+                    if (matchStats[team].freeKicks > 0) {
+                        matchStats[team].freeKicks--;
+                    }
+                    break;
+            }
+        }
+        
         function getEventDescription(event) {
             // Si une description personnalisée existe, l'utiliser
             if (event.customDescription) {

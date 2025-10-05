@@ -73,13 +73,24 @@ function getMatchConfig() {
  */
 function saveData(key, data) {
     try {
-        const serializedData = JSON.stringify(data);
-        localStorage.setItem(`footballStats_${key}`, serializedData);
-        console.log(`Données sauvegardées: ${key}`);
-        return true;
+        const serialized = JSON.stringify(data);
+        const size = new Blob([serialized]).size;
+        
+        if (size > 4.5 * 1024 * 1024) { // 4.5MB
+            throw new Error('Données trop volumineuses');
+        }
+        
+        localStorage.setItem(`footballStats_${key}`, serialized);
+        return { success: true };
     } catch (error) {
-        console.error('Erreur lors de la sauvegarde:', error);
-        return false;
+        if (error.name === 'QuotaExceededError') {
+            return { 
+                success: false, 
+                error: 'QUOTA_EXCEEDED',
+                message: 'Mémoire pleine. Exportez et supprimez d\'anciens matchs.'
+            };
+        }
+        return { success: false, error: error.message };
     }
 }
 
