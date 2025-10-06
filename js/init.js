@@ -1,230 +1,208 @@
-// ===== INITIALISATION GLOBALE DE L'APPLICATION =====
+// init.js - Initialisation centralisée 
 
 /**
- * Gestionnaire d'initialisation
+ * Système d'initialisation centralisé pour Football Stats Manager
  */
-const AppInitializer = {
-    isInitialized: false,
-    currentPage: null,
-    
+
+(function() {
+    'use strict';
+
+    console.log('🚀 Initialisation de Football Stats Manager...');
+
+    // Configuration
+    const CONFIG = {
+        appName: 'Football Stats Manager',
+        version: '1.0.0',
+        dependencies: {
+            utils: ['debounce', 'throttle', 'formatDate'],
+            storage: ['storageModule', 'loadData', 'saveData'],
+            app: ['footballApp']
+        },
+        maxRetries: 10,
+        retryDelay: 100
+    };
+
     /**
-     * Initialisation principale
+     * Détecte la page courante
      */
-    init: function() {
-        if (this.isInitialized) {
-            console.warn('Application déjà initialisée');
-            return;
-        }
-        
-        console.log('🚀 Initialisation de Football Stats Manager...');
-        
-        // Détecter la page actuelle
-        this.detectCurrentPage();
-        
-        // Vérifier les dépendances
-        this.checkDependencies();
-        
-        // Initialiser footballApp si disponible
-        this.initializeFootballApp();
-        
-        // Initialiser les gestionnaires d'événements globaux
-        this.setupGlobalEventHandlers();
-        
-        // Initialisation spécifique à la page
-        this.initializePageSpecific();
-        
-        this.isInitialized = true;
-        console.log('✅ Application initialisée avec succès');
-    },
-    
-    /**
-     * Détecter la page actuelle
-     */
-    detectCurrentPage: function() {
+    function detectCurrentPage() {
         const path = window.location.pathname;
+        const page = path.split('/').pop().replace('.html', '') || 'index';
         
-        if (path.includes('index.html') || path.endsWith('/')) {
-            this.currentPage = 'home';
-        } else if (path.includes('team.html')) {
-            this.currentPage = 'team';
-        } else if (path.includes('composition.html')) {
-            this.currentPage = 'composition';
-        } else if (path.includes('match.html')) {
-            this.currentPage = 'match';
-        } else if (path.includes('live.html')) {
-            this.currentPage = 'live';
-        } else if (path.includes('stats.html')) {
-            this.currentPage = 'stats';
-        } else {
-            this.currentPage = 'unknown';
-        }
-        
-        console.log(`📄 Page détectée: ${this.currentPage}`);
-    },
-    
-    /**
-     * Vérifier les dépendances
-     */
-    checkDependencies: function() {
-        const dependencies = {
-            'utils.js': typeof getPlayerName !== 'undefined',
-            'storage.js': typeof footballStorage !== 'undefined',
-            'app.js': typeof footballApp !== 'undefined'
+        const pageMap = {
+            'index': 'home',
+            '': 'home'
         };
         
-        let allLoaded = true;
+        const detectedPage = pageMap[page] || page;
+        console.log('📄 Page détectée:', detectedPage);
+        return detectedPage;
+    }
+
+    /**
+     * Vérifie les dépendances (VERSION AMÉLIORÉE)
+     */
+    function checkDependencies() {
+        const missing = [];
         
-        for (const [file, loaded] of Object.entries(dependencies)) {
-            if (!loaded) {
-                console.error(`❌ Dépendance manquante: ${file}`);
-                allLoaded = false;
+        for (const [module, functions] of Object.entries(CONFIG.dependencies)) {
+            // Pour storage, vérifier d'abord storageModule
+            if (module === 'storage') {
+                if (typeof window.storageModule !== 'undefined') {
+                    console.log('✅ Dépendance chargée: storage.js (via storageModule)');
+                    continue;
+                }
+            }
+            
+            // Vérifier les fonctions
+            const moduleMissing = functions.filter(fn => typeof window[fn] === 'undefined');
+            
+            if (moduleMissing.length === 0) {
+                console.log(`✅ Dépendance chargée: ${module}.js`);
             } else {
-                console.log(`✅ Dépendance chargée: ${file}`);
+                console.warn(`❌ Dépendance manquante: ${module}.js`, moduleMissing);
+                missing.push({ module, functions: moduleMissing });
             }
         }
         
-        if (!allLoaded) {
-            console.error('⚠️ Certaines dépendances sont manquantes');
+        if (missing.length > 0) {
+            console.warn('⚠️ Certaines dépendances sont manquantes:', missing);
+            return false;
         }
-    },
-    
+        
+        return true;
+    }
+
     /**
-     * Initialiser footballApp
+     * Attend que footballApp soit disponible
      */
-    initializeFootballApp: function() {
-        if (typeof footballApp !== 'undefined') {
+    function waitForFootballApp(callback, retries = 0) {
+        if (typeof window.footballApp !== 'undefined') {
             console.log('⚽ footballApp disponible');
             
-            // Charger l'état sauvegardé
-            if (typeof footballApp.getState === 'function') {
-                const state = footballApp.getState();
-                console.log('État de l\'application:', state);
-            }
+            const state = window.footballApp.getState();
+            console.log('État de l\'application:', state);
+            
+            callback();
+        } else if (retries < CONFIG.maxRetries) {
+            setTimeout(() => waitForFootballApp(callback, retries + 1), CONFIG.retryDelay);
         } else {
-            console.warn('⚠️ footballApp non disponible');
+            console.error('❌ footballApp non disponible après', CONFIG.maxRetries, 'tentatives');
         }
-    },
-    
+    }
+
     /**
-     * Configuration des gestionnaires d'événements globaux
+     * Initialisation des gestionnaires d'événements globaux
      */
-    setupGlobalEventHandlers: function() {
+    function setupGlobalEventHandlers() {
         // Fermeture des modales en cliquant à l'extérieur
         document.addEventListener('click', function(event) {
             if (event.target.classList.contains('modal')) {
-                const modals = document.querySelectorAll('.modal');
-                modals.forEach(modal => modal.style.display = 'none');
+                if (typeof window.footballApp !== 'undefined' && 
+                    typeof window.footballApp.closeAllModals === 'function') {
+                    window.footballApp.closeAllModals();
+                }
             }
         });
-        
-        // Gestion de la touche Échap
+
+        // Fermeture avec Escape
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
-                const modals = document.querySelectorAll('.modal');
-                modals.forEach(modal => modal.style.display = 'none');
+                if (typeof window.footballApp !== 'undefined' && 
+                    typeof window.footballApp.closeAllModals === 'function') {
+                    window.footballApp.closeAllModals();
+                }
             }
         });
-        
-        // Sauvegarde automatique avant fermeture
+
+        // Sauvegarde avant fermeture
         window.addEventListener('beforeunload', function() {
-            if (typeof footballApp !== 'undefined' && footballApp.saveState) {
-                footballApp.saveState();
+            if (typeof window.footballApp !== 'undefined' && 
+                typeof window.footballApp.saveState === 'function') {
+                window.footballApp.saveState();
             }
         });
-        
+
         console.log('👂 Gestionnaires d\'événements globaux configurés');
-    },
-    
+    }
+
     /**
-     * Initialisation spécifique à la page
+     * Initialisation spécifique à chaque page
      */
-    initializePageSpecific: function() {
-        switch(this.currentPage) {
+    function initializePage(page) {
+        console.log(`🏠 Initialisation page ${page}`);
+
+        switch(page) {
             case 'home':
-                this.initHomePage();
+                initHomePage();
                 break;
             case 'team':
-                this.initTeamPage();
+                if (typeof initTeamPage === 'function') initTeamPage();
                 break;
             case 'composition':
-                this.initCompositionPage();
+                if (typeof initCompositionPage === 'function') initCompositionPage();
                 break;
             case 'match':
-                this.initMatchPage();
+                if (typeof initMatchPage === 'function') initMatchPage();
                 break;
             case 'live':
-                this.initLivePage();
+                if (typeof initLivePage === 'function') initLivePage();
                 break;
             case 'stats':
-                this.initStatsPage();
+                if (typeof initStatsPage === 'function') initStatsPage();
                 break;
             default:
-                console.log('Page inconnue, initialisation générique');
-        }
-    },
-    
-    /**
-     * Initialisation page d'accueil
-     */
-    initHomePage: function() {
-        console.log('🏠 Initialisation page d\'accueil');
-        // Logique spécifique déjà dans index.html
-    },
-    
-    /**
-     * Initialisation page équipe
-     */
-    initTeamPage: function() {
-        console.log('👥 Initialisation page équipe');
-        if (typeof initializeTeamPage === 'function') {
-            initializeTeamPage();
-        }
-    },
-    
-    /**
-     * Initialisation page composition
-     */
-    initCompositionPage: function() {
-        console.log('📋 Initialisation page composition');
-        if (typeof initializeCompositionPage === 'function') {
-            initializeCompositionPage();
-        }
-    },
-    
-    /**
-     * Initialisation page match
-     */
-    initMatchPage: function() {
-        console.log('⚽ Initialisation page match');
-        if (typeof initializeMatchPage === 'function') {
-            initializeMatchPage();
-        }
-    },
-    
-    /**
-     * Initialisation page live
-     */
-    initLivePage: function() {
-        console.log('📺 Initialisation page live');
-        if (typeof checkLiveMode === 'function') {
-            checkLiveMode();
-        }
-    },
-    
-    /**
-     * Initialisation page stats
-     */
-    initStatsPage: function() {
-        console.log('📊 Initialisation page stats');
-        if (typeof initializeStatsPage === 'function') {
-            initializeStatsPage();
+                console.log('Page sans initialisation spécifique');
         }
     }
-};
 
-// Auto-initialisation au chargement du DOM
-document.addEventListener('DOMContentLoaded', function() {
-    AppInitializer.init();
-});
+    /**
+     * Initialisation de la page d'accueil
+     */
+    function initHomePage() {
+        if (typeof loadMatchConfig === 'function') {
+            loadMatchConfig();
+        }
 
-console.log('✅ Module init.js chargé');
+        if (typeof updateRecentStats === 'function') {
+            updateRecentStats();
+        }
+
+        const matchDateInput = document.getElementById('matchDate');
+        if (matchDateInput && !matchDateInput.value) {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            matchDateInput.value = now.toISOString().slice(0, 16);
+        }
+    }
+
+    /**
+     * Point d'entrée principal
+     */
+    function init() {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+            return;
+        }
+
+        setTimeout(() => {
+            const depsOk = checkDependencies();
+            
+            if (!depsOk) {
+                console.warn('⚠️ Poursuite malgré dépendances manquantes (elles peuvent se charger)');
+            }
+
+            const currentPage = detectCurrentPage();
+            setupGlobalEventHandlers();
+
+            waitForFootballApp(() => {
+                initializePage(currentPage);
+                console.log('✅ Application initialisée avec succès');
+            });
+        }, 50);
+    }
+
+    init();
+
+    console.log('✅ Module init.js chargé');
+})();
