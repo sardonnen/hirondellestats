@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match - Football Stats</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+    <style>
+        /* Styles spécifiques pour la page match */
+        
+        /* Styles pour le header du match */
+        .match-header {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .match-result {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .team-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .team-name {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .team-score {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2ecc71;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .match-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .match-time {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #f39c12;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .match-half {
+            font-size: 0.85em;
+            color: #ecf0f1;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            text-align: center;
+        }
+        
+        .timer-controls {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .timer-controls .btn {
+            padding: 6px 8px;
+            font-size: 0.75em;
+            white-space: nowrap;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .action-btn {
+            padding: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .action-btn.goal { background: rgba(39, 174, 96, 0.2); border-color: #27ae60; }
+        .action-btn.shot { background: rgba(52, 152, 219, 0.2); border-color: #3498db; }
+        .action-btn.card { background: rgba(243, 156, 18, 0.2); border-color: #f39c12; }
+        .action-btn.foul { background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; }
+        .action-btn.save { background: rgba(230, 126, 34, 0.2); border-color: #e67e22; }
+        .action-btn.freekick { background: rgba(155, 89, 182, 0.2); border-color: #9b59b6; }
+        .action-btn.assist { background: rgba(26, 188, 156, 0.2); border-color: #1abc9c; }
+        .action-btn.corner { background: rgba(52, 73, 94, 0.2); border-color: #34495e; }
+        .action-btn.offside { background: rgba(189, 195, 199, 0.2); border-color: #bdc3c7; }
+        .action-btn.substitution { background: rgba(142, 68, 173, 0.2); border-color: #8e44ad; }
+
+        .action-btn.selected-for-replace {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
+            border-color: #2ecc71 !important;
+            border-width: 3px;
+        }
+       
+        .option-btn {
+            padding: 12px 20px;
+            border: 2px solid rgba(52, 152, 219, 0.5);
+            border-radius: 8px;
+            background: rgba(52, 152, 219, 0.15);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .option-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(52, 152, 219, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .option-btn:hover {
+            border-color: white;
+            background: rgba(52, 152, 219, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        
+        .option-btn:hover::before {
+            left: 100%;
+        }
+        
+        .option-btn.selected {
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(39, 174, 96, 0.4));
+            border-color: #27ae60;
+            color: #2ecc71;
+            font-weight: 600;
+            box-shadow: 0 0 20px rgba(39, 174, 96, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .option-btn.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 4px;
+            right: 8px;
+            font-size: 1.2em;
+            color: #2ecc71;
+        }
+        
+        .player-btn.selected {
+            background: rgba(46, 204, 113, 0.3) !important;
+            border: 3px solid #27ae60 !important;
+            color: #2ecc71 !important;
+            box-shadow: 0 0 15px rgba(39, 174, 96, 0.5);
+        }
+
+        .opponent-choice.selected {
+            background: rgba(231, 76, 60, 0.3) !important;
+            border: 3px solid #e74c3c !important;
+            color: #e74c3c !important;
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+        }
+        
+        .goalkeeper-choice-btn {
+            padding: 20px 30px;
+            border: 3px solid;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+            font-weight: bold;
+            min-width: 120px;
+            text-align: center;
+            margin: 10px;
+        }
+        
+        .goalkeeper-choice-btn.my-gk {
+            background: rgba(230, 126, 34, 0.3);
+            border-color: #e67e22;
+            color: white;
+        }
+        
+        .goalkeeper-choice-btn.opponent-gk {
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #e74c3c;
+            color: white;
+        }
+        
+        .goalkeeper-choice-btn.selected {
+            background: rgba(46, 204, 113, 0.3) !important;
+            color: #2ecc71 !important;
+            border-color: #27ae60 !important;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(39, 174, 96, 0.5);
+        }
+        
+        .save-type-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .save-type-btn {
+            padding: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .save-type-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .save-type-btn.selected {
+            background: rgba(46, 204, 113, 0.3) !important;
+            color: #2ecc71 !important;
+            border-color: #27ae60 !important;
+            box-shadow: 0 0 15px rgba(39, 174, 96, 0.5);
+        }
+        
+        .global-stats-compact {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .compact-stat-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .compact-stat-card:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-3px);
+        }
+        
+        .compact-stat-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+        
+        .compact-stat-values {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+        
+        .compact-team-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2ecc71;
+        }
+        
+        .compact-separator {
+            font-size: 1.2em;
+            color: #bdc3c7;
+        }
+        
+        .compact-opponent-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        
+        .compact-stat-label {
+            font-size: 0.9em;
+            color: #ecf0f1;
+            opacity: 0.9;
+        }
+        
+        .timeline-container {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 5px;
+            margin: 20px 0;
+        }
+        
+        .timeline-header {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            padding: 5px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .timeline-event {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 15px;
+            padding: 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .timeline-event:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .timeline-event:last-child {
+            border-bottom: none;
+        }
+        
+        .event-left, .event-right {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            line-height: 1.3;
+            text-align: left;
+        }
+        
+        .event-left {
+            background: rgba(39, 174, 96, 0.3);
+        }
+        
+        .event-right {
+            background: rgba(231, 76, 60, 0.3);
+        }
+        
+        .event-time {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-align: center;
+            min-width: 60px;
+        }
+        
+        .timeline-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .timeline-controls .btn {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        /* Timers carton blanc */
+        .white-card-timer {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #fff;
+            min-width: 200px;
+        }
+
+        .white-card-timer .timer-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .white-card-timer .timer-countdown {
+            font-size: 1.5em;
+            color: #ffd700;
+        }
+
+        .white-card-timer.expired {
+            border-color: #4CAF50;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="live-link">
+            <button class="btn btn-primary" onclick="generateLiveLink()">📡 Lien Live</button>
+        </div>
+
+        <header class="header">
+            <h1>⚽ Interface de Match</h1>
+            <p>Suivez et enregistrez tous les événements du match</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <a href="../index.html" class="nav-link">🏠 Accueil</a>
+            <a href="team.html" class="nav-link">👥 Équipe</a>
+            <a href="composition.html" class="nav-link">📋 Compo</a>
+            <a href="match.html" class="nav-link active">⚽ Match</a>
+            <a href="live.html" class="nav-link">📺 Live</a>
+            <a href="stats.html" class="nav-link">📊 Stats</a>
+        </nav>
+
+        <main class="main-content">
+            
+            <div class="team-card">
+                <div class="match-header">
+                    <div class="match-result">
+                        <div class="team-info">
+                            <div class="team-name" id="teamName">Mon Équipe</div>
+                            <div class="team-score" id="teamScore">0</div>
+                        </div>
+                        
+                        <div class="match-info">
+                            <div class="match-time" id="matchTime">00:00</div>
+                            <div class="match-half" id="matchHalf">1ère Mi-temps</div>
+                        </div>
+                        
+                        <div class="team-info">
+                            <div class="team-name" id="opponentName">Équipe Adverse</div>
+                            <div class="team-score" id="opponentScore">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="timer-controls">
+                        <button class="btn btn-success" id="playBtn" onclick="toggleTimer()">▶️ Démarrer</button>
+                        <button class="btn btn-primary" onclick="showHalfTimeConfirm()">⏭ Mi-temps</button>
+                        <button class="btn btn-warning" onclick="resetTimer()">🔄 Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="team-card">
+                <h3>⚽ Actions de Jeu</h3>
+                <div class="action-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <button class="action-btn goal" onclick="showUnifiedActionModal('goal')">⚽ But</button>
+                    <button class="action-btn assist" onclick="showUnifiedActionModal('assist')">➡️ Passe Décisive</button>
+                    <button class="action-btn shot" onclick="showUnifiedActionModal('shot')">🎯 Tir</button>
+                    <button class="action-btn save" onclick="showUnifiedActionModal('save')">🧤 Arrêt Gardien</button>
+                    <button class="action-btn foul" onclick="showUnifiedActionModal('foul')">⚠️ Faute</button>
+                    <button class="action-btn card" onclick="showUnifiedActionModal('card')">🟨 Carton</button>
+                    <button class="action-btn corner" onclick="showUnifiedActionModal('corner')">🚩 Corner</button>
+                    <button class="action-btn offside" onclick="showUnifiedActionModal('offside')">🛑 Hors-jeu</button>
+                    <button class="action-btn substitution" onclick="showSubstitutionModal()">🔄 Changement</button>
+                </div>
+            </div>
+
+            <div id="whiteCardTimersZone" class="white-card-timers" style="margin: 20px 0; display: none;">
+                <h4>⏱️ Cartons Blancs Actifs</h4>
+                <div id="whiteCardTimersList" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+            </div>
+
+            <!-- Modal Unified Action -->
+            <div id="unifiedActionModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeUnifiedActionModal()">&times;</span>
+                    <h3 id="unifiedActionTitle">Action</h3>
+                    
+                    <div id="actionOptionsZone" style="display: none; margin-bottom: 20px;">
+                        <div id="actionOptionsButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px;"></div>
+                    </div>
+                    
+                    <div id="teamPlayersZone" style="margin-bottom: 15px;">
+                        <h4>Mon Équipe</h4>
+                        <div id="teamPlayerButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;"></div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <button id="opponentBtn" class="player-btn opponent-choice" onclick="selectOpponent()" style="width: 100%; padding: 15px; font-size: 1.1em;">🔴 Adversaire</button>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button id="saveUnifiedActionBtn" class="btn btn-primary" disabled onclick="saveUnifiedAction()">💾 Enregistrer</button>
+                        <button class="btn btn-secondary" onclick="closeUnifiedActionModal()">❌ Annuler</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Changement -->
+            <div id="substitutionModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeSubstitutionModal()">&times;</span>
+                    <h3>🔄 Changement de Joueuse</h3>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <button id="subMyTeamBtn" class="btn" onclick="selectSubstitutionTeam('myTeam')" style="width: 48%; margin-right: 4%;">🟢 Mon Équipe</button>
+                        <button id="subOpponentBtn" class="btn" onclick="selectSubstitutionTeam('opponent')" style="width: 48%;">🔴 Adversaire</button>
+                    </div>
+                    
+                    <div id="myTeamSubSection" style="display: none;">
+                        <div style="margin-bottom: 15px;">
+                            <h4>Joueuse qui sort (sur le terrain)</h4>
+                            <div id="playerOutButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;"></div>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <h4>Joueuse qui entre (sur le banc)</h4>
+                            <div id="playerInButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button id="saveSubstitutionBtn" class="btn btn-primary" disabled onclick="saveSubstitution()">💾 Enregistrer</button>
+                        <button class="btn btn-secondary" onclick="closeSubstitutionModal()">❌ Annuler</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Modifier/Supprimer Action -->
+            <div id="editActionTypeModal" class="modal">
+                <div class="modal-content" style="max-width: 600px;">
+                    <span class="close" onclick="closeEditActionTypeModal()">&times;</span>
+                    <h3>⚙️ Modifier ou Supprimer l'action</h3>
+                    
+                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                        <p style="margin: 0; color: #f39c12;">Action actuelle : <span id="currentActionType" style="font-weight: bold; color: white;"></span></p>
+                    </div>
+                    
+                    <h4 style="margin-bottom: 15px;">Choisir une nouvelle action :</h4>
+                    <div class="action-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+                        <button class="action-btn goal" onclick="selectNewActionType('goal', event)">⚽ But</button>
+                        <button class="action-btn assist" style="background: rgba(26, 188, 156, 0.2); border-color: #1abc9c;" onclick="selectNewActionType('assist', event)">➡️ Passe Décisive</button>
+                        <button class="action-btn shot" onclick="selectNewActionType('shot', event)">🎯 Tir</button>
+                        <button class="action-btn save" onclick="selectNewActionType('save', event)">🧤 Arrêt Gardien</button>
+                        <button class="action-btn foul" onclick="selectNewActionType('foul', event)">⚠️ Faute</button>
+                        <button class="action-btn card" onclick="selectNewActionType('card', event)">🟨 Carton</button>
+                        <button class="action-btn corner" style="background: rgba(52, 73, 94, 0.2); border-color: #34495e;" onclick="selectNewActionType('corner', event)">🚩 Corner</button>
+                        <button class="action-btn offside" style="background: rgba(189, 195, 199, 0.2); border-color: #bdc3c7;" onclick="selectNewActionType('offside', event)">🛑 Hors-jeu</button>
+                        <button class="action-btn substitution" style="background: rgba(142, 68, 173, 0.2); border-color: #8e44ad;" onclick="selectNewActionType('substitution', event)">🔄 Changement</button>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="btn btn-danger" onclick="deleteActionFromModal()">🗑️ Supprimer</button>
+                        <button class="btn btn-secondary" onclick="closeEditActionTypeModal()">❌ Annuler</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline des événements -->
+            <div class="team-card">
+                <h3>📝 Timeline du Match</h3>
+                <div class="timeline-controls">
+                    <button class="btn btn-primary" onclick="newMatchFromMatchPage()">🆕 Nouveau Match</button>
+                    <button class="btn btn-danger" onclick="resetAllFromMatchPage()">🔄 Reset Complet</button>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-header">
+                        <div>Mon Équipe</div>
+                        <div>Temps</div>
+                        <div>Équipe Adverse</div>
+                    </div>
+                    <div id="eventsTimeline" class="timeline-events">
+                        <div style="text-align: center; padding: 20px; color: #bbb;">Aucun événement enregistré</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Résumé rapide -->
+            <div class="team-card">
+                <h3>📊 Résumé Rapide</h3>
+                <div class="global-stats-compact">
+                    <div class="compact-stat-card goals">
+                        <div class="compact-stat-icon">⚽</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamGoals">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentGoals">0</span>
+                        </div>
+                        <div class="compact-stat-label">Buts</div>
+                    </div>
+                    
+                    <div class="compact-stat-card shots-on-target">
+                        <div class="compact-stat-icon">🎯</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamShotsOnTarget">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentShotsOnTarget">0</span>
+                        </div>
+                        <div class="compact-stat-label">Tirs cadrés</div>
+                    </div>
+                    
+                    <div class="compact-stat-card shots-off-target">
+                        <div class="compact-stat-icon">↗️</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamShotsOffTarget">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentShotsOffTarget">0</span>
+                        </div>
+                        <div class="compact-stat-label">Tirs non cadrés</div>
+                    </div>
+                    
+                    <div class="compact-stat-card cards">
+                        <div class="compact-stat-icon">🟨</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamCards">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentCards">0</span>
+                        </div>
+                        <div class="compact-stat-label">Cartons</div>
+                    </div>
+                    
+                    <div class="compact-stat-card fouls">
+                        <div class="compact-stat-icon">⚠️</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamFouls">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentFouls">0</span>
+                        </div>
+                        <div class="compact-stat-label">Fautes</div>
+                    </div>
+                    
+                    <div class="compact-stat-card saves">
+                        <div class="compact-stat-icon">🧤</div>
+                        <div class="compact-stat-values">
+                            <span class="compact-team-value" id="compactTeamSaves">0</span>
+                            <span class="compact-separator">-</span>
+                            <span class="compact-opponent-value" id="compactOpponentSaves">0</span>
+                        </div>
+                        <div class="compact-stat-label">Arrêts</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/utils.js"></script>
+    <script src="../js/storage.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/match.js"></script>
+    <script src="../js/match_actions.js"></script>
+    <script>
+        // Initialisation au chargement
+        setInterval(syncMatchEventsWithApp, 1000);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMatchPage();
+        });
+    </script>
+</body>
+</html>
