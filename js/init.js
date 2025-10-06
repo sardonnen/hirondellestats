@@ -14,7 +14,7 @@
         appName: 'Football Stats Manager',
         version: '1.0.0',
         dependencies: {
-            utils: ['debounce', 'throttle', 'formatDate'],
+            utils: ['debounce', 'formatDate'],
             storage: ['storageModule', 'loadData', 'saveData'],
             app: ['footballApp']
         },
