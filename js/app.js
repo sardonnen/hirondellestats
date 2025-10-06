@@ -952,8 +952,6 @@ window.footballApp.getCurrentTime = getCurrentTime;
 
 /**
  * Obtenir l'icône de position
- * @param {string} position - Position du joueur
- * @returns {string} Icône correspondante
  */
 function getPositionIcon(position) {
     if (!position) return '👤';
@@ -963,27 +961,22 @@ function getPositionIcon(position) {
     const icons = {
         'gardienne': '🧤',
         'garden': '🧤',
-        'gb': '🧤',
-        'goal': '🧤',
         'défenseuse': '🛡️',
-        'defense': '🛡️',
-        'def': '🛡️',
         'milieu': '⚙️',
-        'mid': '⚙️',
-        'attaquante': '⚽',
-        'attaque': '⚽',
-        'att': '⚽',
-        'avant': '⚽'
+        'attaquante': '⚽'
     };
     
-    // Chercher une correspondance
     for (const [key, icon] of Object.entries(icons)) {
         if (positionLower.includes(key)) {
             return icon;
         }
     }
     
-    return '👤'; // Icône par défaut
+    return '👤';
+}
+
+if (typeof window.getPositionIcon === 'undefined') {
+    window.getPositionIcon = getPositionIcon;
 }
 
 // Exposer globalement si ce n'est pas déjà fait
@@ -996,4 +989,4 @@ if (typeof footballApp !== 'undefined' && !footballApp.getPositionIcon) {
     footballApp.getPositionIcon = getPositionIcon;
 }
 
-console.log('🎯 Football Stats App - Fonctions principales chargées (version corrigée)');
+console.log('🎯 Football Stats App - Fonctions principales chargées');
