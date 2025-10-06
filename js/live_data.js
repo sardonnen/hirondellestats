@@ -1,4 +1,4 @@
-// live_data.js - Module complet de gestion du live (BACKEND)
+// live_data.js - Module de gestion du live (BACKEND)
 
 // ===== CONFIGURATION =====
 
@@ -13,7 +13,7 @@ const JSONBIN_CONFIG = {
 let currentMatchData = null;
 let refreshIntervalId = null;
 
-// ===== FONCTIONS DE RÃ‰CUPÃ‰RATION DE DONNÃ‰ES =====
+// ===== FONCTIONS DE RÉCUPÉRATION DE DONNÉES =====
 
 /**
  * Extraire le binId depuis l'URL
@@ -255,7 +255,6 @@ function generateTimeline(events) {
  * @returns {string} HTML de l'événement
  */
 function getEventHTML(event) {
-    // Si l'événement a déjà une description formatée, l'utiliser
     if (event.formattedDescription) {
         return event.formattedDescription;
     }
@@ -382,8 +381,6 @@ function showErrorMessage(message) {
 
 /**
  * Obtenir la classe CSS du statut du match
- * @param {Object} matchData - Les données du match
- * @returns {string} Classe CSS
  */
 function getMatchStatusClass(matchData) {
     if (matchData.live?.matchStatus === 'finished') return 'finished';
@@ -393,8 +390,6 @@ function getMatchStatusClass(matchData) {
 
 /**
  * Obtenir le texte du statut du match
- * @param {Object} matchData - Les données du match
- * @returns {string} Texte du statut
  */
 function getMatchStatusText(matchData) {
     if (matchData.live?.matchStatus === 'finished') return '🏁 Terminé';
@@ -404,15 +399,13 @@ function getMatchStatusText(matchData) {
 
 /**
  * Formater la dernière mise à jour
- * @param {string} timestamp - Timestamp ISO
- * @returns {string} Texte formaté
  */
 function formatLastUpdate(timestamp) {
     if (!timestamp) return 'N/A';
     
     const date = new Date(timestamp);
     const now = new Date();
-    const diff = Math.floor((now - date) / 1000); // différence en secondes
+    const diff = Math.floor((now - date) / 1000);
     
     if (diff < 60) return `il y a ${diff} seconde${diff > 1 ? 's' : ''}`;
     if (diff < 3600) return `il y a ${Math.floor(diff / 60)} minute${Math.floor(diff / 60) > 1 ? 's' : ''}`;
@@ -465,7 +458,6 @@ function exportData() {
  * Copier l'URL actuelle
  */
 async function copyUrl() {
-    // Enlever fbclid et autres paramètres de tracking
     const url = window.location.href.split('&fbclid')[0].split('?fbclid')[0];
     
     try {
@@ -476,77 +468,16 @@ async function copyUrl() {
     }
 }
 
-/**
- * Obtenir un résumé des données de match (pour debug)
- * @param {Object} matchData - Les données du match
- * @returns {Object} Résumé
- */
-function getMatchSummary(matchData) {
-    if (!matchData) return null;
-    
-    return {
-        matchInfo: {
-            teamName: matchData.matchInfo?.teamName || 'Mon Équipe',
-            opponentName: matchData.matchInfo?.opponentName || 'Équipe Adverse',
-            date: matchData.matchInfo?.date || 'N/A'
-        },
-        score: {
-            team: matchData.stats?.score?.myTeam || 0,
-            opponent: matchData.stats?.score?.opponent || 0
-        },
-        timer: {
-            currentTime: matchData.timer?.currentTime || '00:00',
-            isRunning: matchData.timer?.isRunning || false,
-            currentHalf: matchData.timer?.currentHalf || 1
-        },
-        stats: {
-            eventsCount: matchData.events?.length || 0,
-            playersCount: matchData.players?.length || 0
-        },
-        lastUpdate: matchData.live?.lastUpdate || 'N/A'
-    };
-}
-
-/**
- * Afficher les stats dans la console (pour debug)
- * @param {Object} matchData - Les données du match
- */
-function displayMatchStats(matchData) {
-    if (!matchData) {
-        console.log('❌ Aucune donnée de match disponible');
-        return;
-    }
-    
-    const summary = getMatchSummary(matchData);
-    
-    console.log('═══════════════════════════════════════');
-    console.log('📊 STATISTIQUES DU MATCH');
-    console.log('═══════════════════════════════════════');
-    console.log(`🏆 ${summary.matchInfo.teamName} vs ${summary.matchInfo.opponentName}`);
-    console.log(`📅 Date: ${summary.matchInfo.date}`);
-    console.log('───────────────────────────────────────');
-    console.log(`⚽ Score: ${summary.score.team} - ${summary.score.opponent}`);
-    console.log(`⏱️ Temps: ${summary.timer.currentTime} (${summary.timer.currentHalf}ère mi-temps)`);
-    console.log(`${summary.timer.isRunning ? '▶️ En cours' : '⏸️ En pause'}`);
-    console.log('───────────────────────────────────────');
-    console.log(`📋 Événements: ${summary.stats.eventsCount}`);
-    console.log(`👥 Joueurs: ${summary.stats.playersCount}`);
-    console.log(`🔄 Dernière MàJ: ${new Date(summary.lastUpdate).toLocaleString('fr-FR')}`);
-    console.log('═══════════════════════════════════════');
-}
-
 // ===== GESTION DU RAFRAÎCHISSEMENT AUTOMATIQUE =====
 
 /**
  * Démarrer le rafraîchissement automatique
- * @param {string} binId - L'identifiant du bin
- * @param {number} interval - Intervalle en millisecondes
  */
 function startAutoRefresh(binId, interval = JSONBIN_CONFIG.REFRESH_INTERVAL) {
     console.log(`🔄 Démarrage du rafraîchissement automatique (${interval}ms)`);
     
     refreshIntervalId = setInterval(async () => {
-        await loadMatchData(binId, false); // false = pas de message de chargement
+        await loadMatchData(binId, false);
     }, interval);
 }
 
@@ -561,37 +492,6 @@ function stopAutoRefresh() {
     }
 }
 
-// ===== SAUVEGARDE LOCALE =====
-
-/**
- * Sauvegarder les données récupérées en local
- * @param {Object} matchData - Les données du match
- */
-function saveMatchDataLocally(matchData) {
-    if (!matchData) return;
-    
-    try {
-        localStorage.setItem('liveMatchData', JSON.stringify(matchData));
-        console.log('💾 Données sauvegardées localement');
-    } catch (error) {
-        console.error('❌ Erreur sauvegarde locale:', error);
-    }
-}
-
-/**
- * Récupérer les données sauvegardées en local
- * @returns {Object|null} Les données du match ou null
- */
-function getLocalMatchData() {
-    try {
-        const data = localStorage.getItem('liveMatchData');
-        return data ? JSON.parse(data) : null;
-    } catch (error) {
-        console.error('❌ Erreur lecture données locales:', error);
-        return null;
-    }
-}
-
 // ===== INITIALISATION =====
 
 /**
@@ -600,7 +500,6 @@ function getLocalMatchData() {
 async function initializeLive() {
     console.log('🚀 Initialisation du module live');
     
-    // Vérifier si on a un binId dans l'URL
     const binId = getBinIdFromUrl();
     
     if (!binId) {
@@ -608,10 +507,7 @@ async function initializeLive() {
         return;
     }
     
-    // Charger les données initiales
     await loadMatchData(binId, true);
-    
-    // Démarrer le rafraîchissement automatique
     startAutoRefresh(binId);
     
     console.log('✅ Module live initialisé');
@@ -619,76 +515,31 @@ async function initializeLive() {
 
 // ===== ÉVÉNEMENTS =====
 
-/**
- * Initialisation au chargement de la page
- */
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📺 Page live chargée');
     initializeLive();
 });
 
-/**
- * Nettoyage avant fermeture de la page
- */
 window.addEventListener('beforeunload', function() {
     stopAutoRefresh();
-    
-    // Sauvegarder les données actuelles
-    if (currentMatchData) {
-        saveMatchDataLocally(currentMatchData);
-    }
-});
-
-/**
- * Écouter les mises à jour automatiques (événement personnalisé)
- */
-window.addEventListener('matchDataUpdated', function(event) {
-    console.log('🔄 Mise à jour automatique reçue');
-    
-    const matchData = event.detail;
-    if (matchData) {
-        currentMatchData = matchData;
-        displayMatchData(matchData);
-    }
 });
 
 // ===== EXPORT DES FONCTIONS GLOBALES =====
 
-/**
- * Module live exporté globalement
- */
 window.liveModule = {
-    // Récupération de données
     getBinIdFromUrl,
     fetchMatchDataFromBin,
     loadMatchData,
-    
-    // Affichage
     displayMatchData,
     updateStatus,
     showNoDataMessage,
     showErrorMessage,
-    
-    // Actions utilisateur
     refreshData,
     exportData,
     copyUrl,
-    
-    // Rafraîchissement
     startAutoRefresh,
     stopAutoRefresh,
-    
-    // Sauvegarde locale
-    saveMatchDataLocally,
-    getLocalMatchData,
-    
-    // Utilitaires
-    getMatchSummary,
-    displayMatchStats,
-    
-    // Variables
     getCurrentMatchData: () => currentMatchData
 };
 
 console.log('✅ Module liveModule disponible globalement');
-console.log('💡 Utilisation: liveModule.refreshData(), liveModule.exportData(), etc.');

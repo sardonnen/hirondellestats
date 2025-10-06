@@ -1,548 +1,387 @@
-// ===== CONFIGURATION API JSONBIN.IO =====
-const JSONBIN_CONFIG = {
-    // Remplacez par votre clé API JSONBin.io
-    API_KEY: '$2a$10$L3uaRDnltfCsdgv50dAJ0.aTJsslnmT2SPju9EPNd6HvXqW6u9KmS',
-    BASE_URL: 'https://api.jsonbin.io/v3/b',
-    HEADERS: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': '$2a$10$L3uaRDnltfCsdgv50dAJ0.aTJsslnmT2SPju9EPNd6HvXqW6u9KmS'
-    }
+// storage.js - Gestion du stockage localStorage (BACKEND)
+
+// ===== CONSTANTES =====
+
+const STORAGE_PREFIX = 'footballStats_';
+const STORAGE_KEYS = {
+    PLAYERS: 'players',
+    MATCH_CONFIG: 'matchConfig',
+    CURRENT_MATCH: 'currentMatch',
+    EVENTS: 'events',
+    LIVE_DATA: 'liveMatchData'
 };
 
+// ===== FONCTIONS DE BASE =====
+
 /**
- * Effacement de toutes les données de l'application
+ * Construire une clé de stockage avec le préfixe
+ * @param {string} key - Clé de base
+ * @returns {string} Clé complète avec préfixe
+ */
+function buildStorageKey(key) {
+    return STORAGE_PREFIX + key;
+}
+
+/**
+ * Sauvegarder des données dans localStorage
+ * @param {string} key - Clé de stockage
+ * @param {*} data - Données à sauvegarder
+ * @returns {boolean} Succès de l'opération
+ */
+function saveData(key, data) {
+    try {
+        const storageKey = buildStorageKey(key);
+        const jsonData = JSON.stringify(data);
+        localStorage.setItem(storageKey, jsonData);
+        console.log(`💾 Données sauvegardées: ${key}`);
+        return true;
+    } catch (error) {
+        console.error(`❌ Erreur sauvegarde ${key}:`, error);
+        return false;
+    }
+}
+
+/**
+ * Charger des données depuis localStorage
+ * @param {string} key - Clé de stockage
+ * @returns {*} Données chargées ou null
+ */
+function loadData(key) {
+    try {
+        const storageKey = buildStorageKey(key);
+        const jsonData = localStorage.getItem(storageKey);
+        
+        if (!jsonData) {
+            return null;
+        }
+        
+        const data = JSON.parse(jsonData);
+        console.log(`📂 Données chargées: ${key}`);
+        return data;
+    } catch (error) {
+        console.error(`❌ Erreur chargement ${key}:`, error);
+        return null;
+    }
+}
+
+/**
+ * Supprimer des données du localStorage
+ * @param {string} key - Clé de stockage
+ * @returns {boolean} Succès de l'opération
+ */
+function removeData(key) {
+    try {
+        const storageKey = buildStorageKey(key);
+        localStorage.removeItem(storageKey);
+        console.log(`🗑️ Données supprimées: ${key}`);
+        return true;
+    } catch (error) {
+        console.error(`❌ Erreur suppression ${key}:`, error);
+        return false;
+    }
+}
+
+/**
+ * Vérifier si une clé existe dans le localStorage
+ * @param {string} key - Clé de stockage
+ * @returns {boolean} True si la clé existe
+ */
+function hasData(key) {
+    const storageKey = buildStorageKey(key);
+    return localStorage.getItem(storageKey) !== null;
+}
+
+/**
+ * Effacer toutes les données de l'application
+ * @returns {boolean} Succès de l'opération
  */
 function clearAllData() {
     try {
         const keys = Object.keys(localStorage);
+        let cleared = 0;
+        
         keys.forEach(key => {
-            if (key.startsWith('footballStats_')) {
+            if (key.startsWith(STORAGE_PREFIX)) {
                 localStorage.removeItem(key);
+                cleared++;
             }
         });
-        console.log('Toutes les données ont été effacées');
+        
+        console.log(`🗑️ ${cleared} clés supprimées`);
         return true;
     } catch (error) {
-        console.error('Erreur lors de l\'effacement:', error);
+        console.error('❌ Erreur lors du nettoyage:', error);
         return false;
     }
 }
 
-/**
- * Sauvegarde de la configuration du match
- */
-function setMatchConfig(config) {
-    return saveData('matchConfig', {
-        ...config,
-        lastUpdated: new Date().toISOString()
-    });
-}
+// ===== FONCTIONS SPÉCIFIQUES =====
 
 /**
- * Chargement de la configuration du match
- */
-function getMatchConfig() {
-    const config = loadData('matchConfig');
-    return config || {
-        teamName: 'Mon Équipe',
-        opponentName: 'Équipe Adverse',
-        venue: 'Stade Municipal',
-        matchDate: new Date().toISOString()
-    };
-}
-
-// ===== GESTION DES JOUEURS =====
-
-/**
- * Sauvegarde de la liste des joueurs
+ * Sauvegarder les joueurs
+ * @param {Array} players - Liste des joueurs
  */
 function savePlayers(players) {
-    return saveData('players', players);
+    return saveData(STORAGE_KEYS.PLAYERS, players);
 }
 
 /**
- * Chargement de la liste des joueurs
+ * Charger les joueurs
+ * @returns {Array} Liste des joueurs ou tableau vide
  */
 function loadPlayers() {
-    return loadData('players') || [];
+    return loadData(STORAGE_KEYS.PLAYERS) || [];
 }
 
 /**
- * Ajout d'un joueur
+ * Sauvegarder la configuration du match
+ * @param {Object} config - Configuration du match
  */
-function addPlayer(player) {
-    const players = loadPlayers();
-    const newPlayer = {
-        id: Date.now() + Math.random(),
-        ...player,
-        createdAt: new Date().toISOString()
+function saveMatchConfig(config) {
+    return saveData(STORAGE_KEYS.MATCH_CONFIG, config);
+}
+
+/**
+ * Charger la configuration du match
+ * @returns {Object} Configuration ou objet par défaut
+ */
+function loadMatchConfig() {
+    return loadData(STORAGE_KEYS.MATCH_CONFIG) || {
+        teamName: 'Mon Équipe',
+        opponentName: 'Équipe Adverse',
+        venue: 'Stade',
+        date: new Date().toISOString().split('T')[0],
+        startTime: '15:00'
     };
-    players.push(newPlayer);
-    savePlayers(players);
-    return newPlayer;
 }
 
 /**
- * Mise à jour d'un joueur
+ * Sauvegarder le match actuel
+ * @param {Object} matchData - Données du match
  */
-function updatePlayer(playerId, updates) {
-    const players = loadPlayers();
-    const playerIndex = players.findIndex(p => p.id === playerId);
-    
-    if (playerIndex !== -1) {
-        players[playerIndex] = {
-            ...players[playerIndex],
-            ...updates,
-            updatedAt: new Date().toISOString()
-        };
-        savePlayers(players);
-        return players[playerIndex];
-    }
-    return null;
+function saveCurrentMatch(matchData) {
+    return saveData(STORAGE_KEYS.CURRENT_MATCH, matchData);
 }
 
 /**
- * Suppression d'un joueur
- */
-function removePlayer(playerId) {
-    const players = loadPlayers();
-    const filteredPlayers = players.filter(p => p.id !== playerId);
-    savePlayers(filteredPlayers);
-    return filteredPlayers;
-}
-
-// ===== GESTION DES COMPOSITIONS =====
-
-/**
- * Sauvegarde d'une composition
- */
-function saveComposition(name, players, startingEleven) {
-    const composition = {
-        name: name,
-        players: players,
-        startingEleven: startingEleven,
-        timestamp: new Date().toISOString()
-    };
-    return saveData(`composition_${name}`, composition);
-}
-
-/**
- * Chargement d'une composition
- */
-function loadComposition(name) {
-    return loadData(`composition_${name}`);
-}
-
-/**
- * Liste de toutes les compositions sauvegardées
- */
-function listCompositions() {
-    const compositions = [];
-    const keys = Object.keys(localStorage);
-    
-    keys.forEach(key => {
-        if (key.startsWith('footballStats_composition_')) {
-            const name = key.replace('footballStats_composition_', '');
-            const composition = loadData(`composition_${name}`);
-            if (composition) {
-                compositions.push({
-                    name: name,
-                    timestamp: composition.timestamp
-                });
-            }
-        }
-    });
-    
-    return compositions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-}
-
-/**
- * Suppression d'une composition
- */
-function deleteComposition(name) {
-    return removeData(`composition_${name}`);
-}
-
-// ===== GESTION DES MATCHS =====
-
-/**
- * Sauvegarde d'un match
- */
-function saveMatch(matchData) {
-    const match = {
-        ...matchData,
-        lastUpdated: new Date().toISOString()
-    };
-    return saveData('currentMatch', match);
-}
-
-/**
- * Chargement du match actuel
+ * Charger le match actuel
+ * @returns {Object|null} Données du match ou null
  */
 function loadCurrentMatch() {
-    return loadData('currentMatch');
+    return loadData(STORAGE_KEYS.CURRENT_MATCH);
 }
 
 /**
- * Sauvegarde d'un match dans l'historique
+ * Sauvegarder les événements
+ * @param {Array} events - Liste des événements
  */
-function saveMatchToHistory(matchData) {
-    const history = loadMatchHistory();
-    const match = {
-        ...matchData,
-        savedAt: new Date().toISOString()
-    };
-    history.unshift(match);
-    
-    // Garder seulement les 50 derniers matchs
-    if (history.length > 50) {
-        history.splice(50);
-    }
-    
-    return saveData('matchHistory', history);
+function saveEvents(events) {
+    return saveData(STORAGE_KEYS.EVENTS, events);
 }
 
 /**
- * Chargement de l'historique des matchs
+ * Charger les événements
+ * @returns {Array} Liste des événements ou tableau vide
  */
-function loadMatchHistory() {
-    return loadData('matchHistory') || [];
+function loadEvents() {
+    return loadData(STORAGE_KEYS.EVENTS) || [];
 }
 
-// ===== SYNCHRONISATION JSONBIN.IO =====
+// ===== FONCTIONS UTILITAIRES =====
 
 /**
- * Upload des données vers JSONBin.io pour le live
+ * Obtenir la taille totale du stockage utilisé
+ * @returns {number} Taille en octets
  */
-async function uploadToJsonBin(data) {
-    try {
-        const response = await fetch(JSONBIN_CONFIG.BASE_URL, {
-            method: 'POST',
-            headers: JSONBIN_CONFIG.HEADERS,
-            body: JSON.stringify(data)
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            console.log('Données uploadées vers JSONBin:', result.metadata.id);
-            return result.metadata.id;
-        } else {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-        }
-    } catch (error) {
-        console.error('Erreur upload JSONBin:', error);
-        return null;
-    }
-}
-
-/**
- * Récupération des données depuis JSONBin.io
- */
-async function downloadFromJsonBin(binId) {
-    try {
-        const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${binId}/latest`, {
-            method: 'GET',
-            headers: {
-                'X-Master-Key': JSONBIN_CONFIG.HEADERS['X-Master-Key']
-            }
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            console.log('Données téléchargées depuis JSONBin');
-            return result.record;
-        } else {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-        }
-    } catch (error) {
-        console.error('Erreur download JSONBin:', error);
-        return null;
-    }
-}
-
-/**
- * Mise à jour des données dans JSONBin.io
- */
-async function updateJsonBin(binId, data) {
-    try {
-        const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${binId}`, {
-            method: 'PUT',
-            headers: JSONBIN_CONFIG.HEADERS,
-            body: JSON.stringify(data)
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            console.log('Données mises à jour dans JSONBin');
-            return result;
-        } else {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-        }
-    } catch (error) {
-        console.error('Erreur update JSONBin:', error);
-        return null;
-    }
-}
-
-// ===== GESTION DU LIVE =====
-
-/**
- * Génération d'un lien live
- */
-async function generateLiveLink(matchData) {
-    const liveData = {
-        matchId: matchData.id || Date.now().toString(),
-        config: getMatchConfig(),
-        players: loadPlayers(),
-        events: matchData.events || [],
-        score: matchData.score || { team: 0, opponent: 0 },
-        time: matchData.time || 0,
-        half: matchData.half || 1,
-        timestamp: new Date().toISOString()
-    };
+function getStorageSize() {
+    let total = 0;
     
-    // Sauvegarder localement pour fallback
-    saveData(`live_${liveData.matchId}`, liveData);
-    
-    // Essayer d'uploader vers JSONBin
-    const binId = await uploadToJsonBin(liveData);
-    
-    if (binId) {
-        // Sauvegarder l'ID du bin pour les mises à jour
-        saveData(`liveBin_${liveData.matchId}`, binId);
-        return {
-            url: `${window.location.origin}${window.location.pathname}?live=${liveData.matchId}&bin=${binId}`,
-            matchId: liveData.matchId,
-            binId: binId
-        };
-    } else {
-        // Fallback: utiliser seulement le localStorage
-        return {
-            url: `${window.location.origin}${window.location.pathname}?live=${liveData.matchId}`,
-            matchId: liveData.matchId,
-            binId: null
-        };
-    }
-}
-
-/**
- * Mise à jour des données live
- */
-async function updateLiveData(matchId, updateData) {
-    const currentData = loadData(`live_${matchId}`) || {};
-    const updatedData = {
-        ...currentData,
-        ...updateData,
-        lastUpdated: new Date().toISOString()
-    };
-    
-    // Sauvegarder localement
-    saveData(`live_${matchId}`, updatedData);
-    
-    // Essayer de mettre à jour JSONBin
-    const binId = loadData(`liveBin_${matchId}`);
-    if (binId) {
-        await updateJsonBin(binId, updatedData);
-    }
-    
-    return updatedData;
-}
-
-/**
- * Récupération des données live
- */
-async function getLiveData(matchId, binId = null) {
-    // Essayer JSONBin en premier si on a un binId
-    if (binId) {
-        const jsonbinData = await downloadFromJsonBin(binId);
-        if (jsonbinData) {
-            return jsonbinData;
+    for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key) && key.startsWith(STORAGE_PREFIX)) {
+            total += localStorage[key].length + key.length;
         }
     }
     
-    // Fallback: localStorage
-    return loadData(`live_${matchId}`);
+    return total;
 }
 
-// ===== EXPORT/IMPORT =====
+/**
+ * Obtenir la taille du stockage en format lisible
+ * @returns {string} Taille formatée (ex: "2.5 KB")
+ */
+function getStorageSizeFormatted() {
+    const bytes = getStorageSize();
+    
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+    return (bytes / 1048576).toFixed(2) + ' MB';
+}
 
 /**
- * Export de toutes les données
+ * Lister toutes les clés de l'application
+ * @returns {Array} Liste des clés
+ */
+function listAllKeys() {
+    const keys = [];
+    
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(STORAGE_PREFIX)) {
+            keys.push(key.replace(STORAGE_PREFIX, ''));
+        }
+    }
+    
+    return keys;
+}
+
+/**
+ * Exporter toutes les données de l'application
+ * @returns {Object} Objet contenant toutes les données
  */
 function exportAllData() {
-    const allData = {
-        players: loadPlayers(),
-        matchConfig: getMatchConfig(),
-        currentMatch: loadCurrentMatch(),
-        matchHistory: loadMatchHistory(),
-        compositions: listCompositions().map(comp => ({
-            ...comp,
-            data: loadComposition(comp.name)
-        })),
-        exportDate: new Date().toISOString(),
-        version: '1.0'
-    };
+    const exportData = {};
+    const keys = listAllKeys();
     
-    return allData;
+    keys.forEach(key => {
+        exportData[key] = loadData(key);
+    });
+    
+    exportData._exportDate = new Date().toISOString();
+    exportData._version = '1.0';
+    
+    return exportData;
 }
 
 /**
- * Import de données
+ * Importer des données dans l'application
+ * @param {Object} data - Données à importer
+ * @returns {boolean} Succès de l'opération
  */
 function importAllData(data) {
     try {
-        if (data.players) {
-            savePlayers(data.players);
-        }
+        // Sauvegarder chaque clé
+        Object.keys(data).forEach(key => {
+            if (!key.startsWith('_')) { // Ignorer les métadonnées
+                saveData(key, data[key]);
+            }
+        });
         
-        if (data.matchConfig) {
-            setMatchConfig(data.matchConfig);
-        }
-        
-        if (data.currentMatch) {
-            saveMatch(data.currentMatch);
-        }
-        
-        if (data.matchHistory) {
-            saveData('matchHistory', data.matchHistory);
-        }
-        
-        if (data.compositions) {
-            data.compositions.forEach(comp => {
-                if (comp.data) {
-                    saveComposition(comp.name, comp.data.players, comp.data.startingEleven);
-                }
-            });
-        }
-        
-        console.log('Données importées avec succès');
+        console.log('✅ Données importées avec succès');
         return true;
     } catch (error) {
-        console.error('Erreur lors de l\'import:', error);
+        console.error('❌ Erreur lors de l\'import:', error);
         return false;
     }
 }
 
-// ===== UTILITAIRES =====
-
 /**
- * Vérification de l'état du stockage
+ * Obtenir des informations sur le stockage
+ * @returns {Object} Informations détaillées
  */
 function getStorageInfo() {
-    const info = {
-        players: loadPlayers().length,
-        compositions: listCompositions().length,
-        hasCurrentMatch: !!loadCurrentMatch(),
-        matchHistory: loadMatchHistory().length,
-        storageUsed: 0
+    return {
+        keys: listAllKeys(),
+        keysCount: listAllKeys().length,
+        totalSize: getStorageSize(),
+        formattedSize: getStorageSizeFormatted(),
+        hasPlayers: hasData(STORAGE_KEYS.PLAYERS),
+        hasMatch: hasData(STORAGE_KEYS.CURRENT_MATCH),
+        hasConfig: hasData(STORAGE_KEYS.MATCH_CONFIG)
     };
-    
-    // Calculer l'espace utilisé
-    let totalSize = 0;
-    for (let key in localStorage) {
-        if (key.startsWith('footballStats_')) {
-            totalSize += localStorage[key].length;
-        }
-    }
-    info.storageUsed = Math.round(totalSize / 1024); // en KB
-    
-    return info;
 }
+
+// ===== MIGRATION DE DONNÉES =====
 
 /**
- * Nettoyage automatique des anciennes données
+ * Migrer les anciennes données vers le nouveau format
  */
-function cleanupOldData(daysToKeep = 30) {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+function migrateOldData() {
+    console.log('🔄 Vérification des migrations nécessaires...');
     
-    // Nettoyer l'historique des matchs
-    const history = loadMatchHistory();
-    const filteredHistory = history.filter(match => 
-        new Date(match.savedAt || match.timestamp) > cutoffDate
-    );
-    
-    if (filteredHistory.length !== history.length) {
-        saveData('matchHistory', filteredHistory);
-        console.log(`Nettoyage: ${history.length - filteredHistory.length} anciens matchs supprimés`);
-    }
-    
-    // Nettoyer les données live anciennes
-    const keys = Object.keys(localStorage);
-    let cleanedCount = 0;
-    
-    keys.forEach(key => {
-        if (key.startsWith('footballStats_live_')) {
-            const data = loadData(key.replace('footballStats_', ''));
-            if (data && data.timestamp) {
-                const dataDate = new Date(data.timestamp);
-                if (dataDate < cutoffDate) {
-                    localStorage.removeItem(key);
-                    cleanedCount++;
-                }
+    // Exemple : Ajouter des champs manquants aux joueurs
+    const players = loadPlayers();
+    if (players && players.length > 0) {
+        let needsUpdate = false;
+        
+        const updatedPlayers = players.map(player => {
+            if (!player.stats) {
+                player.stats = {
+                    goals: 0,
+                    shots: 0,
+                    cards: 0,
+                    fouls: 0,
+                    saves: 0
+                };
+                needsUpdate = true;
             }
+            return player;
+        });
+        
+        if (needsUpdate) {
+            savePlayers(updatedPlayers);
+            console.log('✅ Migration des joueurs effectuée');
         }
-    });
-    
-    if (cleanedCount > 0) {
-        console.log(`Nettoyage: ${cleanedCount} données live anciennes supprimées`);
     }
 }
 
-// ===== INITIALISATION =====
+// ===== EXPORT DES FONCTIONS =====
 
-// Nettoyage automatique au chargement (seulement une fois par jour)
-document.addEventListener('DOMContentLoaded', function() {
-    const lastCleanup = loadData('lastCleanup');
-    const today = new Date().toDateString();
-    
-    if (!lastCleanup || lastCleanup !== today) {
-        cleanupOldData();
-        saveData('lastCleanup', today);
-    }
-});
-
-// Export des fonctions globales
-window.footballStorage = {
-    // Données générales
+/**
+ * Module de stockage exporté globalement
+ */
+window.storageModule = {
+    // Fonctions de base
     saveData,
     loadData,
     removeData,
+    hasData,
     clearAllData,
     
-    // Configuration match
-    setMatchConfig,
-    getMatchConfig,
-    
-    // Joueurs
+    // Fonctions spécifiques
     savePlayers,
     loadPlayers,
-    addPlayer,
-    updatePlayer,
-    removePlayer,
-    
-    // Compositions
-    saveComposition,
-    loadComposition,
-    listCompositions,
-    deleteComposition,
-    
-    // Matchs
-    saveMatch,
+    saveMatchConfig,
+    loadMatchConfig,
+    saveCurrentMatch,
     loadCurrentMatch,
-    saveMatchToHistory,
-    loadMatchHistory,
-    
-    // Live
-    generateLiveLink,
-    updateLiveData,
-    getLiveData,
-    
-    // Import/Export
-    exportAllData,
-    importAllData,
+    saveEvents,
+    loadEvents,
     
     // Utilitaires
+    getStorageSize,
+    getStorageSizeFormatted,
+    listAllKeys,
+    exportAllData,
+    importAllData,
     getStorageInfo,
-    cleanupOldData
+    
+    // Migration
+    migrateOldData,
+    
+    // Constantes
+    STORAGE_PREFIX,
+    STORAGE_KEYS
 };
+
+// Exposer aussi les fonctions individuellement pour compatibilité
+window.saveData = saveData;
+window.loadData = loadData;
+window.removeData = removeData;
+window.hasData = hasData;
+window.clearAllData = clearAllData;
+window.getMatchConfig = loadMatchConfig;
+window.getMyTeamPlayers = loadPlayers;
+
+// ===== INITIALISATION =====
+
+// Vérifier et migrer les données au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('💾 Module storage.js initialisé');
+    migrateOldData();
+    
+    // Afficher les infos de stockage
+    const info = getStorageInfo();
+    console.log(`📊 Stockage: ${info.keysCount} clés, ${info.formattedSize}`);
+});
+
+console.log('✅ Module storageModule disponible globalement');
