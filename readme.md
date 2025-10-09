@@ -17,7 +17,8 @@ football-stats/
 │   ├── setup.js            # Configuration et diagnostics
 │   └── stats.js            # Calculs statistiques
 │   ├── storage.js          # Gestion stockage (local + JSONBin)
-│   └── utils.js            # Calculs statistiques
+│   └── utils.js            # 
+│   └── pdf-export.js       # export stats format pdf
 └── pages/
 ├── composition.html    # Composition 11 titulaires
 ├── live.html           # Affichage live pour spectateurs

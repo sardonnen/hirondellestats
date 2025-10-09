@@ -48,7 +48,7 @@
                     
                     <div class="match-meta">
                         <div class="meta-item">
-                            <span class="meta-label">🟏️ Lieu:</span>
+                            <span class="meta-label">🏟️ Lieu:</span>
                             <span class="meta-value" id="summaryVenue">Stade Municipal</span>
                         </div>
                         <div class="meta-item">
@@ -67,9 +67,10 @@
                 </div>
                 
                 <div class="stats-actions">
-                    <button class="btn btn-primary" onclick="generateReport()">📋 Générer Rapport</button>
+                    <button class="btn btn-primary" onclick="generateMatchPDF()">📄 Exporter PDF</button>
+                    <button class="btn btn-secondary" onclick="generateReport()">📋 Générer Rapport</button>
                     <button class="btn btn-secondary" onclick="exportStats()">📤 Exporter Stats</button>
-                    <button class="btn btn-warning" onclick="generatePDF()">📄 Export PDF</button>
+                    <button class="btn btn-warning" onclick="printStats()">🖨️ Imprimer</button>
                 </div>
             </div>
 
@@ -153,7 +154,7 @@
 
             <!-- Statistiques individuelles -->
             <div class="team-card">
-                <h2>👤 Statistiques Indiv.</h2>
+                <h2>👤 Statistiques Individuelles</h2>
                 <div class="stats-filter">
                     <button class="filter-btn active" onclick="filterPlayers('all')" data-filter="all">Toutes</button>
                     <button class="filter-btn" onclick="filterPlayers('field')" data-filter="field">Titulaires</button>
@@ -196,831 +197,82 @@
                 </div>
                 
                 <div id="detailedTimeline" class="detailed-timeline">
-                    <!-- Timeline détaillée apparaîtra ici -->
+                    <!-- Timeline apparaîtra ici -->
                 </div>
             </div>
 
-            <!-- Graphiques et analyses -->
+            <!-- Analyse avancée -->
             <div class="team-card">
-                <h2>📈 Analyses Avancées</h2>
-                <div class="analysis-grid">
+                <h2>📊 Analyse Avancée</h2>
+                <div class="advanced-analysis">
                     <div class="analysis-card">
-                        <h3>🎯 Efficacité Offensive</h3>
-                        <div class="efficiency-display">
+                        <h3>Efficacité Offensive</h3>
+                        <div class="efficiency-meter">
+                            <div class="efficiency-bar" id="efficiencyProgress"></div>
+                        </div>
+                        <div class="efficiency-stats">
                             <div class="efficiency-item">
                                 <span class="efficiency-label">Taux de réussite:</span>
                                 <span class="efficiency-value" id="shotEfficiency">0%</span>
                             </div>
                             <div class="efficiency-item">
-                                <span class="efficiency-label">Buts/Tir:</span>
-                                <span class="efficiency-value" id="goalsPerShot">0.0</span>
-                            </div>
-                            <div class="efficiency-bar">
-                                <div class="efficiency-progress" id="efficiencyProgress" style="width: 0%"></div>
+                                <span class="efficiency-label">Buts par tir:</span>
+                                <span class="efficiency-value" id="goalsPerShot">0.00</span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="analysis-card">
-                        <h3>🛡️ Performance Défensive</h3>
-                        <div class="defense-display">
+                        <h3>Performance Défensive</h3>
+                        <div class="defense-stats">
                             <div class="defense-item">
-                                <span class="defense-label">Arrêts gardienne:</span>
+                                <span class="defense-label">Arrêts totaux:</span>
                                 <span class="defense-value" id="totalSaves">0</span>
                             </div>
                             <div class="defense-item">
                                 <span class="defense-label">Buts encaissés:</span>
                                 <span class="defense-value" id="goalsConceded">0</span>
                             </div>
-                            <div class="defense-rating">
-                                <span class="rating-label">Note défensive:</span>
-                                <div class="rating-stars" id="defenseRating">
-                                    ⭐⭐⭐⭐⭐
-                                </div>
+                            <div class="defense-item">
+                                <span class="defense-label">Note défensive:</span>
+                                <span class="defense-value" id="defenseRating">⭐⭐⭐</span>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="analysis-card">
-                        <h3>📊 Répartition des Événements</h3>
-                        <div class="events-distribution" id="eventsChart">
-                            <!-- Graphique simple des événements -->
-                        </div>
-                    </div>
+                </div>
+                
+                <div class="events-chart" id="eventsChart">
+                    <!-- Graphique des événements -->
                 </div>
             </div>
 
-            <!-- Meilleurs performeurs -->
-            <div class="team-card">
-                <h2>🏆 Meilleurs Performeurs</h2>
-                <div class="top-performers">
-                    <div class="performer-category">
-                        <h3>⚽ Meilleure Buteuse</h3>
-                        <div class="top-player" id="topScorer">
-                            <div class="player-name">-</div>
-                            <div class="player-stat">0 but(s)</div>
-                        </div>
-                    </div>
-                    
-                    <div class="performer-category">
-                        <h3>🎯 Meilleure Tireuse</h3>
-                        <div class="top-player" id="topShooter">
-                            <div class="player-name">-</div>
-                            <div class="player-stat">0 tir(s)</div>
-                        </div>
-                    </div>
-                    
-                    <div class="performer-category">
-                        <h3>🧤 Meilleure Gardienne</h3>
-                        <div class="top-player" id="topKeeper">
-                            <div class="player-name">-</div>
-                            <div class="player-stat">0 arrêt(s)</div>
-                        </div>
-                    </div>
-                    
-                    <div class="performer-category">
-                        <h3>⚡ Joueuse du Match</h3>
-                        <div class="top-player motm" id="playerOfMatch">
-                            <div class="player-name">-</div>
-                            <div class="player-stat">Score: 0</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </main>
     </div>
 
     <!-- Modal Rapport -->
     <div id="reportModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content report-modal">
             <span class="close" onclick="closeReportModal()">&times;</span>
-            <h3>📋 Rapport de Match</h3>
+            <h2>📋 Rapport de Match</h2>
             <div id="reportContent" class="report-content">
-                <!-- Le rapport généré apparaîtra ici -->
+                <!-- Contenu du rapport -->
             </div>
             <div class="modal-actions">
                 <button class="btn btn-primary" onclick="downloadReport()">💾 Télécharger</button>
-                <button class="btn btn-secondary" onclick="closeReportModal()">❌ Fermer</button>
+                <button class="btn btn-secondary" onclick="closeReportModal()">✖ Fermer</button>
             </div>
         </div>
     </div>
 
     <!-- Scripts -->
-    <script src="../js/utils.js"></script>
+    <!-- jsPDF et jspdf-autotable depuis CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- Scripts de l'application -->
     <script src="../js/storage.js"></script>
     <script src="../js/app.js"></script>
-    <script src="../js/init.js"></script>
+    <script src="../js/pdf-export.js"></script>
     <script src="../js/stats.js"></script>
-    <!-- Bibliothèques pour PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
-
-    <style>
-        /* Styles spécifiques à la page statistiques */
-        .match-summary {
-            background: rgba(255,255,255,0.1);
-            border-radius: var(--border-radius-lg);
-            padding: 15px;
-            margin: 15px 0;
-        }
-
-        .match-result {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .team-result {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .team-name {
-            font-size: 1em;
-            font-weight: bold;
-        }
-
-        .team-score {
-            font-size: 2em;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        .match-details {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .match-time {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: var(--warning-color);
-        }
-
-        .match-status {
-            padding: 3px 10px;
-            background: rgba(39, 174, 96, 0.3);
-            border-radius: 15px;
-            border: 1px solid var(--success-color);
-            font-weight: bold;
-            font-size: 0.85em;
-        }
-
-        .match-meta {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .meta-item {
-            display: flex;
-            gap: 5px;
-            padding: 5px 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: var(--border-radius);
-            font-size: 0.85em;
-        }
-
-        .meta-label {
-            font-weight: bold;
-        }
-
-        .stats-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 15px;
-        }
-
-        .stats-actions .btn {
-            padding: 8px 16px;
-            font-size: 0.9em;
-        }
-
-        .stat-detail-row {
-            margin: 5px 0;
-            padding-left: 30px;
-            font-size: 0.85em;
-            opacity: 0.9;
-            border-left: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-.stat-detail-row > div {
-    padding: 2px 0;
-}
-
-        /* Grid 3x2 pour stats globales */
-        .global-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 15px 0;
-        }
-
-        .global-stat-card {
-            background: rgba(255,255,255,0.1);
-            border-radius: var(--border-radius);
-            padding: 10px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: var(--transition);
-        }
-
-        .global-stat-card:hover {
-            background: rgba(255,255,255,0.15);
-            transform: translateY(-2px);
-        }
-
-        .global-stat-card .stat-icon {
-            font-size: 1.2em;
-            margin-bottom: 5px;
-        }
-
-        .global-stat-card .stat-values {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 5px;
-            font-size: 1.2em;
-            font-weight: bold;
-            margin: 5px 0;
-        }
-
-        .team-value {
-            color: var(--success-color);
-        }
-
-        .opponent-value {
-            color: var(--danger-color);
-        }
-
-        .separator {
-            color: var(--light-color);
-            opacity: 0.6;
-        }
-
-        .stat-label {
-            font-size: 0.8em;
-            font-weight: 600;
-            color: var(--light-color);
-        }
-
-        .stats-filter {
-            display: flex;
-            gap: 8px;
-            margin: 15px 0;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn, .timeline-filter-btn {
-            padding: 6px 12px;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: var(--border-radius);
-            background: rgba(255,255,255,0.1);
-            color: white;
-            cursor: pointer;
-            transition: var(--transition);
-            font-size: 0.85em;
-        }
-
-        .filter-btn.active, .timeline-filter-btn.active {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .filter-btn:hover, .timeline-filter-btn:hover {
-            background: rgba(255,255,255,0.2);
-        }
-
-        /* Grid 2 colonnes pour les joueuses */
-        .players-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin: 15px 0;
-        }
-
-        .player-stats-card {
-            background: rgba(255,255,255,0.1);
-            border-radius: var(--border-radius);
-            border: 1px solid rgba(255,255,255,0.1);
-            overflow: hidden;
-            transition: var(--transition);
-        }
-
-        .player-stats-card:hover {
-            background: rgba(255,255,255,0.15);
-            transform: translateY(-2px);
-        }
-
-        .player-stats-card.goalkeeper {
-            border-color: #e67e22;
-            background: rgba(230, 126, 34, 0.1);
-        }
-
-        .player-stats-header {
-            padding: 8px 10px;
-            background: rgba(0,0,0,0.2);
-        }
-
-        .player-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .player-position {
-            font-size: 1.2em;
-        }
-
-        .player-details .player-name {
-            font-size: 0.95em;
-            font-weight: bold;
-            margin-bottom: 2px;
-        }
-
-        .player-number {
-            font-size: 0.75em;
-            color: var(--warning-color);
-        }
-
-        .player-status {
-            font-size: 0.7em;
-            opacity: 0.8;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-        }
-
-        .player-time {
-            font-size: 0.7em;
-            opacity: 0.8;
-            color: #f39c12;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-        }
-
-        .player-stats-content {
-            padding: 8px 10px;
-        }
-
-        .stat-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .stat-row:last-child {
-            border-bottom: none;
-        }
-
-        .stat-row .stat-icon {
-            width: 20px;
-            text-align: center;
-            font-size: 0.9em;
-        }
-
-        .stat-row .stat-label {
-            flex: 1;
-            font-weight: 500;
-            font-size: 0.85em;
-        }
-
-        .stat-row .stat-value {
-            font-weight: 600;
-            color: white;
-            font-size: 0.85em;
-        }
-
-        /* Note en dernier */
-        .player-score-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 0;
-            margin-top: 5px;
-            padding-top: 8px;
-            border-top: 2px solid rgba(255,255,255,0.2);
-        }
-
-        .player-score-row .stat-icon {
-            width: 20px;
-            text-align: center;
-            font-size: 0.9em;
-        }
-
-        .player-score-row .stat-label {
-            flex: 1;
-            font-weight: 600;
-            font-size: 0.85em;
-        }
-
-        .player-score-row .stat-value {
-            font-weight: bold;
-            font-size: 0.85em;
-        }
-
-        .player-score-row .stat-value.positive {
-            color: var(--success-color);
-        }
-
-        .player-score-row .stat-value.negative {
-            color: var(--danger-color);
-        }
-
-        .player-score-row .stat-value.neutral {
-            color: #95a5a6;
-        }
-
-        .halftime-analysis {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin: 15px 0;
-        }
-
-        .half-stats h3 {
-            color: var(--warning-color);
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 1em;
-        }
-
-        .half-stats-grid {
-            display: grid;
-            gap: 8px;
-        }
-
-        .half-stat-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: var(--border-radius);
-            font-size: 0.85em;
-        }
-
-        .half-stat-icon {
-            width: 20px;
-            text-align: center;
-        }
-
-        .half-stat-label {
-            flex: 1;
-        }
-
-        .half-stat-value {
-            font-weight: bold;
-            color: white;
-        }
-
-        .timeline-controls {
-            display: flex;
-            gap: 8px;
-            margin: 15px 0;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .detailed-timeline {
-            max-height: 400px;
-            overflow-y: auto;
-            background: rgba(0,0,0,0.2);
-            border-radius: var(--border-radius);
-            padding: 10px;
-        }
-
-        .timeline-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: var(--border-radius);
-            border-left: 3px solid;
-            font-size: 0.85em;
-        }
-
-        .timeline-item.team {
-            background: rgba(39, 174, 96, 0.1);
-            border-left-color: var(--success-color);
-        }
-
-        .timeline-item.opponent {
-            background: rgba(231, 76, 60, 0.1);
-            border-left-color: var(--danger-color);
-        }
-
-        .timeline-time {
-            font-weight: bold;
-            min-width: 50px;
-            background: rgba(255,255,255,0.2);
-            padding: 3px 6px;
-            border-radius: 4px;
-            text-align: center;
-            font-size: 0.8em;
-        }
-
-        .timeline-icon {
-            font-size: 1em;
-            min-width: 25px;
-            text-align: center;
-        }
-
-        .timeline-content {
-            flex: 1;
-        }
-
-        .timeline-text {
-            font-weight: 500;
-            margin-bottom: 3px;
-        }
-
-        .timeline-meta {
-            font-size: 0.75em;
-            opacity: 0.8;
-        }
-
-        .analysis-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            margin: 15px 0;
-        }
-
-        .analysis-card {
-            background: rgba(255,255,255,0.1);
-            border-radius: var(--border-radius);
-            padding: 15px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .analysis-card h3 {
-            color: var(--warning-color);
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 1em;
-        }
-
-        .efficiency-display, .defense-display {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .efficiency-item, .defense-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            font-size: 0.85em;
-        }
-
-        .efficiency-value, .defense-value {
-            font-weight: bold;
-            color: white;
-        }
-
-        .efficiency-bar {
-            height: 15px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 8px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .efficiency-progress {
-            height: 100%;
-            background: linear-gradient(to right, var(--danger-color), var(--warning-color), var(--success-color));
-            transition: width 0.5s ease;
-        }
-
-        .defense-rating {
-            text-align: center;
-            margin-top: 8px;
-        }
-
-        .rating-stars {
-            font-size: 1em;
-            margin-top: 5px;
-        }
-
-        .events-distribution {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .chart-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8em;
-        }
-
-        .chart-label {
-            min-width: 70px;
-            font-size: 0.8em;
-        }
-
-        .chart-progress {
-            flex: 1;
-            height: 12px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 6px;
-            overflow: hidden;
-        }
-
-        .chart-fill {
-            height: 100%;
-            background: white;
-            transition: width 0.5s ease;
-        }
-
-        .chart-value {
-            min-width: 25px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.8em;
-        }
-
-        .top-performers {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin: 15px 0;
-        }
-
-        .performer-category {
-            background: rgba(255,255,255,0.1);
-            border-radius: var(--border-radius);
-            padding: 15px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .performer-category h3 {
-            color: var(--warning-color);
-            margin-bottom: 10px;
-            font-size: 0.9em;
-        }
-
-        .top-player {
-            background: rgba(255,255,255,0.1);
-            padding: 10px;
-            border-radius: var(--border-radius);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .top-player.motm {
-            background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,140,0,0.2));
-            border-color: #ffd700;
-        }
-
-        .top-player .player-name {
-            font-weight: bold;
-            font-size: 0.95em;
-            margin-bottom: 5px;
-        }
-
-        .top-player .player-stat {
-            color: white;
-            font-weight: 600;
-            font-size: 0.85em;
-        }
-
-        .report-content {
-            max-height: 70vh;
-            overflow-y: auto;
-            padding: 15px;
-            background: rgba(255,255,255,0.05);
-            border-radius: var(--border-radius);
-            margin: 15px 0;
-        }
-
-        .report-header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid rgba(255,255,255,0.2);
-            padding-bottom: 15px;
-        }
-
-        .report-section {
-            margin: 15px 0;
-            padding: 12px;
-            background: rgba(255,255,255,0.1);
-            border-radius: var(--border-radius);
-        }
-
-        .report-section h3 {
-            color: var(--warning-color);
-            margin-bottom: 8px;
-            font-size: 1em;
-        }
-
-        .report-section ul {
-            margin-left: 20px;
-        }
-
-        .report-section li {
-            margin: 5px 0;
-            font-size: 0.9em;
-        }
-
-        .no-stats, .no-timeline, .no-chart {
-            text-align: center;
-            font-style: italic;
-            opacity: 0.7;
-            padding: 30px 15px;
-            color: var(--light-color);
-            font-size: 0.9em;
-        }
-
-        /* Responsive - ajustements supplémentaires pour très petits écrans */
-        @media (max-width: 480px) {
-            .match-result {
-                font-size: 0.9em;
-            }
-
-            .team-score {
-                font-size: 1.8em;
-            }
-
-            .match-time {
-                font-size: 1.3em;
-            }
-
-            .meta-item {
-                font-size: 0.75em;
-                padding: 4px 8px;
-            }
-
-            .stats-actions .btn {
-                padding: 6px 12px;
-                font-size: 0.85em;
-            }
-
-            .global-stats-grid {
-                gap: 8px;
-            }
-
-            .global-stat-card {
-                padding: 8px;
-            }
-
-            .players-stats-grid {
-                gap: 8px;
-            }
-
-            .player-stats-header {
-                padding: 6px 8px;
-            }
-
-            .player-details .player-name {
-                font-size: 0.85em;
-            }
-
-            .player-stats-content {
-                padding: 6px 8px;
-            }
-
-            .top-performers {
-                grid-template-columns: 1fr;
-            }
-
-            .halftime-analysis {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Print styles */
-        @media print {
-            .nav-tabs, .stats-actions, .modal {
-                display: none !important;
-            }
-
-            .container {
-                padding: 0;
-            }
-
-            .team-card {
-                break-inside: avoid;
-                page-break-inside: avoid;
-                margin-bottom: 20px;
-            }
-        }
-    </style>
 </body>
 </html>
