@@ -503,23 +503,70 @@ function updateQuickStatsFromEvents() {
     
     updateQuickStats();
     
-    document.getElementById('teamScore').textContent = matchStats.myTeam.goals;
-    document.getElementById('opponentScore').textContent = matchStats.opponent.goals;
+    const teamScoreEl = document.getElementById('teamScore');
+    const opponentScoreEl = document.getElementById('opponentScore');
+    
+    if (teamScoreEl) teamScoreEl.textContent = matchStats.myTeam.goals;
+    if (opponentScoreEl) opponentScoreEl.textContent = matchStats.opponent.goals;
 }
 
 function updateQuickStats() {
-    document.getElementById('compactTeamGoals').textContent = matchStats.myTeam.goals;
-    document.getElementById('compactOpponentGoals').textContent = matchStats.opponent.goals;
-    document.getElementById('compactTeamShotsOnTarget').textContent = matchStats.myTeam.shotsOnTarget || 0;
-    document.getElementById('compactOpponentShotsOnTarget').textContent = matchStats.opponent.shotsOnTarget || 0;
-    document.getElementById('compactTeamShotsOffTarget').textContent = matchStats.myTeam.shotsOffTarget || 0;
-    document.getElementById('compactOpponentShotsOffTarget').textContent = matchStats.opponent.shotsOffTarget || 0;
-    document.getElementById('compactTeamCards').textContent = matchStats.myTeam.cards;
-    document.getElementById('compactOpponentCards').textContent = matchStats.opponent.cards;
-    document.getElementById('compactTeamFouls').textContent = matchStats.myTeam.fouls;
-    document.getElementById('compactOpponentFouls').textContent = matchStats.opponent.fouls;
-    document.getElementById('compactTeamSaves').textContent = matchStats.myTeam.saves;
-    document.getElementById('compactOpponentSaves').textContent = matchStats.opponent.saves;
+    const container = document.getElementById('quickStats');
+    if (!container) return; // Protection
+    
+    // Créer le contenu HTML
+    container.innerHTML = `
+        <div class="compact-stats-grid">
+            <div class="stat-row">
+                <div class="stat-label">⚽ Buts</div>
+                <div class="stat-values">
+                    <span class="team-value">${matchStats.myTeam.goals}</span>
+                    <span class="separator">-</span>
+                    <span class="opponent-value">${matchStats.opponent.goals}</span>
+                </div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">🎯 Tirs cadrés</div>
+                <div class="stat-values">
+                    <span class="team-value">${matchStats.myTeam.shotsOnTarget || 0}</span>
+                    <span class="separator">-</span>
+                    <span class="opponent-value">${matchStats.opponent.shotsOnTarget || 0}</span>
+                </div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">📍 Tirs non cadrés</div>
+                <div class="stat-values">
+                    <span class="team-value">${matchStats.myTeam.shotsOffTarget || 0}</span>
+                    <span class="separator">-</span>
+                    <span class="opponent-value">${matchStats.opponent.shotsOffTarget || 0}</span>
+                </div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">🟨 Cartons</div>
+                <div class="stat-values">
+                    <span class="team-value">${matchStats.myTeam.cards}</span>
+                    <span class="separator">-</span>
+                    <span class="opponent-value">${matchStats.opponent.cards}</span>
+                </div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">⚠️ Fautes</div>
+                <div class="stat-values">
+                    <span class="team-value">${matchStats.myTeam.fouls}</span>
+                    <span class="separator">-</span>
+                    <span class="opponent-value">${matchStats.opponent.fouls}</span>
+                </div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">🧤 Arrêts</div>
+                <div class="stat-values">
+                    <span class="team-value">${matchStats.myTeam.saves}</span>
+                    <span class="separator">-</span>
+                    <span class="opponent-value">${matchStats.opponent.saves}</span>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 function updateMatchDisplay() {
