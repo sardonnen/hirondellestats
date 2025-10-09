@@ -913,6 +913,60 @@ window.matchPageFunctions = {
     autoSave: autoSave
 };
 
+// ===== FONCTIONS UI (À AJOUTER À LA FIN DE match.js) =====
+
+/**
+ * Toggle timer (appelé depuis HTML)
+ */
+function toggleTimer() {
+    const state = matchState;
+    const playBtn = document.getElementById('playBtn');
+    
+    if (state.isPlaying) {
+        stopMatchTimer();
+        if (playBtn) {
+            playBtn.innerHTML = '▶️ Démarrer';
+            playBtn.classList.remove('btn-danger');
+            playBtn.classList.add('btn-success');
+        }
+    } else {
+        startMatchTimer();
+        if (playBtn) {
+            playBtn.innerHTML = '⏸️ Pause';
+            playBtn.classList.remove('btn-success');
+            playBtn.classList.add('btn-danger');
+        }
+    }
+}
+
+/**
+ * Reset timer (appelé depuis HTML)
+ */
+function resetTimer() {
+    if (confirm('Réinitialiser le chronomètre ?')) {
+        resetMatchTimer();
+        const playBtn = document.getElementById('playBtn');
+        if (playBtn) {
+            playBtn.innerHTML = '▶️ Démarrer';
+            playBtn.classList.remove('btn-danger');
+            playBtn.classList.add('btn-success');
+        }
+    }
+}
+
+/**
+ * Confirmation mi-temps (appelé depuis HTML)
+ */
+function showHalfTimeConfirm() {
+    if (matchState.currentHalf === 2) {
+        alert('Le match est déjà en seconde mi-temps');
+        return;
+    }
+    if (confirm('Passer à la seconde mi-temps ?')) {
+        switchToSecondHalf();
+    }
+}
+
 // ===== EXPOSITION GLOBALE =====
 
 window.toggleTimer = toggleTimer;
@@ -925,5 +979,9 @@ window.openEditActionTypeModal = openEditActionTypeModal;
 window.closeEditActionTypeModal = closeEditActionTypeModal;
 window.selectNewActionType = selectNewActionType;
 window.deleteActionFromModal = deleteActionFromModal;
+window.toggleTimer = toggleTimer;
+window.resetTimer = resetTimer;
+window.showHalfTimeConfirm = showHalfTimeConfirm;
+
 
 console.log('✅ match.js chargé');
