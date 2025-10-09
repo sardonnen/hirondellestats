@@ -1287,4 +1287,269 @@ function updateSpecificStatsDisplay() {
     updateAllDisplays();
 }
 
+/**
+ * Génération d'un PDF complet avec toutes les statistiques
+ */
+async function generatePDF() {
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        
+        // Configuration
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 15;
+        let currentY = margin;
+        
+        // Fonction pour ajouter une nouvelle page si nécessaire
+        function checkPageBreak(neededHeight) {
+            if (currentY + neededHeight > pageHeight - margin) {
+                doc.addPage();
+                currentY = margin;
+                return true;
+            }
+            return false;
+        }
+        
+        // Fonction pour ajouter du texte avec retour à la ligne automatique
+        function addText(text, x, y, options = {}) {
+            const fontSize = options.fontSize || 10;
+            const maxWidth = options.maxWidth || (pageWidth - 2 * margin);
+            
+            doc.setFontSize(fontSize);
+            if (options.bold) doc.setFont(undefined, 'bold');
+            else doc.setFont(undefined, 'normal');
+            
+            const lines = doc.splitTextToSize(text, maxWidth);
+            doc.text(lines, x, y);
+            
+            return y + (lines.length * fontSize * 0.4);
+        }
+        
+        // 1. EN-TÊTE DU RAPPORT
+        doc.setFontSize(20);
+        doc.setFont(undefined, 'bold');
+        doc.text('📊 RAPPORT DE MATCH COMPLET', pageWidth / 2, currentY, { align: 'center' });
+        currentY += 15;
+        
+        // Date de génération
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        const now = new Date();
+        doc.text(`Généré le ${now.toLocaleDateString('fr-FR')} à ${now.toLocaleTimeString('fr-FR')}`, pageWidth / 2, currentY, { align: 'center' });
+        currentY += 15;
+        
+        // 2. RÉSUMÉ DU MATCH
+        checkPageBreak(30);
+        doc.setFontSize(16);
+        doc.setFont(undefined, 'bold');
+        doc.text('🏆 RÉSUMÉ DU MATCH', margin, currentY);
+        currentY += 10;
+        
+        const config = matchData.config || {};
+        const score = matchData.score || { team: 0, opponent: 0 };
+        
+        // Score principal
+        doc.setFontSize(14);
+        const scoreText = `${config.teamName || 'Mon Équipe'} ${score.team} - ${score.opponent} ${config.opponentName || 'Équipe Adverse'}`;
+        currentY = addText(scoreText, pageWidth / 2, currentY, { fontSize: 14, bold: true });
+        currentY += 5;
+        
+        // Informations du match
+        const matchInfo = [
+            `📍 Lieu: ${config.venue || 'Non spécifié'}`,
+            `📅 Date: ${config.matchDate ? new Date(config.matchDate).toLocaleDateString('fr-FR') : 'Non spécifiée'}`,
+            `⏱️ Durée: ${footballApp.formatTime(matchData.time || 0)}`,
+            `📝 Événements: ${(matchData.events || []).length}`,
+            `🏁 Mi-temps: ${matchData.half || 1}`
+        ];
+        
+        matchInfo.forEach(info => {
+            currentY = addText(info, margin, currentY + 5, { fontSize: 10 });
+        });
+        currentY += 10;
+        
+        // 3. STATISTIQUES GLOBALES
+        checkPageBreak(40);
+        doc.setFontSize(16);
+        doc.setFont(undefined, 'bold');
+        doc.text('📈 STATISTIQUES GLOBALES', margin, currentY);
+        currentY += 10;
+        
+        if (matchData.globalStats) {
+            const globalStatsData = [
+                ['Statistique', config.teamName || 'Mon Équipe', config.opponentName || 'Équipe Adverse'],
+                ['⚽ Buts', matchData.globalStats.team.goals, matchData.globalStats.opponent.goals],
+                ['🎯 Tirs', matchData.globalStats.team.shots, matchData.globalStats.opponent.shots],
+                ['🟨 Cartons', matchData.globalStats.team.cards, matchData.globalStats.opponent.cards],
+                ['⚠️ Fautes', matchData.globalStats.team.fouls, matchData.globalStats.opponent.fouls],
+                ['🧤 Arrêts', matchData.globalStats.team.saves, matchData.globalStats.opponent.saves],
+                ['⚽ Coups Francs', matchData.globalStats.team.freeKicks, matchData.globalStats.opponent.freeKicks]
+            ];
+            
+            doc.autoTable({
+                head: [globalStatsData[0]],
+                body: globalStatsData.slice(1),
+                startY: currentY,
+                theme: 'grid',
+                headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 9, cellPadding: 3 },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 40 },
+                    1: { halign: 'center', cellWidth: 30 },
+                    2: { halign: 'center', cellWidth: 30 }
+                }
+            });
+            
+            currentY = doc.lastAutoTable.finalY + 10;
+        }
+        
+        // 4. ANALYSE DES TIRS (si disponible)
+        if (playersStats && Object.keys(playersStats).length > 0) {
+            checkPageBreak(30);
+            const shotsSummary = calculateShotsSummary();
+            
+            if (shotsSummary.total > 0) {
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text('🎯 ANALYSE DES TIRS', margin, currentY);
+                currentY += 10;
+                
+                const efficiency = ((shotsSummary.cadre / shotsSummary.total) * 100).toFixed(1);
+                currentY = addText(`Total: ${shotsSummary.total} tirs (${efficiency}% cadrés)`, margin, currentY, { fontSize: 12, bold: true });
+                
+                const shotsData = [
+                    ['Type de Tir', 'Nombre', 'Pourcentage'],
+                    ['✓ Cadrés', shotsSummary.cadre, `${((shotsSummary.cadre / shotsSummary.total) * 100).toFixed(1)}%`],
+                    ['✗ Non cadrés', shotsSummary.nonCadre, `${((shotsSummary.nonCadre / shotsSummary.total) * 100).toFixed(1)}%`],
+                    ['🚫 Contrés', shotsSummary.contre, `${((shotsSummary.contre / shotsSummary.total) * 100).toFixed(1)}%`],
+                    ['📍 Poteaux', shotsSummary.poteau, `${((shotsSummary.poteau / shotsSummary.total) * 100).toFixed(1)}%`],
+                    ['🧤 Arrêtés', shotsSummary.arrete, `${((shotsSummary.arrete / shotsSummary.total) * 100).toFixed(1)}%`]
+                ];
+                
+                doc.autoTable({
+                    head: [shotsData[0]],
+                    body: shotsData.slice(1),
+                    startY: currentY + 5,
+                    theme: 'grid',
+                    headStyles: { fillColor: [46, 204, 113], textColor: 255, fontStyle: 'bold' },
+                    styles: { fontSize: 9, cellPadding: 3 }
+                });
+                
+                currentY = doc.lastAutoTable.finalY + 10;
+            }
+        }
+        
+        // 5. STATISTIQUES INDIVIDUELLES
+        if (playersStats && Object.keys(playersStats).length > 0) {
+            checkPageBreak(40);
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text('👤 STATISTIQUES INDIVIDUELLES', margin, currentY);
+            currentY += 10;
+            
+            const players = Object.values(playersStats)
+                .filter(p => p.playTime > 0 || p.goals > 0 || p.shots > 0)
+                .sort((a, b) => b.score - a.score);
+            
+            if (players.length > 0) {
+                const playersData = [
+                    ['Joueuse', 'Pos', 'Temps', 'Buts', 'Tirs', 'Cartons', 'Note']
+                ];
+                
+                players.forEach(player => {
+                    const positionShort = {
+                        'gardienne': 'G',
+                        'défenseure': 'D',
+                        'milieu': 'M',
+                        'attaquante': 'A'
+                    };
+                    
+                    playersData.push([
+                        player.name,
+                        positionShort[player.position] || 'X',
+                        `${player.playTime || 0}'`,
+                        player.goals || 0,
+                        player.shots || 0,
+                        player.cards || 0,
+                        (player.score || 0).toFixed(1)
+                    ]);
+                });
+                
+                doc.autoTable({
+                    head: [playersData[0]],
+                    body: playersData.slice(1),
+                    startY: currentY,
+                    theme: 'grid',
+                    headStyles: { fillColor: [155, 89, 182], textColor: 255, fontStyle: 'bold' },
+                    styles: { fontSize: 8, cellPadding: 2 },
+                    columnStyles: {
+                        0: { cellWidth: 35 },
+                        1: { halign: 'center', cellWidth: 15 },
+                        2: { halign: 'center', cellWidth: 20 },
+                        3: { halign: 'center', cellWidth: 15 },
+                        4: { halign: 'center', cellWidth: 15 },
+                        5: { halign: 'center', cellWidth: 20 },
+                        6: { halign: 'center', cellWidth: 20 }
+                    }
+                });
+                
+                currentY = doc.lastAutoTable.finalY + 10;
+            }
+        }
+        
+        // 6. MEILLEURS PERFORMEURS
+        if (matchData.topPerformers) {
+            checkPageBreak(30);
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text('🏆 MEILLEURS PERFORMEURS', margin, currentY);
+            currentY += 10;
+            
+            const performers = [
+                `⚽ Meilleure buteuse: ${matchData.topPerformers.topScorer.name || '-'} (${matchData.topPerformers.topScorer.goals || 0} but(s))`,
+                `🎯 Meilleure tireuse: ${matchData.topPerformers.topShooter.name || '-'} (${matchData.topPerformers.topShooter.shots || 0} tir(s))`,
+                `🧤 Meilleure gardienne: ${matchData.topPerformers.topKeeper.name || '-'} (${matchData.topPerformers.topKeeper.saves || 0} arrêt(s))`,
+                `⭐ Joueuse du match: ${matchData.topPerformers.playerOfMatch.name || '-'} (Score: ${matchData.topPerformers.playerOfMatch.score?.toFixed(1) || 0})`
+            ];
+            
+            performers.forEach(perf => {
+                currentY = addText(perf, margin, currentY + 5, { fontSize: 10, bold: true });
+            });
+            currentY += 10;
+        }
+        
+        // 7. ANALYSE PAR MI-TEMPS
+        if (matchData.halftimeStats) {
+            checkPageBreak(30);
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text('⏱️ ANALYSE PAR MI-TEMPS', margin, currentY);
+            currentY += 10;
+            
+            const halftimeData = [
+                ['Statistique', '1ère Mi-temps', '2ème Mi-temps'],
+                ['⚽ Buts', matchData.halftimeStats.firstHalf.goals, matchData.halftimeStats.secondHalf.goals],
+                ['🎯 Tirs', matchData.halftimeStats.firstHalf.shots, matchData.halftimeStats.secondHalf.shots],
+                ['🟨 Cartons', matchData.halftimeStats.firstHalf.cards, matchData.halftimeStats.secondHalf.cards],
+                ['⚠️ Fautes', matchData.halftimeStats.firstHalf.fouls, matchData.halftimeStats.secondHalf.fouls],
+                ['📝 Événements', matchData.halftimeStats.firstHalf.events, matchData.halftimeStats.secondHalf.events]
+            ];
+            
+            doc.autoTable({
+                head: [halftimeData[0]],
+                body: halftimeData.slice(1),
+                startY: currentY,
+                theme: 'grid',
+                headStyles: { fillColor: [243, 156, 18], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 9, cellPadding: 3 }
+            });
+            
+            currentY = doc.lastAutoTable.finalY + 10;
+        }
+        
+        // 8. TIMELINE DES ÉVÉNEMENTS
+        if (matchData.events && matchData.events.length > 0) {
+            checkPageBreak(
+
 console.log('📊 Module stats.js chargé');
