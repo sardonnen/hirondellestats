@@ -1550,6 +1550,154 @@ async function generatePDF() {
         
         // 8. TIMELINE DES ÉVÉNEMENTS
         if (matchData.events && matchData.events.length > 0) {
-            checkPageBreak(
+            checkPageBreak(40);
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text('📝 TIMELINE DES ÉVÉNEMENTS', margin, currentY);
+            currentY += 10;
+            
+            const timelineData = [
+                ['Temps', 'Équipe', 'Action', 'Joueuse']
+            ];
+            
+            matchData.events.forEach(event => {
+                const team = event.isTeam ? (config.teamName || 'Mon Équipe') : (config.opponentName || 'Équipe Adverse');
+                const action = getEventTypeLabel(event.type) + (event.option ? ` (${event.option})` : '');
+                const player = event.playerName || '-';
+                
+                timelineData.push([
+                    event.time || '00:00',
+                    team,
+                    action,
+                    player
+                ]);
+            });
+            
+            doc.autoTable({
+                head: [timelineData[0]],
+                body: timelineData.slice(1),
+                startY: currentY,
+                theme: 'grid',
+                headStyles: { fillColor: [142, 68, 173], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 8, cellPadding: 2 },
+                columnStyles: {
+                    0: { cellWidth: 25, halign: 'center' },
+                    1: { cellWidth: 40 },
+                    2: { cellWidth: 50 },
+                    3: { cellWidth: 40 }
+                }
+            });
+            
+            currentY = doc.lastAutoTable.finalY + 10;
+        }
+        
+        // 9. COMPOSITION DE L'ÉQUIPE
+        if (matchData.players && matchData.players.length > 0) {
+            checkPageBreak(40);
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text('👥 COMPOSITION DE L\'ÉQUIPE', margin, currentY);
+            currentY += 10;
+            
+            const titulaires = matchData.players.filter(p => p.status === 'field');
+            const remplacantes = matchData.players.filter(p => p.status === 'bench');
+            
+            if (titulaires.length > 0) {
+                currentY = addText('🏟️ Titulaires :', margin, currentY + 5, { fontSize: 12, bold: true });
+                
+                const titulairesByPosition = {
+                    'gardienne': titulaires.filter(p => p.position === 'gardienne'),
+                    'défenseure': titulaires.filter(p => p.position === 'défenseure'),
+                    'milieu': titulaires.filter(p => p.position === 'milieu'),
+                    'attaquante': titulaires.filter(p => p.position === 'attaquante')
+                };
+                
+                Object.entries(titulairesByPosition).forEach(([position, players]) => {
+                    if (players.length > 0) {
+                        const positionLabel = position.charAt(0).toUpperCase() + position.slice(1) + 's';
+                        const playerNames = players.map(p => `${p.name}${p.number ? ` (${p.number})` : ''}`).join(', ');
+                        currentY = addText(`• ${positionLabel}: ${playerNames}`, margin + 10, currentY + 3, { fontSize: 10 });
+                    }
+                });
+            }
+            
+            if (remplacantes.length > 0) {
+                currentY = addText('🪑 Remplaçantes :', margin, currentY + 8, { fontSize: 12, bold: true });
+                const remplacanteNames = remplacantes.map(p => `${p.name}${p.number ? ` (${p.number})` : ''}`).join(', ');
+                currentY = addText(`• ${remplacanteNames}`, margin + 10, currentY + 3, { fontSize: 10 });
+            }
+            
+            currentY += 10;
+        }
+        
+        // 10. NOTES ET OBSERVATIONS
+        checkPageBreak(30);
+        doc.setFontSize(16);
+        doc.setFont(undefined, 'bold');
+        doc.text('📝 NOTES ET OBSERVATIONS', margin, currentY);
+        currentY += 10;
+        
+        const observations = [
+            `• Match disputé le ${config.matchDate ? new Date(config.matchDate).toLocaleDateString('fr-FR') : 'date non spécifiée'}`,
+            `• Lieu: ${config.venue || 'Non spécifié'}`,
+            `• Durée effective: ${footballApp.formatTime(matchData.time || 0)}`,
+            `• Nombre total d'événements enregistrés: ${(matchData.events || []).length}`,
+            `• Mi-temps finale: ${matchData.half || 1}${matchData.half === 2 ? ' (match complet)' : ' (match interrompu)'}`
+        ];
+        
+        observations.forEach(obs => {
+            currentY = addText(obs, margin, currentY + 5, { fontSize: 10 });
+        });
+        
+        // 11. PIED DE PAGE
+        checkPageBreak(20);
+        currentY += 15;
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.text('Rapport généré par Football Stats Manager', pageWidth / 2, currentY, { align: 'center' });
+        doc.text(`Page ${doc.internal.getNumberOfPages()}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+        
+        // SAUVEGARDE DU PDF
+        const fileName = `rapport_match_${config.teamName?.toLowerCase().replace(/\s+/g, '_') || 'equipe'}_vs_${config.opponentName?.toLowerCase().replace(/\s+/g, '_') || 'adversaire'}_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(fileName);
+        
+        showNotification('📄 Rapport PDF généré avec succès !', 'success');
+        
+    } catch (error) {
+        console.error('❌ Erreur génération PDF:', error);
+        showNotification('❌ Erreur lors de la génération du PDF', 'error');
+    }
+}
+
+/**
+ * Fonction utilitaire pour obtenir le label d'un type d'événement
+ */
+function getEventTypeLabel(type) {
+    const labels = {
+        goal: 'But',
+        assist: 'Passe décisive',
+        shot: 'Tir',
+        save: 'Arrêt',
+        card: 'Carton',
+        foul: 'Faute',
+        corner: 'Corner',
+        offside: 'Hors-jeu',
+        substitution: 'Changement',
+        freeKick: 'Coup franc'
+    };
+    return labels[type] || type;
+}
+
+/**
+ * Fonction utilitaire pour mettre à jour un élément texte
+ */
+function updateElementText(id, text) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = text;
+        return true;
+    }
+    return false;
+}
 
 console.log('📊 Module stats.js chargé');
